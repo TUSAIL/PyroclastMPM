@@ -2,6 +2,9 @@
 
 A modular GPU based Material Point Method (MPM) solver.
 
+<img src="./doc/scoop.gif" width="50%" height="50%"/>
+
+<!-- ![til](./doc/scoop.gif) -->
 
 <!-- [![PyPI Release](https://img.shields.io/pypi/v/pyroclastmpm.svg)](https://pypi.org/project/pyroclastmpm) -->
 <!-- [![Documentation Status](https://readthedocs.org/projects/None/badge/)](https://None.readthedocs.io/) -->
