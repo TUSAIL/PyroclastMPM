@@ -8,7 +8,7 @@ output_directory = "output"
 total_steps = 10000
 output_steps = 100 #frequency
 output_start = 0
-cell_size_ratio = 30.0
+cell_size_ratio = 40.0
 
 [nodes]
 node_start = [0.0, 0.0]
@@ -34,7 +34,7 @@ particle_density=2450
 alpha = 0.95
 
 [boundaryconditions]
-gravity = [0.0,0.0, -0.3]
+gravity = [0.0,0.0, -0.1]
 axis0_mode=[1,1,0]
 axis1_mode=[1,1,1]
 # axis0_mode=[1,1,0]

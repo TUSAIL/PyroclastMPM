@@ -1,6 +1,6 @@
 # Project specific ignores
 poetry.lock
-outputs/
+output/
 plots/
 logs/
 backups/
