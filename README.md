@@ -1,5 +1,5 @@
 
-<p align="center" style="margin-bottom: 0px !important; padding-left: 100px;">
+<p align="center" style="margin-bottom: 0px !important; ">
   <img width="400" src="./doc/scoop_no_boundary.gif" alt="PyroclastMPM logo" align="center">
 </p>
 
