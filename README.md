@@ -3,8 +3,7 @@
   <img width="400" src="./doc/scoop_no_boundary.gif" alt="PyroclastMPM logo" align="center">
 </p>
 
-<h1 align="center">PyroclastMPM</h1>
-
+<h1 align="center" style="margin-top: 0px;">PyroclastMPM</h1>
 A modular GPU based Material Point Method (MPM) solver.
 
 <!-- 
