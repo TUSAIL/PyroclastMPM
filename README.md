@@ -1,6 +1,6 @@
 
-<p align="center" style="margin-bottom: 0px !important; ">
-  <img width="200" src="./doc/scoop_no_boundary.gif" alt="PyroclastMPM logo" align="center">
+<p align="center" style="margin-bottom: 0px !important;  padding-left: 100px">
+  <img width="400" src="./doc/scoop_no_boundary.gif" alt="PyroclastMPM logo" align="center">
 </p>
 
 <h1 align="center" style="margin-top: 0px;">PyroclastMPM</h1>
