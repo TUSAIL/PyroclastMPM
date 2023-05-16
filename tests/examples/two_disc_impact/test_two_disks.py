@@ -16,10 +16,6 @@ from pyroclastmpm import (
 )
 
 
-# Functions to test
-# [ ] two disc impact with USL
-# [ ] two disc impact with MUSL
-# [ ] two disc impact with TLMPM (and contacts)
 def create_circle(center: np.array, radius: float, cell_size: float, ppc_1d: int = 1):
 
     start, end = center-radius, center+radius
