@@ -1,14 +1,16 @@
-# Welcome to PyroclastMPM
+
+<p align="center" style="margin-bottom: 0px !important; padding-left: 100px;">
+  <img width="400" src="./doc/scoop_no_boundary.gif" alt="PyroclastMPM logo" align="center">
+</p>
+
+<h1 align="center">PyroclastMPM</h1>
 
 A modular GPU based Material Point Method (MPM) solver.
 
-<p align="center">
-<img src="./doc/scoop.gif" width="50%" height="50%"/>
-</p>
-
+<!-- 
 <p align="center">
 <img src="./doc/disc_impact.gif" width="50%" height="50%"/>
-</p>
+</p> -->
 
 <!-- ![til](./doc/scoop.gif) -->
 
