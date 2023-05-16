@@ -4,7 +4,9 @@
 </p>
 
 <h1 align="center" style="margin-top: 0px;">PyroclastMPM</h1>
-A modular GPU based Material Point Method (MPM) solver.
+
+
+<p align="center"  > A modular GPU based Material Point Method (MPM) solver. </p>
 
 <!-- 
 <p align="center">
@@ -16,8 +18,20 @@ A modular GPU based Material Point Method (MPM) solver.
 <!-- [![PyPI Release](https://img.shields.io/pypi/v/pyroclastmpm.svg)](https://pypi.org/project/pyroclastmpm) -->
 <!-- [![Documentation Status](https://readthedocs.org/projects/None/badge/)](https://None.readthedocs.io/) -->
 
+# Welcome
 
-# Features
+PyroclastMPM is an explicit GPU-based Material Point Method (MPM) solver written in CUDA and C++ with Python bindings. PyroclastMPM is designed to be fast, modular, and highly extensible.
+
+# Motivation
+
+The main goal of PyroclastMPM is to accurately model granular impact problems encountered in industry, showcasing the rate dependence change attributed to the fluid-solid transition of granular material. The solver is specifically designed to be applicable in industrial settings, striking a balance between computational performance and code readability.
+
+
+# Installation
+...
+
+
+
 
 ## Implementation
 * 1D, 2D, 3D
