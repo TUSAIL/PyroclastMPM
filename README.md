@@ -26,10 +26,63 @@ PyroclastMPM is an explicit GPU-based Material Point Method (MPM) solver written
 
 The main goal of PyroclastMPM is to accurately model granular impact problems encountered in industry, showcasing the rate dependence change attributed to the fluid-solid transition of granular material. The solver is specifically designed to be applicable in industrial settings, striking a balance between computational performance and code readability.
 
+# Requirements
+(in development)
 
 # Installation
-...
 
+## Method A: Building source
+1. Check if all the  [requirements](#requirements) are met
+   - GCC version `gcc --version` and `g++ --version` should be less than `>8 or <12`
+   - CMAKE version `cmake --version` should be `>=3.11`
+   - CUDA `nvcc --version`
+   - Poetry `poetry --version`
+   - vtk9 and libvtk9-dev 
+
+
+2. Clone repository and submodules (with ssh)
+
+```
+git clone --recurse-submodules -j8 git@github.com:TUSAIL/PyroclastMPM.git
+
+cd PyroclastMPM
+```
+3. Install Python depedencies
+
+```
+poetry install
+```
+
+4. Build project
+
+```
+mkdir build
+cmake -B ./build/ -S .
+make -j4 -C ./build
+```
+
+5. Run tests (in build directory)
+
+Compiled executable
+```
+./build/tests/tests
+```
+
+Python 
+```
+pytest ./tests/
+```
+
+6. Run example
+
+```
+ make -C examples/Scoop
+
+```
+
+## Method B: Python wheel
+(in development)
+`pip install <wheel>`
 
 
 
