@@ -22,7 +22,7 @@
 
 PyroclastMPM is an explicit GPU-based Material Point Method (MPM) solver written in CUDA and C++ with Python bindings. PyroclastMPM is designed to be fast, modular, and highly extensible.
 
-# Motivation 🎯 
+# Motivation 🎯🏖️
 
 The main goal of PyroclastMPM is to accurately model granular impact problems encountered in industry, showcasing the rate dependence change attributed to the fluid-solid transition of granular material. The solver is specifically designed to be applicable in industrial settings, striking a balance between computational performance and code readability.
 
@@ -30,7 +30,7 @@ The main goal of PyroclastMPM is to accurately model granular impact problems en
 
 Coming soon!
 
-# Examples 🏖️📚💻
+# Showcase examples 📚💻
 
 Coming soon!
 
@@ -66,13 +66,11 @@ make -j4 -C ./build
 Will look something like this) `pip install <wheel>`
 
 
-# Usage 🔄💻🏖️
-
+# Documentation 📖🔍
 Coming soon!
-
-# Documentation
-
-Comming soon!
+## Usage
+## Detailed list of features
+## Known issues
 
 <!-- # Recommended citation -->
 
@@ -81,7 +79,7 @@ Coming soon!
 
 # Contributor list
 
-# How do I contribute?
+## Want to contribute?
 
 
 # See also 👀🔗
