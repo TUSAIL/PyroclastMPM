@@ -18,23 +18,23 @@
 <!-- [![PyPI Release](https://img.shields.io/pypi/v/pyroclastmpm.svg)](https://pypi.org/project/pyroclastmpm) -->
 <!-- [![Documentation Status](https://readthedocs.org/projects/None/badge/)](https://None.readthedocs.io/) -->
 
-# Welcome
+# Welcome 🎉
 
 PyroclastMPM is an explicit GPU-based Material Point Method (MPM) solver written in CUDA and C++ with Python bindings. PyroclastMPM is designed to be fast, modular, and highly extensible.
 
-# Motivation
+# Motivation 🎯 
 
 The main goal of PyroclastMPM is to accurately model granular impact problems encountered in industry, showcasing the rate dependence change attributed to the fluid-solid transition of granular material. The solver is specifically designed to be applicable in industrial settings, striking a balance between computational performance and code readability.
 
-# Overview of features
+# Overview of Features 🚀
 
 Coming soon!
 
-# Examples
+# Examples 🏖️📚💻
 
 Coming soon!
 
-# Requirements
+# Requirements 📋✅
 Checking requirements
 - GCC version `gcc --version` and `g++ --version` should be less than `>8 or <12`
 - CMAKE version `cmake --version` should be `>=3.11`
@@ -42,7 +42,7 @@ Checking requirements
 - Poetry `poetry --version`
 - vtk9 and libvtk9-dev 
 
-# Installation
+# Installation ⚙️️🔧
 
 ## Method A: Building source
 1. Check if all the  [requirements](#requirements) 
@@ -66,11 +66,38 @@ make -j4 -C ./build
 Will look something like this) `pip install <wheel>`
 
 
-# Usage
+# Usage 🔄💻🏖️
 
-Coming 
+Coming soon!
+
+# Documentation
+
+Comming soon!
+
+<!-- # Recommended citation -->
+
+# Contributing list
+Coming soon!
+
+# Contributor list
+
+# How do I contribute?
 
 
+# See also 👀🔗
+Coming soon!
+
+## Credits
+
+## Inspiration
+
+## Alternatives
+
+# Where do I get help
+
+
+
+<!-- 
 ## Implementation
 * 1D, 2D, 3D
 * C++ / CUDA with
@@ -179,4 +206,4 @@ Then build the sphinx documentation from the top-level build directory:
 cmake --build . --target sphinx-doc
 ```
 
-The web documentation can then be browsed by opening `doc/sphinx/index.html` in your browser.
+The web documentation can then be browsed by opening `doc/sphinx/index.html` in your browser. -->
