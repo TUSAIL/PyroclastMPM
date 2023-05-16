@@ -91,10 +91,6 @@ Coming soon!
 
 ## Alternatives
 
-# Where do I get help
-
-
-
 <!-- 
 ## Implementation
 * 1D, 2D, 3D
