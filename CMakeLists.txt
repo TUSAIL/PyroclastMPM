@@ -24,36 +24,41 @@ if(BUILD_CUDA)
     find_package(CUDAToolkit REQUIRED)
 else()
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX)
+
+    # Thrust
+    add_subdirectory(ext/thrust)
+
+    thrust_create_target(Thrust HOST)
+    
 endif()
 
 # Thrust
-find_package(Thrust REQUIRED CONFIG)
-thrust_create_target(Thrust HOST)
+# find_package(Thrust REQUIRED CONFIG)
+# thrust_create_target(Thrust HOST)
 
 # EIGEN3
 add_subdirectory(ext/eigen/)
 
 # VTK
-find_package(VTK REQUIRED
-    COMPONENTS
-    CommonCore
-    CommonDataModel
-    CommonTransforms
-    FiltersSources
-    FiltersCore
-    FiltersGeneral
-    FiltersPoints
-    InfovisCore # DataObject
-    IOCore
-    IOExport
-    IOGeometry
-    IOXML
-    IOHDF
+# find_package(VTK REQUIRED
+#     COMPONENTS
+#     CommonCore
+#     CommonDataModel
+#     CommonTransforms
+#     FiltersSources
+#     FiltersCore
+#     FiltersGeneral
+#     FiltersPoints
+#     InfovisCore # DataObject
+#     IOCore
+#     IOExport
+#     IOGeometry
+#     IOXML
+#     IOHDF
+#     # IOXdmf
+# )
 
-    # IOXdmf
-)
-
-include_directories(${VTK_INCLUDE_DIRS})
+# include_directories(${VTK_INCLUDE_DIRS})
 
 # main ompile the library
 add_subdirectory(src)

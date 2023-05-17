@@ -57,7 +57,10 @@ set(
 
 add_library(pyroclastmpm ${PyroclastSrc})
 
-target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen Thrust ${VTK_LIBRARIES} )
+# target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen Thrust ${VTK_LIBRARIES} )
+
+target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen Thrust)
+
 
 if(BUILD_CUDA)
   target_link_libraries(pyroclastmpm PRIVATE CUDA::cudart CUDA::cuda_driver)
@@ -71,10 +74,10 @@ if(BUILD_CUDA)
   set_target_properties(pyroclastmpm PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 endif()
 
-vtk_module_autoinit(
-TARGETS pyroclastmpm
-MODULES ${VTK_LIBRARIES}
-)
+# vtk_module_autoinit(
+# TARGETS pyroclastmpm
+# MODULES ${VTK_LIBRARIES}
+# )
 
 target_include_directories(pyroclastmpm PUBLIC
 $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/>
