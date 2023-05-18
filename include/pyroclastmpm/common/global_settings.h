@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "pyroclastmpm/common/types_common.cuh"
+#include "pyroclastmpm/common/types_common.h"
 
 namespace pyroclastmpm
 {

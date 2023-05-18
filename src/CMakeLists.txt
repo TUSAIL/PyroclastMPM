@@ -39,8 +39,8 @@ set(
 
   # "nodes/nodes_kernels.cu"
 
-  # "common/helper.cu"
-  # "common/global_settings.cu"
+  "common/helper.cpp"
+  "common/global_settings.cpp"
   # "common/output.cu"
 
   # "common/tools.cu"
@@ -59,7 +59,7 @@ add_library(pyroclastmpm ${PyroclastSrc})
 
 # target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen Thrust ${VTK_LIBRARIES} )
 
-target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen Thrust)
+target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen )
 
 
 if(BUILD_CUDA)
