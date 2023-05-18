@@ -1,11 +1,11 @@
-#include "pyroclastmpm/common/global_settings.h"
+#include "pyroclastmpm/common/global_settings.cuh"
 
 namespace pyroclastmpm
 {
 
   char output_directory_cpu[256];
 
-#ifdef __CUDACC__
+#ifdef CUDA_ENABLED
   __constant__ SFType shape_function_gpu = LinearShapeFunction;
 
   __constant__ int num_surround_nodes_gpu;
@@ -82,7 +82,7 @@ namespace pyroclastmpm
   void set_global_particles_per_cell(const int _particles_per_cell)
   {
     particles_per_cell_cpu = _particles_per_cell;
-#ifdef __CUDACC__
+#ifdef CUDA_ENABLED
     cudaMemcpyToSymbol(particles_per_cell_gpu, &(_particles_per_cell), sizeof(int), 0);
 #endif
   }
@@ -95,7 +95,7 @@ namespace pyroclastmpm
   void set_global_dt(const Real _dt)
   {
     dt_cpu = _dt;
-#ifdef __CUDACC__
+#ifdef CUDA_ENABLED
     cudaMemcpyToSymbol(dt_gpu, &(_dt), sizeof(Real), 0);
 #endif
   };
@@ -103,7 +103,7 @@ namespace pyroclastmpm
   void set_global_step(const int _step)
   {
     global_step_cpu = _step;
-#ifdef __CUDACC__
+#ifdef CUDA_ENABLED
     cudaMemcpyToSymbol(global_step_gpu, &(_step), sizeof(int), 0);
 #endif
   };
@@ -116,7 +116,7 @@ namespace pyroclastmpm
       window_size_cpu = 2;
       num_surround_nodes_cpu = pow(window_size_cpu, DIM);
       shape_function_cpu = LinearShapeFunction;
-#ifdef __CUDACC__
+#ifdef CUDA_ENABLED
       cudaMemcpyToSymbol(shape_function_gpu, &(shape_function_cpu), sizeof(int), 0);
 #if DIM == 1
       cudaMemcpyToSymbol(forward_window_gpu, linear_forward_window_1d,
@@ -141,7 +141,7 @@ namespace pyroclastmpm
       window_size_cpu = 4;
       num_surround_nodes_cpu = pow(window_size_cpu, DIM);
       shape_function_cpu = QuadraticShapeFunction;
-#ifdef __CUDACC__
+#ifdef CUDA_ENABLED
       cudaMemcpyToSymbol(shape_function_gpu, &(shape_function_cpu), sizeof(int),
                          0);
 
@@ -169,7 +169,7 @@ namespace pyroclastmpm
       num_surround_nodes_cpu = pow(window_size_cpu, DIM);
       shape_function_cpu = CubicShapeFunction;
 
-#ifdef __CUDACC__
+#ifdef CUDA_ENABLED
       cudaMemcpyToSymbol(shape_function_gpu, &(shape_function_cpu), sizeof(int),
                          0);
 #if DIM == 1
@@ -191,7 +191,7 @@ namespace pyroclastmpm
 
 #endif
     }
-#ifdef __CUDACC__
+#ifdef CUDA_ENABLED
     cudaMemcpyToSymbol(window_size_gpu, &(window_size_cpu), sizeof(int), 0);
 
     cudaMemcpyToSymbol(num_surround_nodes_gpu, &(num_surround_nodes_cpu),
@@ -201,4 +201,4 @@ namespace pyroclastmpm
 
 
 
-}; // namespace pyroclastmpm
+}; // namespace pyroclastmpmma

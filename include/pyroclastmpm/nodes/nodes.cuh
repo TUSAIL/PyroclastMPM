@@ -1,8 +1,8 @@
 #pragma once
 // #include <thrust/execution_policy.h>
 
-#include "pyroclastmpm/common/types_common.h"
-#include "pyroclastmpm/common/helper.h"
+#include "pyroclastmpm/common/types_common.cuh"
+#include "pyroclastmpm/common/helper.cuh"
 // #include "pyroclastmpm/common/output.cuh"
 // #include "pyroclastmpm/nodes/nodes_kernels.cuh"
 

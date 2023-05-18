@@ -19,9 +19,13 @@ option(BUILD_DOCS "Enable building of documentation" OFF)
 option(BUILD_TESTING "Enable testing" ON)
 option(CMAKE_BUILD_TYPE "Make release build" Release)
 
+# make an if  else statekent if cuda is enabled
+
 if(BUILD_CUDA)
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX CUDA)
     find_package(CUDAToolkit REQUIRED)
+    add_compile_definitions(CUDA_ENABLED)
+
 else()
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX)
 

@@ -1,5 +1,5 @@
 #include <thrust/gather.h>
-#include "pyroclastmpm/common/helper.h"
+#include "pyroclastmpm/common/helper.cuh"
 
 namespace pyroclastmpm
 {

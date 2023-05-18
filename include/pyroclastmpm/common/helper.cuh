@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pyroclastmpm/common/types_common.h"
+#include "pyroclastmpm/common/types_common.cuh"
 
 
 namespace pyroclastmpm

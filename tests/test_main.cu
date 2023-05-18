@@ -3,7 +3,7 @@
 // Helper
 // #include "pyroclastmpm/common/helper.cuh"
 // #include "pyroclastmpm/common/types_common.h"
-#include "pyroclastmpm/common/global_settings.h"
+#include "pyroclastmpm/common/global_settings.cuh"
 // #include "unit/test_global.cuh" // Tests needed
 
 // Partitioning
@@ -24,7 +24,7 @@
 
 // // Particles, Nodes, Shape Functions
 // #include "unit/test_particles.cuh"
-#include "unit/test_nodes.h"
+#include "unit/test_nodes.cuh"
 // #include "unit/test_shapefunctions.cuh"
 
 // // Solvers

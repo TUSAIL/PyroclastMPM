@@ -1,5 +1,5 @@
 
-#include "pyroclastmpm/nodes/nodes.h"
+#include "pyroclastmpm/nodes/nodes.cuh"
 
 // Functions tested
 // [x] NodesContainer::NodesContainer
@@ -85,7 +85,7 @@ TEST(NodesContainer, CONSTRUCTOR)
   EXPECT_EQ(node_ids[2], Vectori(2));
 #endif
 
-//   // TODO insert test for node types
+  // TODO insert test for node types
 }
 
 // /**

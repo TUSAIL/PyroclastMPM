@@ -1,6 +1,6 @@
 set(
   PyroclastSrc_test
-  "test_main.cpp"
+  "test_main.cu"
 
 )
 enable_testing()

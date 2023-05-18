@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef __CUDA_ARCH__
+#ifdef CUDA_ENABLED
 #include <thrust/device_vector.h>
 #endif
 
@@ -54,7 +54,7 @@ namespace pyroclastmpm
   using Quaternionr = Eigen::Quaternion<Real>;
   using AngleAxisr = Eigen::AngleAxis<Real>;
 
-#ifdef __CUDA_ARCH__
+#ifdef CUDA_ENABLED
   // using execution_policy = thrust::device;
   struct execution_policy : thrust::device_execution_policy<execution_policy>
   {
@@ -106,7 +106,7 @@ namespace pyroclastmpm
 #define BLOCKSIZE 64
 #define WARPSIZE 32
 
-#ifdef __CUDA_ARCH__
+#ifdef CUDA_ENABLED
   // device code here
 
 #define gpuErrchk(ans)                    \

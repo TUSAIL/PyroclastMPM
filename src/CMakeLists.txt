@@ -35,12 +35,12 @@ set(
 
   # "particles/particles.cu"
   # "particles/particles_kernels.cu"
-  "nodes/nodes.cpp"
+  "nodes/nodes.cu"
 
   # "nodes/nodes_kernels.cu"
 
-  "common/helper.cpp"
-  "common/global_settings.cpp"
+  "common/helper.cu"
+  "common/global_settings.cu"
   # "common/output.cu"
 
   # "common/tools.cu"
@@ -69,6 +69,7 @@ if(BUILD_CUDA)
     --relocatable-device-code=true
     -O3
     --expt-relaxed-constexpr
+    -x cu
     >
   )
   set_target_properties(pyroclastmpm PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
