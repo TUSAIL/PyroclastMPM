@@ -26,15 +26,15 @@ else()
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX)
 
     # Thrust
-    add_subdirectory(ext/thrust)
+    add_subdirectory(ext/thrust thrust)
 
-    thrust_create_target(Thrust HOST)
+    #solves https://github.com/NVIDIA/thrust/issues/386
+    add_compile_definitions(THRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
+
     
 endif()
 
-# Thrust
-# find_package(Thrust REQUIRED CONFIG)
-# thrust_create_target(Thrust HOST)
+
 
 # EIGEN3
 add_subdirectory(ext/eigen/)
@@ -63,19 +63,19 @@ add_subdirectory(ext/eigen/)
 # main ompile the library
 add_subdirectory(src)
 
-# # compile the tests
-# if(BUILD_TESTING)
-#     include(FetchContent)
-#     FetchContent_Declare(
-#         googletest
-#         GIT_REPOSITORY https://github.com/google/googletest.git
-#         GIT_TAG release-1.12.1
-#     )
-#     # For Windows: Prevent overriding the parent project's compiler/linker settings
-#     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-#     FetchContent_MakeAvailable(googletest)
-#     add_subdirectory(tests)
-# endif()
+# compile the tests
+if(BUILD_TESTING)
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.12.1
+    )
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+    add_subdirectory(tests)
+endif()
 
 # if(BUILD_DOCS)
 #     add_subdirectory(doc)
