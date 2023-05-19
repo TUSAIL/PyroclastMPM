@@ -38,14 +38,27 @@ namespace pyroclastmpm
   using Vector1b = Eigen::Matrix<bool, 1, 1>;
 
 #if DIM == 3
+  #define NODE_MEM_INDEX(BIN, NUM_BINS) \
+    (BIN[0] + BIN[1] * NUM_BINS[0] + BIN[2] * NUM_BINS[0] * NUM_BINS[1])
+#define WINDOW_BIN(BIN, WINDOW, i) \
+    (BIN + Vectori({WINDOW[i][0], WINDOW[i][1], WINDOW[i][2]}))
   using Vectorr = Vector3r;
   using Matrixr = Matrix3r;
   using Vectori = Vector3i;
 #elif DIM == 2
+
+  #define NODE_MEM_INDEX(BIN, NUM_BINS) \
+    (BIN[0] + BIN[1] * NUM_BINS[0])
+  #define WINDOW_BIN(BIN, WINDOW, i) \
+    (BIN + Vectori({WINDOW[i][0], WINDOW[i][1]}))
   using Vectorr = Vector2r;
   using Matrixr = Matrix2r;
   using Vectori = Vector2i;
 #else // DIM == 1
+  #define NODE_MEM_INDEX(BIN, NUM_BINS) \
+    (BIN[0])
+  #define WINDOW_BIN(BIN, WINDOW, i) \
+    (BIN + Vectori(WINDOW[i][0]))
   using Vectorr = Vector1r;
   using Matrixr = Matrix1r;
   using Vectori = Vector1i;

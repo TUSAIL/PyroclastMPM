@@ -1,6 +1,6 @@
 #pragma once
 
-__device__ inline Real linear(const Real relative_distance, const int node_type=0)
+__device__  __host__ inline Real linear(const Real relative_distance, const int node_type=0)
 {
   double abs_relative_distance = fabs(relative_distance);
   if (abs_relative_distance >= 1.0)

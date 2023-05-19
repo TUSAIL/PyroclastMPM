@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pyroclastmpm/materials/linearelastic/linearelasticmat.cuh"
+#include "pyroclastmpm/materials/linearelastic.cuh"
 
 // Functions to test
 // [x] LinearElastic::LinearElastic (Tested implicitly via stress_update)

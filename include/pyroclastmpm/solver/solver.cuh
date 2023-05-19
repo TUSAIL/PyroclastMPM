@@ -6,28 +6,29 @@
 #include "pyroclastmpm/common/types_common.cuh"
 
 // Boundary conditions
-#include "pyroclastmpm/boundaryconditions/bodyforce/bodyforce.cuh"
 #include "pyroclastmpm/boundaryconditions/boundaryconditions.cuh"
-#include "pyroclastmpm/boundaryconditions/gravity/gravity.cuh"
-#include "pyroclastmpm/boundaryconditions/noslipwall/noslipwall.cuh"
-#include "pyroclastmpm/boundaryconditions/periodicwall/periodicwall.cuh"
-#include "pyroclastmpm/boundaryconditions/rigidparticles/rigidparticles.cuh"
-#include "pyroclastmpm/boundaryconditions/slipwall/slipwall.cuh"
-#include "pyroclastmpm/boundaryconditions/planardomain/planardomain.cuh"
-#include "pyroclastmpm/boundaryconditions/nodedomain/nodedomain.cuh"
+// #include "pyroclastmpm/boundaryconditions/bodyforce/bodyforce.cuh"
+// #include "pyroclastmpm/boundaryconditions/gravity/gravity.cuh"
+// #include "pyroclastmpm/boundaryconditions/noslipwall/noslipwall.cuh"
+// #include "pyroclastmpm/boundaryconditions/periodicwall/periodicwall.cuh"
+// #include "pyroclastmpm/boundaryconditions/rigidparticles/rigidparticles.cuh"
+// #include "pyroclastmpm/boundaryconditions/slipwall/slipwall.cuh"
+// #include "pyroclastmpm/boundaryconditions/planardomain/planardomain.cuh"
+// #include "pyroclastmpm/boundaryconditions/nodedomain/nodedomain.cuh"
 
 // Materials
-#include "pyroclastmpm/materials/druckerprager/druckerpragermat.cuh"
-#include "pyroclastmpm/materials/linearelastic/linearelasticmat.cuh"
-#include "pyroclastmpm/materials/localrheo/localrheomat.cuh"
 #include "pyroclastmpm/materials/materials.cuh"
-#include "pyroclastmpm/materials/newtonfluid/newtonfluidmat.cuh"
+// #include "pyroclastmpm/materials/druckerprager/druckerpragermat.cuh"
+#include "pyroclastmpm/materials/linearelastic.cuh"
+// #include "pyroclastmpm/materials/localrheo/localrheomat.cuh"
+
+// #include "pyroclastmpm/materials/newtonfluid/newtonfluidmat.cuh"
 
 
 // Particles, Nodes and shapefunctions
 #include "pyroclastmpm/nodes/nodes.cuh"
 #include "pyroclastmpm/particles/particles.cuh"
-#include "pyroclastmpm/shapefunctions/shapefunction_kernels.cuh"
+#include "pyroclastmpm/shapefunction/shapefunction.cuh"
 
 namespace pyroclastmpm
 {
@@ -37,22 +38,23 @@ namespace pyroclastmpm
      *
      */
     using MaterialType = std::variant<Material,
-                                      LinearElastic,
-                                      NewtonFluid,
-                                      LocalGranularRheology,
-                                      DruckerPrager>;
+                                      LinearElastic
+                                    //   NewtonFluid,
+                                    //   LocalGranularRheology,
+                                    //   DruckerPrager
+                                    >;
 
     /**
      * @brief Define the boundary condition type as a variant of all the possible
      * boundary conditions
      *
      */
-    using BoundaryConditionType = std::variant<BoundaryCondition,
-                                               Gravity,
-                                               RigidParticles,
-                                               BodyForce,
-                                               PlanarDomain,
-                                               NodeDomain
+    using BoundaryConditionType = std::variant<BoundaryCondition
+    //                                            Gravity,
+    //                                            RigidParticles,
+    //                                            BodyForce,
+    //                                            PlanarDomain,
+    //                                            NodeDomain
                                                >;
 
     /**
@@ -102,12 +104,6 @@ namespace pyroclastmpm
          *
          */
         void stress_update();
-
-        /**
-         * @brief calculate the shapefunction values for all particles
-         *
-         */
-        void calculate_shape_function();
 
         /**
          * @brief reset (temporary) arrays to initial state

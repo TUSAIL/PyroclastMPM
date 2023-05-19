@@ -1,6 +1,5 @@
 #pragma once
 
-#include "pyroclastmpm/materials/linearelastic/linearelasticmat_kernels.cuh"
 #include "pyroclastmpm/materials/materials.cuh"
 
 namespace pyroclastmpm

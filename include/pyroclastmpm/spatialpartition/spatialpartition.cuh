@@ -1,11 +1,10 @@
 #pragma once
 
-#include <thrust/execution_policy.h>
 #include <thrust/sequence.h>
 #include <thrust/sort.h>
 #include "pyroclastmpm/common/helper.cuh"
 #include "pyroclastmpm/common/types_common.cuh"
-#include "pyroclastmpm/spatialpartition/spatialpartition_kernels.cuh"
+// #include "pyroclastmpm/spatialpartition/spatialpartition_kernels.cuh"
 
 namespace pyroclastmpm {
 
@@ -91,6 +90,6 @@ class SpatialPartition {
   /** @brief total number of cells within the grid */
   int num_cells_total;
 
-  GPULaunchConfig launch_config;
+  // GPULaunchConfig launch_config;
 };
 }  // namespace pyroclastmpm

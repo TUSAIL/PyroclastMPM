@@ -23,10 +23,8 @@ namespace pyroclastmpm
         const cpu_array<Matrix3r> _stresses,
         const cpu_array<Real> _masses,
         const cpu_array<Real> _volumes,
-        const cpu_array<OutputType> _output_formats)
+        const cpu_array<OutputType> _output_formats) : output_formats(_output_formats)
     {
-
-        output_formats = _output_formats;
         num_particles = _positions.size();
 
         set_default_device<Matrix3r>(num_particles, _stresses, stresses_gpu, Matrix3r::Zero());
@@ -64,10 +62,10 @@ namespace pyroclastmpm
 
         spatial = SpatialPartition(); // create a temporary partitioning object, since we are getting domain size
 
-        launch_config.tpb = dim3(int((num_particles) / BLOCKSIZE) + 1, 1, 1);
-        launch_config.bpg = dim3(BLOCKSIZE, 1, 1);
+        // launch_config.tpb = dim3(int((num_particles) / BLOCKSIZE) + 1, 1, 1);
+        // launch_config.bpg = dim3(BLOCKSIZE, 1, 1);
 
-        gpuErrchk(cudaDeviceSynchronize());
+        // gpuErrchk(cudaDeviceSynchronize());
 
         reset(); // reset needed
     }
@@ -75,21 +73,20 @@ namespace pyroclastmpm
     void ParticlesContainer::reset(bool reset_psi)
     {
 
+        execution_policy exec;
         if (reset_psi)
         {
-            thrust::fill(thrust::device, psi_gpu.begin(), psi_gpu.end(), 0.);
-            thrust::fill(thrust::device, dpsi_gpu.begin(), dpsi_gpu.end(),
+            thrust::fill(exec, psi_gpu.begin(), psi_gpu.end(), 0.);
+            thrust::fill(exec, dpsi_gpu.begin(), dpsi_gpu.end(),
                          Vectorr::Zero());
         }
-
-        thrust::fill(thrust::device, velocity_gradient_gpu.begin(),
+        thrust::fill(exec, velocity_gradient_gpu.begin(),
                      velocity_gradient_gpu.end(), Matrixr::Zero());
 
-        thrust::fill(thrust::device, pressures_gpu.begin(), pressures_gpu.end(), 0.);
+        thrust::fill(exec, pressures_gpu.begin(), pressures_gpu.end(), 0.);
 
-        thrust::fill(thrust::device, phases_gpu.begin(), phases_gpu.end(), -1);
-        thrust::fill(thrust::device, forces_external_gpu.begin(), forces_external_gpu.end(), Vectorr::Zero());
-
+        thrust::fill(exec, phases_gpu.begin(), phases_gpu.end(), -1);
+        thrust::fill(exec, forces_external_gpu.begin(), forces_external_gpu.end(), Vectorr::Zero());
     }
 
     void ParticlesContainer::reorder()
@@ -125,58 +122,58 @@ namespace pyroclastmpm
     void ParticlesContainer::output_vtk()
     {
 
-        vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+        // vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 
-        cpu_array<Matrix3r> stresses_cpu = stresses_gpu;
-        cpu_array<Matrixr> velocity_gradient_cpu = velocity_gradient_gpu;
-        cpu_array<Matrixr> F_cpu = F_gpu;
-        cpu_array<Matrixr> Fp_cpu = FP_gpu;
-        cpu_array<Matrixr> strain_increments_cpu = strain_increments_gpu;
-        cpu_array<Vectorr> velocities_cpu = velocities_gpu;
-        cpu_array<Vectorr> positions_cpu = positions_gpu;
-        cpu_array<Real> masses_cpu = masses_gpu;
-        cpu_array<Real> volumes_cpu = volumes_gpu;
-        cpu_array<Real> volumes_original_cpu = volumes_original_gpu;
-        cpu_array<Real> densities_cpu = densities_gpu;
-        cpu_array<Real> mu_cpu = mu_gpu;
-        cpu_array<Real> g_cpu = g_gpu;
-        cpu_array<Real> ddg_cpu = ddg_gpu;
-        cpu_array<int> colors_cpu = colors_gpu;
-        cpu_array<int> phases_cpu = phases_gpu;
+        // cpu_array<Matrix3r> stresses_cpu = stresses_gpu;
+        // cpu_array<Matrixr> velocity_gradient_cpu = velocity_gradient_gpu;
+        // cpu_array<Matrixr> F_cpu = F_gpu;
+        // cpu_array<Matrixr> Fp_cpu = FP_gpu;
+        // cpu_array<Matrixr> strain_increments_cpu = strain_increments_gpu;
+        // cpu_array<Vectorr> velocities_cpu = velocities_gpu;
+        // cpu_array<Vectorr> positions_cpu = positions_gpu;
+        // cpu_array<Real> masses_cpu = masses_gpu;
+        // cpu_array<Real> volumes_cpu = volumes_gpu;
+        // cpu_array<Real> volumes_original_cpu = volumes_original_gpu;
+        // cpu_array<Real> densities_cpu = densities_gpu;
+        // cpu_array<Real> mu_cpu = mu_gpu;
+        // cpu_array<Real> g_cpu = g_gpu;
+        // cpu_array<Real> ddg_cpu = ddg_gpu;
+        // cpu_array<int> colors_cpu = colors_gpu;
+        // cpu_array<int> phases_cpu = phases_gpu;
 
-        // get pressure
-        cpu_array<Real> pressures_cpu;
-        pressures_cpu.resize(num_particles);
+        // // get pressure
+        // cpu_array<Real> pressures_cpu;
+        // pressures_cpu.resize(num_particles);
 
-        for (int pi = 0; pi < num_particles; pi++)
-        {
-            pressures_cpu[pi] = -(stresses_cpu[pi].block(0, 0, DIM, DIM).trace() / DIM);
-        }
+        // for (int pi = 0; pi < num_particles; pi++)
+        // {
+        //     pressures_cpu[pi] = -(stresses_cpu[pi].block(0, 0, DIM, DIM).trace() / DIM);
+        // }
 
-        set_vtk_points(positions_cpu, polydata);
-        set_vtk_pointdata<Vectorr>(positions_cpu, polydata, "Positions");
-        set_vtk_pointdata<Vectorr>(velocities_cpu, polydata, "Velocity");
-        set_vtk_pointdata<Matrix3r>(stresses_cpu, polydata, "Stress");
-        set_vtk_pointdata<Matrixr>(velocity_gradient_cpu, polydata, "VelocityGradient");
-        set_vtk_pointdata<Matrixr>(F_cpu, polydata, "DeformationMatrix");
-        set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass");
-        set_vtk_pointdata<Real>(volumes_cpu, polydata, "Volume");
-        set_vtk_pointdata<Real>(volumes_original_cpu, polydata, "VolumeOriginal");
-        set_vtk_pointdata<uint8_t>(colors_cpu, polydata, "Color");
-        set_vtk_pointdata<Matrixr>(strain_increments_cpu, polydata, "Strain_Increments");
-        set_vtk_pointdata<Real>(densities_cpu, polydata, "Density");
-        set_vtk_pointdata<uint8_t>(phases_cpu, polydata, "Phase");
-        set_vtk_pointdata<Real>(pressures_cpu, polydata, "Pressure");
-        set_vtk_pointdata<Matrixr>(Fp_cpu, polydata, "PlasticDeformation");
-        set_vtk_pointdata<Real>(mu_cpu, polydata, "FrictionCoef");
-        set_vtk_pointdata<Real>(g_cpu, polydata, "G");
-        set_vtk_pointdata<Real>(ddg_cpu, polydata, "DDG");
+        // set_vtk_points(positions_cpu, polydata);
+        // set_vtk_pointdata<Vectorr>(positions_cpu, polydata, "Positions");
+        // set_vtk_pointdata<Vectorr>(velocities_cpu, polydata, "Velocity");
+        // set_vtk_pointdata<Matrix3r>(stresses_cpu, polydata, "Stress");
+        // set_vtk_pointdata<Matrixr>(velocity_gradient_cpu, polydata, "VelocityGradient");
+        // set_vtk_pointdata<Matrixr>(F_cpu, polydata, "DeformationMatrix");
+        // set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass");
+        // set_vtk_pointdata<Real>(volumes_cpu, polydata, "Volume");
+        // set_vtk_pointdata<Real>(volumes_original_cpu, polydata, "VolumeOriginal");
+        // set_vtk_pointdata<uint8_t>(colors_cpu, polydata, "Color");
+        // set_vtk_pointdata<Matrixr>(strain_increments_cpu, polydata, "Strain_Increments");
+        // set_vtk_pointdata<Real>(densities_cpu, polydata, "Density");
+        // set_vtk_pointdata<uint8_t>(phases_cpu, polydata, "Phase");
+        // set_vtk_pointdata<Real>(pressures_cpu, polydata, "Pressure");
+        // set_vtk_pointdata<Matrixr>(Fp_cpu, polydata, "PlasticDeformation");
+        // set_vtk_pointdata<Real>(mu_cpu, polydata, "FrictionCoef");
+        // set_vtk_pointdata<Real>(g_cpu, polydata, "G");
+        // set_vtk_pointdata<Real>(ddg_cpu, polydata, "DDG");
 
-        // loop over output_formats
-        for (auto format : output_formats)
-        {
-            write_vtk_polydata(polydata, "particles", format);
-        }
+        // // loop over output_formats
+        // for (auto format : output_formats)
+        // {
+        //     write_vtk_polydata(polydata, "particles", format);
+        // }
     }
 
     void ParticlesContainer::set_spatialpartition(const Vectorr start,

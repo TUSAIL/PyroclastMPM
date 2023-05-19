@@ -13,7 +13,7 @@ set(
   # "boundaryconditions/planardomain/planardomain_kernels.cu"
   # "boundaryconditions/nodedomain/nodedomain.cu"
   # "boundaryconditions/nodedomain/nodedomain_kernels.cu"
-  # "materials/linearelastic/linearelasticmat.cu"
+  "materials/linearelastic/linearelastic.cu"
   # "materials/linearelastic/linearelasticmat_kernels.cu"
   # "materials/newtonfluid/newtonfluidmat.cu"
   # "materials/newtonfluid/newtonfluidmat_kernels.cu"
@@ -24,16 +24,20 @@ set(
   # "materials/localrheo/localrheomat.cu"
   # "materials/druckerprager/druckerpragermat_kernels.cu"
   # "materials/druckerprager/druckerpragermat.cu"
-  # "solver/solver.cu"
-  # "shapefunctions/shapefunction_kernels.cu"
-  # "solver/usl/usl.cu"
+  
+  
+  "solver/solver.cu"
+
+
+  "shapefunction/shapefunction.cu"
+  "solver/usl/usl.cu"
   # "solver/usl/usl_kernels.cu"
   # "solver/musl/musl.cu"
   # "solver/musl/musl_kernels.cu"
   # "solver/tlmpm/tlmpm.cu"
   # "solver/tlmpm/tlmpm_kernels.cu"
 
-  # "particles/particles.cu"
+  "particles/particles.cu"
   # "particles/particles_kernels.cu"
   "nodes/nodes.cu"
 
@@ -44,7 +48,7 @@ set(
   # "common/output.cu"
 
   # "common/tools.cu"
-  # "spatialpartition/spatialpartition.cu"
+  "spatialpartition/spatialpartition.cu"
   # "spatialpartition/spatialpartition_kernels.cu"
 
   # # future
@@ -73,6 +77,10 @@ if(BUILD_CUDA)
     >
   )
   set_target_properties(pyroclastmpm PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+else()
+#let g++ compile cuda files
+set_source_files_properties(${PyroclastSrc} PROPERTIES LANGUAGE CXX)
 endif()
 
 # vtk_module_autoinit(

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <thrust/execution_policy.h>
-#include <thrust/unique.h>
-#include <thrust/remove.h>
+// #include <thrust/execution_policy.h>
+// #include <thrust/unique.h>
+// #include <thrust/remove.h>
 #include "pyroclastmpm/common/types_common.cuh"
 #include "pyroclastmpm/common/helper.cuh"
-#include "pyroclastmpm/common/output.cuh"
-#include "pyroclastmpm/particles/particles_kernels.cuh"
+// #include "pyroclastmpm/common/output.cuh"
+// #include "pyroclastmpm/particles/particles_kernels.cuh"
 #include "pyroclastmpm/spatialpartition/spatialpartition.cuh"
 
 namespace pyroclastmpm
@@ -157,7 +157,7 @@ namespace pyroclastmpm
     /*! @brief Total Number of particles */
     int num_particles;
 
-    GPULaunchConfig launch_config;
+    // GPULaunchConfig launch_config;
 
     cpu_array<OutputType> output_formats;
 

@@ -52,7 +52,7 @@ TEST(USL, Solve)
   usl_solver.particles.stresses_gpu = stresses;
   usl_solver.particles.partition();
 
-  usl_solver.calculate_shape_function();
+  calculate_shape_function(usl_solver.nodes, usl_solver.particles);
 
   usl_solver.P2G();
 

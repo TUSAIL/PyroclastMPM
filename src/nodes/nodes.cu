@@ -2,40 +2,43 @@
 
 namespace pyroclastmpm
 {
+
 #ifdef CUDA_ENABLED
   extern Real __constant__ dt_gpu;
 #else
   extern Real dt_cpu;
 #endif
 
-
-  struct IntegrateFunctor
+  NodesContainer::NodesContainer(const Vectorr _node_start,
+                                 const Vectorr _node_end,
+                                 const Real _node_spacing,
+                                 const cpu_array<OutputType> _output_formats)
+      : node_start(_node_start),
+        node_end(_node_end),
+        node_spacing(_node_spacing),
+        output_formats(_output_formats)
   {
-    template <typename Tuple>
-    __host__ __device__ void operator()(Tuple tuple) const
+    inv_node_spacing = 1.0 / node_spacing;
+    num_nodes_total = 1;
+    num_nodes = Vectori::Ones();
+
+    for (int axis = 0; axis < DIM; axis++)
     {
-      Vectorr &moments_nt = thrust::get<0>(tuple);
-      Vectorr &forces_total = thrust::get<1>(tuple);
-      const Vectorr &forces_external = thrust::get<2>(tuple);
-      const Vectorr &forces_internal = thrust::get<3>(tuple);
-      const Vectorr &moments = thrust::get<4>(tuple);
-      const Real &mass = thrust::get<5>(tuple);
-      if (mass <= 0.000000001)
-      {
-        return;
-      }
-      const Vectorr ftotal = forces_internal + forces_external;
-      forces_total = ftotal;
-#ifdef CUDA_ENABLED
-      moments_nt = moments + ftotal * dt_gpu;
-#else
-      moments_nt = moments + ftotal * dt_cpu;
-#endif
+      num_nodes[axis] =
+          (int)((node_end[axis] - node_start[axis]) / node_spacing) + 1;
+      num_nodes_total *= num_nodes[axis];
     }
-  };
+    set_default_device<Vectorr>(num_nodes_total, {}, moments_gpu, Vectorr::Zero());
+    set_default_device<Vectorr>(num_nodes_total, {}, moments_nt_gpu, Vectorr::Zero());
+    set_default_device<Vectorr>(num_nodes_total, {}, forces_external_gpu, Vectorr::Zero());
+    set_default_device<Vectorr>(num_nodes_total, {}, forces_internal_gpu, Vectorr::Zero());
+    set_default_device<Vectorr>(num_nodes_total, {}, forces_total_gpu, Vectorr::Zero());
+    set_default_device<Real>(num_nodes_total, {}, masses_gpu, 0.);
+    set_default_device<Vectori>(num_nodes_total, {}, node_ids_gpu, Vectori::Zero());
+    set_default_device<Vectori>(num_nodes_total, {}, node_types_gpu, Vectori::Zero());
+    reset();
 
-  void GiveNodeIds(gpu_array<Vectori> &node_ids_gpu, const Vectori num_nodes)
-  {
+    // Calculate integer placement of nodes (x,y,z) along the grid
     cpu_array<Vectori> node_ids_cpu = node_ids_gpu;
 #if DIM == 1
     for (size_t xi = 0; xi < num_nodes; xi++)
@@ -72,45 +75,6 @@ namespace pyroclastmpm
     node_ids_gpu = node_ids_cpu;
   }
 
-  NodesContainer::NodesContainer(const Vectorr _node_start,
-                                 const Vectorr _node_end,
-                                 const Real _node_spacing,
-                                 const cpu_array<OutputType> _output_formats)
-      : node_start(_node_start),
-        node_end(_node_end),
-        node_spacing(_node_spacing),
-        output_formats(_output_formats)
-  {
-    inv_node_spacing = 1.0 / node_spacing;
-    num_nodes_total = 1;
-
-#if DIM == 3
-    num_nodes = Vectori({1, 1, 1});
-#elif DIM == 2
-    num_nodes = Vectori({1, 1});
-#else
-    num_nodes = Vectori(1);
-#endif
-
-    for (int axis = 0; axis < DIM; axis++)
-    {
-      num_nodes[axis] =
-          (int)((node_end[axis] - node_start[axis]) / node_spacing) + 1;
-      num_nodes_total *= num_nodes[axis];
-    }
-    set_default_device<Vectorr>(num_nodes_total, {}, moments_gpu, Vectorr::Zero());
-    set_default_device<Vectorr>(num_nodes_total, {}, moments_nt_gpu, Vectorr::Zero());
-    set_default_device<Vectorr>(num_nodes_total, {}, forces_external_gpu, Vectorr::Zero());
-    set_default_device<Vectorr>(num_nodes_total, {}, forces_internal_gpu, Vectorr::Zero());
-    set_default_device<Vectorr>(num_nodes_total, {}, forces_total_gpu, Vectorr::Zero());
-    set_default_device<Real>(num_nodes_total, {}, masses_gpu, 0.);
-    set_default_device<Vectori>(num_nodes_total, {}, node_ids_gpu, Vectori::Zero());
-    set_default_device<Vectori>(num_nodes_total, {}, node_types_gpu, Vectori::Zero());
-    reset();
-
-    GiveNodeIds(node_ids_gpu, num_nodes);
-  }
-
   NodesContainer::~NodesContainer() {}
 
   void NodesContainer::reset()
@@ -129,11 +93,34 @@ namespace pyroclastmpm
     thrust::fill(exec, masses_gpu.begin(), masses_gpu.end(), 0.);
   }
 
+  struct IntegrateFunctor
+  {
+    template <typename Tuple>
+    __host__ __device__ void operator()(Tuple tuple) const
+    {
+      Vectorr &moments_nt = thrust::get<0>(tuple);
+      Vectorr &forces_total = thrust::get<1>(tuple);
+      const Vectorr &forces_external = thrust::get<2>(tuple);
+      const Vectorr &forces_internal = thrust::get<3>(tuple);
+      const Vectorr &moments = thrust::get<4>(tuple);
+      const Real &mass = thrust::get<5>(tuple);
+      if (mass <= 0.000000001)
+      {
+        return;
+      }
+      const Vectorr ftotal = forces_internal + forces_external;
+      forces_total = ftotal;
+#ifdef CUDA_ENABLED
+      moments_nt = moments + ftotal * dt_gpu;
+#else
+      moments_nt = moments + ftotal * dt_cpu;
+#endif
+    }
+  };
+
   void NodesContainer::integrate()
   {
-
     execution_policy exec;
-
     PARALLEL_FOR_EACH_ZIP(exec,
                           num_nodes_total,
                           IntegrateFunctor(),
@@ -160,14 +147,7 @@ namespace pyroclastmpm
 
   std::vector<Vectorr> NodesContainer::give_node_coords_stl()
   {
-    gpu_array<Vectorr> node_coords_cpu;
-    node_coords_cpu.resize(num_nodes_total);
-    cpu_array<Vectori> node_ids_cpu = node_ids_gpu;
-    for (size_t i = 0; i < num_nodes_total; i++)
-    {
-      node_coords_cpu[i] = node_start + node_ids_cpu[i].cast<Real>() * node_spacing;
-    }
-    gpu_array<Vectorr> node_coords_gpu = node_coords_cpu;
+    gpu_array<Vectorr> node_coords_gpu = give_node_coords();
     return std::vector<Vectorr>(node_coords_gpu.begin(), node_coords_gpu.end());
   }
 

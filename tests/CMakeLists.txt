@@ -24,6 +24,9 @@ if(BUILD_CUDA)
       >
   )
   set_target_properties(tests PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+else()
+  #let g++ compile cuda files
+  set_source_files_properties(${PyroclastSrc_test} PROPERTIES LANGUAGE CXX)
 endif()
 
 

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "pyroclastmpm/materials/linearelastic/linearelasticmat.cuh"
+#include "pyroclastmpm/materials/linearelastic.cuh"
 
 #include "pyroclastmpm/particles/particles.cuh"
 
@@ -25,7 +25,7 @@ using namespace pyroclastmpm;
  * functions
  *
  */
-TEST(Solver, Constructor1D) {
+TEST(Solver, Constructor) {
   set_globals(0.1, 1, LinearShapeFunction, "output");
   std::vector<Vectorr> pos = {Vectorr::Zero()};
   
