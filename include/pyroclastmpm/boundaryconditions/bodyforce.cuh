@@ -1,6 +1,5 @@
 #pragma once
 
-#include "pyroclastmpm/boundaryconditions/bodyforce/bodyforce_kernels.cuh"
 #include "pyroclastmpm/boundaryconditions/boundaryconditions.cuh"
 #include "pyroclastmpm/nodes/nodes.cuh"
 

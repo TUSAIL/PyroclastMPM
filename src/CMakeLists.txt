@@ -4,7 +4,7 @@ set(
   PyroclastSrc
 
   # "boundaryconditions/bodyforce/bodyforce_kernels.cu"
-  # "boundaryconditions/bodyforce/bodyforce.cu"
+  "boundaryconditions/bodyforce.cu"
   "boundaryconditions/gravity.cu"
   # "boundaryconditions/rigidparticles/rigidparticles.cu"
   # "boundaryconditions/rigidparticles/rigidparticles_kernels.cu"
