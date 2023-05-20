@@ -1,0 +1,20 @@
+{
+  "name": "PyroclastMPM dev CPU",
+  "build": { "dockerfile": "Dockerfile" },
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint"]
+    },
+    "terminal.integrated.shell.linux": "bash",
+    "terminal.integrated.profiles.linux": {
+      "bash (container default)": {
+        "path": "/usr/bin/bash",
+        "overrideName": true
+      }
+    }
+  },
+  
+  "postCreateCommand": "poetry -n install && poetry -n shell", // install no prompt
+  "forwardPorts": [3000]
+}
