@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pyroclastmpm/materials/newtonfluid/newtonfluidmat.cuh"
+#include "pyroclastmpm/materials/newtonfluid.cuh"
 
 // Functions to test
 // [ ] NewtonFluid::NewtonFluid (Tested implicitly via stress_update)

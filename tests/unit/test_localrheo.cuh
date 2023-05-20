@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pyroclastmpm/materials/localrheo/localrheomat.cuh"
+#include "pyroclastmpm/materials/localrheo.cuh"
 
 // Functions to test
 // [ ] LocalGranularRheology::LocalGranularRheology (Tested implicitly via stress_update)

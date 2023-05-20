@@ -1,7 +1,6 @@
 #pragma once
 
 #include "pyroclastmpm/materials/materials.cuh"
-#include "pyroclastmpm/materials/newtonfluid/newtonfluidmat_kernels.cuh"
 
 namespace pyroclastmpm
 {

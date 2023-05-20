@@ -81,14 +81,11 @@ namespace pyroclastmpm
                   }
                   else if (shape_function_type == CubicShapeFunction)
                   {
-
-                        printf("Node types not implemented :( fix this first \n");
                         for (int axis = 0; axis < DIM; axis++)
                         {
                               N[axis] = cubic(relative_coordinates[axis], node_type[axis]);
                               dN[axis] = derivative_cubic(relative_coordinates[axis], inv_cell_size, node_type[axis]);
                         }
-                        printf(" N %f %f  \n", N[0], N[1]);
                   }
                   else
                   {

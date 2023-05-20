@@ -9,6 +9,9 @@ namespace pyroclastmpm
   extern Real dt_cpu;
 #endif
 
+
+  extern SFType shape_function_cpu;
+
   NodesContainer::NodesContainer(const Vectorr _node_start,
                                  const Vectorr _node_end,
                                  const Real _node_spacing,
@@ -40,6 +43,7 @@ namespace pyroclastmpm
 
     // Calculate integer placement of nodes (x,y,z) along the grid
     cpu_array<Vectori> node_ids_cpu = node_ids_gpu;
+    cpu_array<Vectori> node_types_cpu = node_types_gpu;
 #if DIM == 1
     for (size_t xi = 0; xi < num_nodes; xi++)
     {
@@ -72,6 +76,36 @@ namespace pyroclastmpm
       }
     }
 #endif
+
+    for (size_t index = 0; index < num_nodes_total; index++)
+    {
+      for (size_t axis = 0; axis < DIM; axis++)
+      {
+        if (shape_function_cpu == CubicShapeFunction)
+        {
+          if ((node_ids_cpu[index][axis] == 0) | (node_ids_cpu[index][axis] == num_nodes[axis] - 1))
+          {
+            // Cell at boundary
+            node_types_cpu[index][axis] = 1;
+          }
+          else if (node_ids_cpu[index][axis] == 1)
+          {
+            // Cell right of boundary
+            node_types_cpu[index][axis] = 2;
+          }
+          else if (node_ids_cpu[index][axis] == node_ids_cpu[index][axis] - 2)
+          {
+            // Cell left of boundary
+            node_types_cpu[index][axis] = 4;
+          }
+          else
+          {
+            node_types_cpu[index][axis] = 3;
+          }
+        }
+      }
+    }
+    node_types_gpu = node_types_cpu;
     node_ids_gpu = node_ids_cpu;
 
 #ifdef CUDA_ENABLED

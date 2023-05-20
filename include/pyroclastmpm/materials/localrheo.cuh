@@ -1,6 +1,5 @@
-// #pragma once
+#pragma once
 
-#include "pyroclastmpm/materials/nonlocalngf/nonlocalngfmat_kernels.cuh"
 #include "pyroclastmpm/materials/materials.cuh"
 
 namespace pyroclastmpm
@@ -9,13 +8,14 @@ namespace pyroclastmpm
   class ParticlesContainer; // Forward declarations
 
   /**
-   * @brief Non local granular fluidity model based on Amin Haeri's work (2022)
+   * @brief Local Granular Rheology material. This material is based on the mu(I)
+   * rheology of Dunatunga et al. (2015).
    *
    */
-  struct NonLocalNGF : Material
+  struct LocalGranularRheology : Material
   {
     /**
-     * @brief Construct a  new non local granular fluidity model
+     * @brief Construct a new Local Granular Rheology object
      *
      * @param _density material density
      * @param _E Young's modulus
@@ -26,25 +26,23 @@ namespace pyroclastmpm
      * @param _rho_c critical density
      * @param _particle_diameter particle diameter
      * @param _particle_density particle solid density
-     * @param _A nonlocal amplitude
      */
-    NonLocalNGF(const Real _density,
-                const Real _E,
-                const Real _pois,
-                const Real _I0,
-                const Real _mu_s,
-                const Real _mu_2,
-                const Real _rho_c,
-                const Real _particle_diameter,
-                const Real _particle_density,
-                const Real _A);
+    LocalGranularRheology(const Real _density,
+                          const Real _E,
+                          const Real _pois,
+                          const Real _I0,
+                          const Real _mu_s,
+                          const Real _mu_2,
+                          const Real _rho_c,
+                          const Real _particle_diameter,
+                          const Real _particle_density);
 
     /**
      * @brief Destroy the Local Granular Rheology object
      *
      *
      */
-    ~NonLocalNGF();
+    ~LocalGranularRheology();
 
     /**
      * @brief Perform stress update
@@ -53,6 +51,13 @@ namespace pyroclastmpm
      * @param mat_id material id
      */
     void stress_update(ParticlesContainer &particles_ptr, int mat_id) override;
+
+    void mp_benchmark(
+      std::vector<Matrix3r> &_stress_cpu,
+      std::vector<uint8_t> &_phases_cpu,
+      const std::vector<Matrixr> _velocity_gradient_cpu,
+      const std::vector<Real> _volume_cpu,
+      const std::vector<Real> _mass_cpu);
 
     /**
      * @brief Calculated value
@@ -112,9 +117,6 @@ namespace pyroclastmpm
 
     /** @brief Bulk modulus (K) */
     Real bulk_modulus;
-
-    /** @brief Non local amplitude (A=0 for local) */
-    Real A;
   };
 
 } // namespace pyroclastmpm

@@ -133,64 +133,64 @@ TEST(ShapeFunctions, CubicShapeFunction)
     sum_psi += psi[i];
   }
 
-  // EXPECT_NEAR(sum_psi, 1., 0.0001);
+  EXPECT_NEAR(sum_psi, 1., 0.0001);
 
-//   // we only check some nodes
-//   // should already give us an idea if the function is correct
-// #if DIM == 3
-//   EXPECT_NEAR(psi[0], 0.00042187, 0.0001);
-//   EXPECT_NEAR(psi[1], 0.00168750, 0.0001);
-//   EXPECT_NEAR(psi[2], 0.00042187, 0.0001);
-//   EXPECT_NEAR(psi[3], 0, 0.0001);
-//   EXPECT_NEAR(psi[4], 0.00970313, 0.0001);
-//   EXPECT_NEAR(psi[5], 0.038812, 0.0001);
-//   EXPECT_NEAR(psi[6], 0.00970313, 0.0001);
-//   EXPECT_NEAR(psi[7], 0., 0.0001);
+  // we only check some nodes
+  // should already give us an idea if the function is correct
+#if DIM == 3
+  EXPECT_NEAR(psi[0], 0.00042187, 0.0001);
+  EXPECT_NEAR(psi[1], 0.00168750, 0.0001);
+  EXPECT_NEAR(psi[2], 0.00042187, 0.0001);
+  EXPECT_NEAR(psi[3], 0, 0.0001);
+  EXPECT_NEAR(psi[4], 0.00970313, 0.0001);
+  EXPECT_NEAR(psi[5], 0.038812, 0.0001);
+  EXPECT_NEAR(psi[6], 0.00970313, 0.0001);
+  EXPECT_NEAR(psi[7], 0., 0.0001);
 
-//   EXPECT_NEAR(dpsi[0][0], -0.02531, 0.0001);
-//   EXPECT_NEAR(dpsi[0][1], -0.01406, 0.0001);
-//   EXPECT_NEAR(dpsi[0][2], -0.01266, 0.0001);
+  EXPECT_NEAR(dpsi[0][0], -0.02531, 0.0001);
+  EXPECT_NEAR(dpsi[0][1], -0.01406, 0.0001);
+  EXPECT_NEAR(dpsi[0][2], -0.01266, 0.0001);
 
-//   EXPECT_NEAR(dpsi[1][0], -0.1013, 0.0001);
-//   EXPECT_NEAR(dpsi[1][1], -0.05625, 0.0001);
-//   EXPECT_NEAR(dpsi[1][2], 0, 0.0001);
+  EXPECT_NEAR(dpsi[1][0], -0.1013, 0.0001);
+  EXPECT_NEAR(dpsi[1][1], -0.05625, 0.0001);
+  EXPECT_NEAR(dpsi[1][2], 0, 0.0001);
 
-//   EXPECT_NEAR(dpsi[2][0], -0.02531, 0.0001);
-//   EXPECT_NEAR(dpsi[2][1], -0.01406, 0.0001);
-//   EXPECT_NEAR(dpsi[2][2], 0.01266, 0.0001);
+  EXPECT_NEAR(dpsi[2][0], -0.02531, 0.0001);
+  EXPECT_NEAR(dpsi[2][1], -0.01406, 0.0001);
+  EXPECT_NEAR(dpsi[2][2], 0.01266, 0.0001);
 
-//   EXPECT_NEAR(dpsi[3][0], 0, 0.0001);
-//   EXPECT_NEAR(dpsi[3][1], 0, 0.0001);
-//   EXPECT_NEAR(dpsi[3][2], 0, 0.0001);
+  EXPECT_NEAR(dpsi[3][0], 0, 0.0001);
+  EXPECT_NEAR(dpsi[3][1], 0, 0.0001);
+  EXPECT_NEAR(dpsi[3][2], 0, 0.0001);
   
-//   EXPECT_NEAR(dpsi[4][0], -0.1266, 0.0001);
-//   EXPECT_NEAR(dpsi[4][1], -0.3234, 0.0001);
-//   EXPECT_NEAR(dpsi[4][2], -0.2911, 0.0001);
+  EXPECT_NEAR(dpsi[4][0], -0.1266, 0.0001);
+  EXPECT_NEAR(dpsi[4][1], -0.3234, 0.0001);
+  EXPECT_NEAR(dpsi[4][2], -0.2911, 0.0001);
   
-//   EXPECT_NEAR(dpsi[5][0], -0.5063, 0.0001);
-//   EXPECT_NEAR(dpsi[5][1],  -1.29375, 0.0001);
-//   EXPECT_NEAR(dpsi[5][2], 0, 0.0001);
+  EXPECT_NEAR(dpsi[5][0], -0.5063, 0.0001);
+  EXPECT_NEAR(dpsi[5][1],  -1.29375, 0.0001);
+  EXPECT_NEAR(dpsi[5][2], 0, 0.0001);
 
-// #elif DIM == 2
-//   EXPECT_NEAR(psi[0], 0.0025312525, 0.0001);
-//   EXPECT_NEAR(psi[1], 0.0582187771, 0.0001);
-//   EXPECT_NEAR(psi[2], 0.0582187585, 0.0001);
-//   EXPECT_NEAR(psi[3], 0.002531249076128006,.0001);
+#elif DIM == 2
+  EXPECT_NEAR(psi[0], 0.0025312525, 0.0001);
+  EXPECT_NEAR(psi[1], 0.0582187771, 0.0001);
+  EXPECT_NEAR(psi[2], 0.0582187585, 0.0001);
+  EXPECT_NEAR(psi[3], 0.002531249076128006,.0001);
 
-//   EXPECT_NEAR(dpsi[0][0], -0.1518751, 0.0001);
-//   EXPECT_NEAR(dpsi[0][1], -0.084375, 0.0001);
-//   EXPECT_NEAR(dpsi[1][0], -0.7593751, 0.0001);
-//   EXPECT_NEAR(dpsi[1][1], -1.94062566, 0.0001);
-//   EXPECT_NEAR(dpsi[2][0], 0.759375274, 0.0001);
-//   EXPECT_NEAR(dpsi[2][1], -1.94062507, 0.0001);
-//   EXPECT_NEAR(dpsi[3][0],  0.15187497, 0.0001);
-//   EXPECT_NEAR(dpsi[3][1], -0.08437495, 0.0001);
+  EXPECT_NEAR(dpsi[0][0], -0.1518751, 0.0001);
+  EXPECT_NEAR(dpsi[0][1], -0.084375, 0.0001);
+  EXPECT_NEAR(dpsi[1][0], -0.7593751, 0.0001);
+  EXPECT_NEAR(dpsi[1][1], -1.94062566, 0.0001);
+  EXPECT_NEAR(dpsi[2][0], 0.759375274, 0.0001);
+  EXPECT_NEAR(dpsi[2][1], -1.94062507, 0.0001);
+  EXPECT_NEAR(dpsi[3][0],  0.15187497, 0.0001);
+  EXPECT_NEAR(dpsi[3][1], -0.08437495, 0.0001);
 
-// #else
-//   EXPECT_NEAR(psi[0], 0.03600000, 0.0001);
-//   EXPECT_NEAR(psi[1], 0.52799999, 0.0001);
+#else
+  EXPECT_NEAR(psi[0], 0.03600000, 0.0001);
+  EXPECT_NEAR(psi[1], 0.52799999, 0.0001);
 
-//   EXPECT_NEAR(dpsi[0][0], -1.80000019, 0.0001);
-//   EXPECT_NEAR(dpsi[0][1], -6.39999961, 0.0001);
-// #endif
+  EXPECT_NEAR(dpsi[0][0], -1.80000019, 0.0001);
+  EXPECT_NEAR(dpsi[0][1], -6.39999961, 0.0001);
+#endif
 }

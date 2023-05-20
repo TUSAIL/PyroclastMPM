@@ -1,4 +1,4 @@
-#include "pyroclastmpm/boundaryconditions/gravity/gravity.cuh"
+#include "pyroclastmpm/boundaryconditions/gravity.cuh"
 
 namespace pyroclastmpm {
 
@@ -23,6 +23,25 @@ Gravity::Gravity(Vectorr _gravity,
   gravity_end = _gravity_end;
 }
 
+struct CalculateGravity
+  {
+    Vectorr gravity;
+    CalculateGravity(
+        const Vectorr _gravity) : gravity(_gravity){};
+
+    template <typename Tuple>
+    __host__ __device__ void operator()(Tuple tuple) const
+    {
+
+      Vectorr &force = thrust::get<0>(tuple);
+      const Real mass = thrust::get<1>(tuple);
+
+      if (mass <= 0.000000001) {return;}
+
+      force += gravity * mass;
+    }
+  };
+
 void Gravity::apply_on_nodes_f_ext(NodesContainer& nodes_ref) {
 
   const Real ramp_factor = ((Real)global_step_cpu)/ramp_step;
@@ -34,13 +53,14 @@ void Gravity::apply_on_nodes_f_ext(NodesContainer& nodes_ref) {
     }
 
   }
+  execution_policy exec;
+  PARALLEL_FOR_EACH_ZIP(exec,
+                        nodes_ref.num_nodes_total,
+                        CalculateGravity(gravity),
+                        nodes_ref.forces_external_gpu.begin(),
+                        nodes_ref.masses_gpu.begin());
 
-  KERNEL_APPLY_GRAVITY<<<nodes_ref.launch_config.tpb,
-                         nodes_ref.launch_config.bpg>>>(
-      thrust::raw_pointer_cast(nodes_ref.forces_external_gpu.data()),
-      thrust::raw_pointer_cast(nodes_ref.masses_gpu.data()), gravity,
-      nodes_ref.num_nodes_total);
-  gpuErrchk(cudaDeviceSynchronize());
+
   
 };
 

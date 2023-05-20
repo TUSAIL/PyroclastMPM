@@ -5,27 +5,18 @@ set(
 
   # "boundaryconditions/bodyforce/bodyforce_kernels.cu"
   # "boundaryconditions/bodyforce/bodyforce.cu"
-  # "boundaryconditions/gravity/gravity.cu"
-  # "boundaryconditions/gravity/gravity_kernels.cu"
+  "boundaryconditions/gravity.cu"
   # "boundaryconditions/rigidparticles/rigidparticles.cu"
   # "boundaryconditions/rigidparticles/rigidparticles_kernels.cu"
   # "boundaryconditions/planardomain/planardomain.cu"
   # "boundaryconditions/planardomain/planardomain_kernels.cu"
   # "boundaryconditions/nodedomain/nodedomain.cu"
   # "boundaryconditions/nodedomain/nodedomain_kernels.cu"
-  "materials/linearelastic/linearelastic.cu"
-  # "materials/linearelastic/linearelasticmat_kernels.cu"
-  # "materials/newtonfluid/newtonfluidmat.cu"
-  # "materials/newtonfluid/newtonfluidmat_kernels.cu"
 
-  # "materials/elastoplastic/elastoplasticmat_kernels.cu"
-  # "materials/elastoplastic/elastoplasticmat.cu"
-  # "materials/localrheo/localrheomat_kernels.cu"
-  # "materials/localrheo/localrheomat.cu"
-  # "materials/druckerprager/druckerpragermat_kernels.cu"
-  # "materials/druckerprager/druckerpragermat.cu"
-  
-  
+  # materials
+  "materials/linearelastic.cu"
+  "materials/newtonfluid.cu"
+  "materials/localrheo.cu"
   "solver/solver.cu"
 
 

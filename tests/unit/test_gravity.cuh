@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pyroclastmpm/boundaryconditions/gravity/gravity.cuh"
+#include "pyroclastmpm/boundaryconditions/gravity.cuh"
 #include "pyroclastmpm/nodes/nodes.cuh"
 
 // #include "pyroclastmpm/particles/particles.cuh"
