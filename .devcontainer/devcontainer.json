@@ -15,6 +15,6 @@
     }
   },
   
-  "postCreateCommand": "poetry -n install && poetry -n shell", // install no prompt
-  "forwardPorts": [3000]
+  "postCreateCommand":"git submodule update --init --recursive &&  poetry -n install", // install no prompt
+  // "forwardPorts": [3000]
 }
