@@ -4,7 +4,11 @@
 
   "customizations": {
     "vscode": {
-      "extensions": ["dbaeumer.vscode-eslint"]
+      "extensions": [
+		"dbaeumer.vscode-eslint",
+		"twxs.cmake",
+		"ms-vscode.cmake-tools"
+	]
     },
     "terminal.integrated.shell.linux": "bash",
     "terminal.integrated.profiles.linux": {
