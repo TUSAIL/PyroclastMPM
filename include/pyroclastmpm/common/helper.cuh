@@ -2,7 +2,6 @@
 
 #include "pyroclastmpm/common/types_common.cuh"
 
-
 namespace pyroclastmpm
 {
 

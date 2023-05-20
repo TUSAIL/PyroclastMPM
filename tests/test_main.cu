@@ -19,8 +19,7 @@
 // #include "unit/test_gravity.cuh"
 // #include "unit/test_bodyforce.cuh"
 // #include "unit/test_rigidparticles.cuh" // Tests needed (fix implementation)
-// #include "unit/test_planardomain.cuh" 
-
+// #include "unit/test_planardomain.cuh"
 
 // // Particles, Nodes, Shape Functions
 #include "unit/test_particles.cuh"
@@ -31,10 +30,9 @@
 #include "unit/test_solver.cuh"
 #include "unit/test_usl.cuh"
 // #include "unit/test_musl.cuh"
-// #include "unit/test_tlmpm.cuh" 
+// #include "unit/test_tlmpm.cuh"
 
-
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

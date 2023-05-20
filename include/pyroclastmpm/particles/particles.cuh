@@ -5,7 +5,7 @@
 // #include <thrust/remove.h>
 #include "pyroclastmpm/common/types_common.cuh"
 #include "pyroclastmpm/common/helper.cuh"
-// #include "pyroclastmpm/common/output.cuh"
+#include "pyroclastmpm/common/output.cuh"
 // #include "pyroclastmpm/particles/particles_kernels.cuh"
 #include "pyroclastmpm/spatialpartition/spatialpartition.cuh"
 
@@ -73,7 +73,7 @@ namespace pyroclastmpm
     void set_spatialpartition(const Vectorr start,
                               const Vectorr end,
                               const Real spacing);
-    
+
     /*! @brief particles' stresses, we allways store 3x3 matrix for stresses */
     gpu_array<Matrix3r> stresses_gpu;
 
@@ -157,14 +157,15 @@ namespace pyroclastmpm
     /*! @brief Total Number of particles */
     int num_particles;
 
-    // GPULaunchConfig launch_config;
+#ifdef CUDA_ENABLED
+    GPULaunchConfig launch_config;
+#endif
 
     cpu_array<OutputType> output_formats;
 
     bool isRestart = false;
 
     int numColors = 0;
-
   };
 
 } // namespace pyroclastmpm

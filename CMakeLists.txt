@@ -38,29 +38,27 @@ else()
     
 endif()
 
-
-
 # EIGEN3
 add_subdirectory(ext/eigen/)
 
 # VTK
-# find_package(VTK REQUIRED
-#     COMPONENTS
-#     CommonCore
-#     CommonDataModel
-#     CommonTransforms
-#     FiltersSources
-#     FiltersCore
-#     FiltersGeneral
-#     FiltersPoints
-#     InfovisCore # DataObject
-#     IOCore
-#     IOExport
-#     IOGeometry
-#     IOXML
-#     IOHDF
-#     # IOXdmf
-# )
+find_package(VTK REQUIRED
+    COMPONENTS
+    CommonCore
+    CommonDataModel
+    CommonTransforms
+    FiltersSources
+    FiltersCore
+    FiltersGeneral
+    FiltersPoints
+    InfovisCore # DataObject
+    IOCore
+    IOExport
+    IOGeometry
+    IOXML
+    IOHDF
+    # IOXdmf
+)
 
 # include_directories(${VTK_INCLUDE_DIRS})
 
@@ -85,10 +83,10 @@ endif()
 #     add_subdirectory(doc)
 # endif()
 
-# if(BUILD_PYTHON)
-#     add_subdirectory(ext/pybind11)
-#     add_subdirectory(python/pyroclastmpm)
-# endif()
+if(BUILD_PYTHON)
+    add_subdirectory(ext/pybind11)
+    add_subdirectory(python/pyroclastmpm)
+endif()
 
 # Add an alias target for use if this project is included as a subproject in another project
 add_library(pyroclastmpm::pyroclastmpm ALIAS pyroclastmpm)

@@ -36,7 +36,7 @@ namespace pyroclastmpm
         cpu_array<BoundaryConditionType> _boundaryconditions =
             cpu_array<BoundaryConditionType>(),
         Real _alpha = 0.99);
-        
+
     // FUNCTIONS
     /**
      * @brief Particle to grid update (velocity gather)

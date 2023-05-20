@@ -116,7 +116,7 @@ namespace pyroclastmpm
 
     std::string output_directory = output_directory_cpu;
     std::string filename =
-        output_directory + "/" + filestem +  std::to_string(global_step_cpu);
+        output_directory + "/" + filestem + std::to_string(global_step_cpu);
 
     if (output_type == VTK)
     {

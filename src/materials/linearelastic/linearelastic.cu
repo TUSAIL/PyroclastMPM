@@ -62,9 +62,6 @@ namespace pyroclastmpm
       const Matrixr strain_increments = deformation_matrix * dt_cpu;
 #endif
 
-
-
-
 #if DIM == 3
       Matrixr cauchy_stress = stress;
 #else

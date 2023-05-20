@@ -5,20 +5,27 @@ from .particles import ParticlesContainer
 from .nodes import NodesContainer
 
 from .boundaryconditions import (
-    Gravity,
+    # Gravity,
     BoundaryCondition,
-    BodyForce,
-    RigidParticles,
-    PlanarDomain,
-    NodeDomain
+    # BodyForce,
+    # RigidParticles,
+    # PlanarDomain,
+    # NodeDomain
 )
 
-from .materials import (Material, LinearElastic, NewtonFluid,
-                        LocalGranularRheology,
-                        DruckerPrager
-                        )
+from .materials import (
+    Material,
+    LinearElastic,
+    # NewtonFluid,
+    # LocalGranularRheology,
+    # DruckerPrager
+    )
 
-from .solver import USL, TLMPM, MUSL
+from .solver import (
+                     USL, 
+                    #  TLMPM,
+                    #  MUSL
+                     )
 
 from .pyroclastmpm_pybind import (
     LinearShapeFunction,

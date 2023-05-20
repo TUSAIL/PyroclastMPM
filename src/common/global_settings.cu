@@ -29,34 +29,34 @@ namespace pyroclastmpm
   int window_size_cpu;
 
   int particles_per_cell_cpu;
-  #if DIM ==1
+#if DIM == 1
   const int linear_forward_window[64][3] = {{0, 0, 0}, {1, 0, 0}};
   const int linear_backward_window[64][3] = {{0, 0, 0}, {-1, 0, 0}};
   const int quadratic_forward_window[64][3] = {{-1, 0, 0},
-                                                  {0, 0, 0},
-                                                  {1, 0, 0},
-                                                  {2, 0, 0}};
-  const int quadratic_backward_window[64][3] = {{1, 0, 0},
-                                                  {0, 0, 0},
-                                                  {-1, 0, 0},
-                                                  {-2, 0, 0}};
-  #elif DIM ==2
-  const int linear_forward_window[64][3] = {{0, 0, 0},
+                                               {0, 0, 0},
                                                {1, 0, 0},
-                                               {0, 1, 0},
-                                               {1, 1, 0}};
+                                               {2, 0, 0}};
+  const int quadratic_backward_window[64][3] = {{1, 0, 0},
+                                                {0, 0, 0},
+                                                {-1, 0, 0},
+                                                {-2, 0, 0}};
+#elif DIM == 2
+  const int linear_forward_window[64][3] = {{0, 0, 0},
+                                            {1, 0, 0},
+                                            {0, 1, 0},
+                                            {1, 1, 0}};
   const int linear_backward_window[64][3] = {{0, 0, 0},
                                              {-1, 0, 0},
                                              {0, -1, 0},
                                              {-1, -1, 0}};
   const int quadratic_forward_window[64][3] = {{-1, -1, 0}, {0, -1, 0}, {1, -1, 0}, {2, -1, 0}, {-1, 0, 0}, {0, 0, 0}, {1, 0, 0}, {2, 0, 0}, {-1, 1, 0}, {0, 1, 0}, {1, 1, 0}, {2, 1, 0}, {-1, 2, 0}, {0, 2, 0}, {1, 2, 0}, {2, 2, 0}};
   const int quadratic_backward_window[64][3] = {{1, 1, 0}, {0, 1, 0}, {-1, 1, 0}, {-2, 1, 0}, {1, 0, 0}, {0, 0, 0}, {-1, 0, 0}, {-2, 0, 0}, {1, -1, 0}, {0, -1, 0}, {-1, -1, 0}, {-2, -1, 0}, {1, -2, 0}, {0, -2, 0}, {-1, -2, 0}, {-2, -2, 0}};
-  #else
+#else
   const int linear_forward_window[64][3] = {{0, 0, 0}, {0, 0, 1}, {1, 0, 0}, {1, 0, 1}, {0, 1, 0}, {0, 1, 1}, {1, 1, 0}, {1, 1, 1}};
   const int linear_backward_window[64][3] = {{0, 0, 0}, {0, 0, -1}, {-1, 0, 0}, {-1, 0, -1}, {0, -1, 0}, {0, -1, -1}, {-1, -1, 0}, {-1, -1, -1}};
   const int quadratic_forward_window[64][3] = {{-1, -1, -1}, {-1, -1, 0}, {-1, -1, 1}, {-1, -1, 2}, {0, -1, -1}, {0, -1, 0}, {0, -1, 1}, {0, -1, 2}, {1, -1, -1}, {1, -1, 0}, {1, -1, 1}, {1, -1, 2}, {2, -1, -1}, {2, -1, 0}, {2, -1, 1}, {2, -1, 2}, {-1, 0, -1}, {-1, 0, 0}, {-1, 0, 1}, {-1, 0, 2}, {0, 0, -1}, {0, 0, 0}, {0, 0, 1}, {0, 0, 2}, {1, 0, -1}, {1, 0, 0}, {1, 0, 1}, {1, 0, 2}, {2, 0, -1}, {2, 0, 0}, {2, 0, 1}, {2, 0, 2}, {-1, 1, -1}, {-1, 1, 0}, {-1, 1, 1}, {-1, 1, 2}, {0, 1, -1}, {0, 1, 0}, {0, 1, 1}, {0, 1, 2}, {1, 1, -1}, {1, 1, 0}, {1, 1, 1}, {1, 1, 2}, {2, 1, -1}, {2, 1, 0}, {2, 1, 1}, {2, 1, 2}, {-1, 2, -1}, {-1, 2, 0}, {-1, 2, 1}, {-1, 2, 2}, {0, 2, -1}, {0, 2, 0}, {0, 2, 1}, {0, 2, 2}, {1, 2, -1}, {1, 2, 0}, {1, 2, 1}, {1, 2, 2}, {2, 2, -1}, {2, 2, 0}, {2, 2, 1}, {2, 2, 2}};
   const int quadratic_backward_window[64][3] = {{1, 1, 1}, {1, 1, 0}, {1, 1, -1}, {1, 1, -2}, {0, 1, 1}, {0, 1, 0}, {0, 1, -1}, {0, 1, -2}, {-1, 1, 1}, {-1, 1, 0}, {-1, 1, -1}, {-1, 1, -2}, {-2, 1, 1}, {-2, 1, 0}, {-2, 1, -1}, {-2, 1, -2}, {1, 0, 1}, {1, 0, 0}, {1, 0, -1}, {1, 0, -2}, {0, 0, 1}, {0, 0, 0}, {0, 0, -1}, {0, 0, -2}, {-1, 0, 1}, {-1, 0, 0}, {-1, 0, -1}, {-1, 0, -2}, {-2, 0, 1}, {-2, 0, 0}, {-2, 0, -1}, {-2, 0, -2}, {1, -1, 1}, {1, -1, 0}, {1, -1, -1}, {1, -1, -2}, {0, -1, 1}, {0, -1, 0}, {0, -1, -1}, {0, -1, -2}, {-1, -1, 1}, {-1, -1, 0}, {-1, -1, -1}, {-1, -1, -2}, {-2, -1, 1}, {-2, -1, 0}, {-2, -1, -1}, {-2, -1, -2}, {1, -2, 1}, {1, -2, 0}, {1, -2, -1}, {1, -2, -2}, {0, -2, 1}, {0, -2, 0}, {0, -2, -1}, {0, -2, -2}, {-1, -2, 1}, {-1, -2, 0}, {-1, -2, -1}, {-1, -2, -2}, {-2, -2, 1}, {-2, -2, 0}, {-2, -2, -1}, {-2, -2, -2}};
-  #endif
+#endif
 
   void set_globals(const Real _dt,
                    const int particles_per_cell,
@@ -111,25 +111,23 @@ namespace pyroclastmpm
       num_surround_nodes_cpu = pow(window_size_cpu, DIM);
 #ifdef CUDA_ENABLED
       cudaMemcpyToSymbol(forward_window_gpu, linear_forward_window,
-        64 * 3 * sizeof(int));
+                         64 * 3 * sizeof(int));
       cudaMemcpyToSymbol(backward_window_gpu, linear_backward_window,
-        64 * 3 * sizeof(int));
+                         64 * 3 * sizeof(int));
 #else
       std::copy(
-        &linear_forward_window[0][0],
-        &linear_forward_window[0][0] + 64 * 3,
-        &forward_window_cpu[0][0]
-      );
+          &linear_forward_window[0][0],
+          &linear_forward_window[0][0] + 64 * 3,
+          &forward_window_cpu[0][0]);
       std::copy(
-        &linear_backward_window[0][0],
-        &linear_backward_window[0][0] + 64 * 3,
-        &backward_window_cpu[0][0]
-      );
+          &linear_backward_window[0][0],
+          &linear_backward_window[0][0] + 64 * 3,
+          &backward_window_cpu[0][0]);
 #endif
     }
     else if ((_shapefunction == QuadraticShapeFunction) || (_shapefunction == CubicShapeFunction))
     {
-  
+
       window_size_cpu = 4;
       num_surround_nodes_cpu = pow(window_size_cpu, DIM);
       // shape_function_cpu = QuadraticShapeFunction;
@@ -140,18 +138,16 @@ namespace pyroclastmpm
                          64 * 3 * sizeof(int));
 #else
       std::copy(
-        &quadratic_forward_window[0][0],
-        &quadratic_forward_window[0][0] + 64 * 3,
-        &forward_window_cpu[0][0]
-      );
+          &quadratic_forward_window[0][0],
+          &quadratic_forward_window[0][0] + 64 * 3,
+          &forward_window_cpu[0][0]);
       std::copy(
-        &quadratic_backward_window[0][0],
-        &quadratic_backward_window[0][0] + 64 * 3,
-        &backward_window_cpu[0][0]
-      );
+          &quadratic_backward_window[0][0],
+          &quadratic_backward_window[0][0] + 64 * 3,
+          &backward_window_cpu[0][0]);
 #endif
     }
-   
+
 #ifdef CUDA_ENABLED
     cudaMemcpyToSymbol(window_size_gpu, &(window_size_cpu), sizeof(int), 0);
 
@@ -159,7 +155,5 @@ namespace pyroclastmpm
                        sizeof(int), 0);
 #endif
   };
-
-
 
 }; // namespace pyroclastmpmma

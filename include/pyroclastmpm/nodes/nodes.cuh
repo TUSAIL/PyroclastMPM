@@ -1,10 +1,8 @@
 #pragma once
-// #include <thrust/execution_policy.h>
 
 #include "pyroclastmpm/common/types_common.cuh"
 #include "pyroclastmpm/common/helper.cuh"
-// #include "pyroclastmpm/common/output.cuh"
-// #include "pyroclastmpm/nodes/nodes_kernels.cuh"
+#include "pyroclastmpm/common/output.cuh"
 
 namespace pyroclastmpm
 {
@@ -95,11 +93,9 @@ namespace pyroclastmpm
     /** @brief Inverse grid size of the background grid */
     Real inv_node_spacing;
 
-    // GPULaunchConfig launch_config;
-
-    // temp for mapping grid to ids
-    // GPULaunchConfig launch_config_map;
-
+#ifdef CUDA_ENABLED
+    GPULaunchConfig launch_config;
+#endif
 
     cpu_array<OutputType> output_formats;
   };

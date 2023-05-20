@@ -24,7 +24,6 @@
 
 // #include "pyroclastmpm/materials/newtonfluid/newtonfluidmat.cuh"
 
-
 // Particles, Nodes and shapefunctions
 #include "pyroclastmpm/nodes/nodes.cuh"
 #include "pyroclastmpm/particles/particles.cuh"
@@ -39,10 +38,10 @@ namespace pyroclastmpm
      */
     using MaterialType = std::variant<Material,
                                       LinearElastic
-                                    //   NewtonFluid,
-                                    //   LocalGranularRheology,
-                                    //   DruckerPrager
-                                    >;
+                                      //   NewtonFluid,
+                                      //   LocalGranularRheology,
+                                      //   DruckerPrager
+                                      >;
 
     /**
      * @brief Define the boundary condition type as a variant of all the possible
@@ -50,11 +49,11 @@ namespace pyroclastmpm
      *
      */
     using BoundaryConditionType = std::variant<BoundaryCondition
-    //                                            Gravity,
-    //                                            RigidParticles,
-    //                                            BodyForce,
-    //                                            PlanarDomain,
-    //                                            NodeDomain
+                                               //                                            Gravity,
+                                               //                                            RigidParticles,
+                                               //                                            BodyForce,
+                                               //                                            PlanarDomain,
+                                               //                                            NodeDomain
                                                >;
 
     /**
@@ -137,7 +136,6 @@ namespace pyroclastmpm
 
         /** current step of the main loop */
         int current_step;
-        
     };
 
 } // namespace pyroclastmpm

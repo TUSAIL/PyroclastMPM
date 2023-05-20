@@ -4,11 +4,9 @@
 #include "pyroclastmpm/nodes/nodes.cuh"
 #include "pyroclastmpm/particles/particles.cuh"
 
+namespace pyroclastmpm
+{
 
-namespace pyroclastmpm {
-
-
-void calculate_shape_function(NodesContainer& nodes_ref, ParticlesContainer & particles_ref);
-                                
+    void calculate_shape_function(NodesContainer &nodes_ref, ParticlesContainer &particles_ref);
 
 }

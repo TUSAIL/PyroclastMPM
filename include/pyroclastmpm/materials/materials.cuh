@@ -34,7 +34,6 @@ namespace pyroclastmpm
      */
     virtual void stress_update(ParticlesContainer &particles_ref, int mat_id){};
 
-
     /**
      * @brief calculate material time step
      * @param cell_size

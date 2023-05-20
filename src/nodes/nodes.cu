@@ -73,6 +73,12 @@ namespace pyroclastmpm
     }
 #endif
     node_ids_gpu = node_ids_cpu;
+
+#ifdef CUDA_ENABLED
+    launch_config.tpb = dim3(int((num_nodes_total) / BLOCKSIZE) + 1, 1, 1);
+    launch_config.bpg = dim3(BLOCKSIZE, 1, 1);
+    gpuErrchk(cudaDeviceSynchronize());
+#endif
   }
 
   NodesContainer::~NodesContainer() {}
@@ -154,28 +160,28 @@ namespace pyroclastmpm
   void NodesContainer::output_vtk()
   {
 
-    //     vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+        vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 
-    //     cpu_array<Vectorr> positions_cpu = give_node_coords();
-    //     cpu_array<Vectorr> moments_cpu = moments_gpu;
-    //     cpu_array<Vectorr> moments_nt_cpu = moments_nt_gpu;
-    //     cpu_array<Vectorr> forces_external_cpu = forces_external_gpu;
-    //     cpu_array<Vectorr> forces_internal_cpu = forces_internal_gpu;
-    //     cpu_array<Vectorr> forces_total_cpu = forces_total_gpu;
-    //     cpu_array<Real> masses_cpu = masses_gpu;
+        cpu_array<Vectorr> positions_cpu = give_node_coords();
+        cpu_array<Vectorr> moments_cpu = moments_gpu;
+        cpu_array<Vectorr> moments_nt_cpu = moments_nt_gpu;
+        cpu_array<Vectorr> forces_external_cpu = forces_external_gpu;
+        cpu_array<Vectorr> forces_internal_cpu = forces_internal_gpu;
+        cpu_array<Vectorr> forces_total_cpu = forces_total_gpu;
+        cpu_array<Real> masses_cpu = masses_gpu;
 
-    //     set_vtk_points(positions_cpu, polydata);
-    //     set_vtk_pointdata<Vectorr>(moments_cpu, polydata, "Moments");
-    //     set_vtk_pointdata<Vectorr>(moments_nt_cpu, polydata, "MomentsNT");
-    //     set_vtk_pointdata<Vectorr>(forces_external_cpu, polydata, "ForcesExternal");
-    //     set_vtk_pointdata<Vectorr>(forces_internal_cpu, polydata, "ForcesInternal");
-    //     set_vtk_pointdata<Vectorr>(forces_total_cpu, polydata, "ForcesTotal");
-    //     set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass");
+        set_vtk_points(positions_cpu, polydata);
+        set_vtk_pointdata<Vectorr>(moments_cpu, polydata, "Moments");
+        set_vtk_pointdata<Vectorr>(moments_nt_cpu, polydata, "MomentsNT");
+        set_vtk_pointdata<Vectorr>(forces_external_cpu, polydata, "ForcesExternal");
+        set_vtk_pointdata<Vectorr>(forces_internal_cpu, polydata, "ForcesInternal");
+        set_vtk_pointdata<Vectorr>(forces_total_cpu, polydata, "ForcesTotal");
+        set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass");
 
-    //     // loop over output_formats
-    //     for (auto format : output_formats)
-    //     {
-    //       write_vtk_polydata(polydata, "nodes", format);
-    //     }
+        // loop over output_formats
+        for (auto format : output_formats)
+        {
+          write_vtk_polydata(polydata, "nodes", format);
+        }
   }
 } // namespace pyroclastmpm

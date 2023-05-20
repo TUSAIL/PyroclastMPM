@@ -58,16 +58,15 @@ namespace pyroclastmpm
     std::cout << std::endl;
   }
 
-
   template void print_array<bool>(const cpu_array<bool> input);
 
   template void set_default_device<bool>(const int input_size,
-                                            const cpu_array<bool> input,
-                                            gpu_array<bool> &output,
-                                            bool default_value);
+                                         const cpu_array<bool> input,
+                                         gpu_array<bool> &output,
+                                         bool default_value);
 
   template void reorder_device_array<bool>(gpu_array<bool> &output,
-                                              gpu_array<int> sorted_index);
+                                           gpu_array<int> sorted_index);
 
   template void print_array<uint8_t>(const cpu_array<uint8_t> input);
 

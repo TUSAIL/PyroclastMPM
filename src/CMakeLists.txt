@@ -45,9 +45,9 @@ set(
 
   "common/helper.cu"
   "common/global_settings.cu"
-  # "common/output.cu"
+  "common/output.cu"
 
-  # "common/tools.cu"
+  "common/tools.cu"
   "spatialpartition/spatialpartition.cu"
   # "spatialpartition/spatialpartition_kernels.cu"
 
@@ -61,9 +61,9 @@ set(
 
 add_library(pyroclastmpm ${PyroclastSrc})
 
-# target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen Thrust ${VTK_LIBRARIES} )
+target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen ${VTK_LIBRARIES} )
 
-target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen )
+# target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen )
 
 
 if(BUILD_CUDA)
@@ -83,10 +83,10 @@ else()
 set_source_files_properties(${PyroclastSrc} PROPERTIES LANGUAGE CXX)
 endif()
 
-# vtk_module_autoinit(
-# TARGETS pyroclastmpm
-# MODULES ${VTK_LIBRARIES}
-# )
+vtk_module_autoinit(
+TARGETS pyroclastmpm
+MODULES ${VTK_LIBRARIES}
+)
 
 target_include_directories(pyroclastmpm PUBLIC
 $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/>

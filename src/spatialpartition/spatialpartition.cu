@@ -39,6 +39,13 @@ namespace pyroclastmpm
     set_default_device<unsigned int>(num_elements, {}, hash_sorted_gpu, 0);
     set_default_device<Vectori>(num_elements, {}, bins_gpu, Vectori::Zero());
     reset();
+
+
+#ifdef CUDA_ENABLED
+        launch_config.tpb = dim3(int((num_cells_total) / BLOCKSIZE) + 1, 1, 1);
+        launch_config.bpg = dim3(BLOCKSIZE, 1, 1);
+        gpuErrchk(cudaDeviceSynchronize());
+#endif
   }
 
   /**
