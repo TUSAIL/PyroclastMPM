@@ -63,8 +63,6 @@ namespace pyroclastmpm
     }
   };
 
-
-
   struct ApplyBodyMoments
   {
 
@@ -74,27 +72,25 @@ namespace pyroclastmpm
     template <typename Tuple>
     __host__ __device__ void operator()(Tuple tuple) const
     {
-        Vectorr &moment_nt = thrust::get<0>(tuple);
-        Vectorr &moment = thrust::get<1>(tuple);
-        const Vectorr value = thrust::get<2>(tuple);
-        const bool mask = thrust::get<3>(tuple);
+      Vectorr &moment_nt = thrust::get<0>(tuple);
+      Vectorr &moment = thrust::get<1>(tuple);
+      const Vectorr value = thrust::get<2>(tuple);
+      const bool mask = thrust::get<3>(tuple);
 
-
-        if (mask)
+      if (mask)
+      {
+        if (isFixed)
         {
-          if (isFixed)
-          {
-            moment = value;
-            moment_nt = value;
-          }
-          else
-          {
-            moment += value;
-
-            // TODO check if nodes_moments_nt needs to be incremented?
-          }
+          moment = value;
+          moment_nt = value;
         }
+        else
+        {
+          moment += value;
 
+          // TODO check if nodes_moments_nt needs to be incremented?
+        }
+      }
     }
   };
 
@@ -117,12 +113,10 @@ namespace pyroclastmpm
                             nodes_ref.moments_gpu.data(),
                             values_gpu.data(),
                             mask_gpu.data());
-    
-    
     }
     else if (mode_id == 2) // fixed moment
     {
-    
+
       execution_policy exec;
       PARALLEL_FOR_EACH_ZIP(exec,
                             nodes_ref.num_nodes_total,
@@ -131,10 +125,7 @@ namespace pyroclastmpm
                             nodes_ref.moments_gpu.data(),
                             values_gpu.data(),
                             mask_gpu.data());
-
     }
-
-
   };
 
 } // namespace pyroclastmpm

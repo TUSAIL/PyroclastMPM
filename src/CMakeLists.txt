@@ -8,7 +8,7 @@ set(
   "boundaryconditions/gravity.cu"
   # "boundaryconditions/rigidparticles/rigidparticles.cu"
   # "boundaryconditions/rigidparticles/rigidparticles_kernels.cu"
-  # "boundaryconditions/planardomain/planardomain.cu"
+  "boundaryconditions/planardomain.cu"
   # "boundaryconditions/planardomain/planardomain_kernels.cu"
   "boundaryconditions/nodedomain.cu"
 
