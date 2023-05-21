@@ -73,7 +73,7 @@ namespace pyroclastmpm
                            Matrixr::Identity() +
                        2. * shear_modulus * strain_increments;
 #if DIM == 3
-      sigma = cauchy_stress;
+      stress = cauchy_stress;
 #else
       cauchy_stress_3d.block(0, 0, DIM, DIM) = cauchy_stress;
       stress = cauchy_stress_3d;

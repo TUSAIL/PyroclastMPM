@@ -55,24 +55,24 @@ TEST(ShapeFunctions, LinearShapeFunction)
 
   EXPECT_NEAR(dpsi[0][0], -9, 0.0001);
   EXPECT_NEAR(dpsi[0][1], -5, 0.0001);
-  EXPECT_NEAR(dpsi[0][2], -4.5, 0.0001);
+  EXPECT_NEAR(dpsi[0][2], 0., 0.0001);
 
   EXPECT_NEAR(dpsi[1][0], 0, 0.0001);
   EXPECT_NEAR(dpsi[1][1], 0, 0.0001);
-  EXPECT_NEAR(dpsi[1][2], 0, 0.0001);
+  EXPECT_NEAR(dpsi[1][2], 4.5, 0.0001);
 
   EXPECT_NEAR(dpsi[2][0], 9, 0.0001);
   EXPECT_NEAR(dpsi[2][1], -5, 0.0001);
-  EXPECT_NEAR(dpsi[2][2], -4.5, 0.0001);
+  EXPECT_NEAR(dpsi[2][2], 0, 0.0001);
   EXPECT_NEAR(dpsi[3][0], 0, 0.0001);
   EXPECT_NEAR(dpsi[3][1], 0, 0.0001);
-  EXPECT_NEAR(dpsi[3][2], 0, 0.0001);
+  EXPECT_NEAR(dpsi[3][2], 4.5, 0.0001);
   EXPECT_NEAR(dpsi[4][0], -1, 0.0001);
   EXPECT_NEAR(dpsi[4][1], 5, 0.0001);
-  EXPECT_NEAR(dpsi[4][2], -0.5, 0.0001);
+  EXPECT_NEAR(dpsi[4][2], 0, 0.0001);
   EXPECT_NEAR(dpsi[5][0], 0, 0.0001);
   EXPECT_NEAR(dpsi[5][1], 0, 0.0001);
-  EXPECT_NEAR(dpsi[5][2], 0, 0.0001);
+  EXPECT_NEAR(dpsi[5][2], 0.5, 0.0001);
 
 #elif DIM == 2
   EXPECT_NEAR(psi[0], 0.45, 0.0001);
@@ -94,7 +94,7 @@ TEST(ShapeFunctions, LinearShapeFunction)
   EXPECT_NEAR(psi[1], 0.4, 0.0001);
 
   EXPECT_NEAR(dpsi[0][0], -10, 0.0001);
-  EXPECT_NEAR(dpsi[0][1], 10, 0.0001);
+  EXPECT_NEAR(dpsi[1][0], 10, 0.0001);
 
 #endif
 }
@@ -107,7 +107,7 @@ TEST(ShapeFunctions, CubicShapeFunction)
 #elif DIM == 2
   std::vector<Vectorr> pos = {Vectorr({0.45, 0.21})};
 #else
-  std::vector<Vectorr> pos = {Vectorr(0.94)};
+  std::vector<Vectorr> pos = {Vectorr(0.45)};
 #endif
 
   Vectorr min = Vectorr::Zero();
@@ -187,10 +187,10 @@ TEST(ShapeFunctions, CubicShapeFunction)
   EXPECT_NEAR(dpsi[3][1], -0.08437495, 0.0001);
 
 #else
-  EXPECT_NEAR(psi[0], 0.03600000, 0.0001);
-  EXPECT_NEAR(psi[1], 0.52799999, 0.0001);
+  EXPECT_NEAR(psi[0], 0.02083333, 0.0001);
+  EXPECT_NEAR(psi[1], 0.47916666, 0.0001);
 
-  EXPECT_NEAR(dpsi[0][0], -1.80000019, 0.0001);
-  EXPECT_NEAR(dpsi[0][1], -6.39999961, 0.0001);
+  EXPECT_NEAR(dpsi[0][0], -1.25, 0.0001);
+  EXPECT_NEAR(dpsi[1][0], -6.25, 0.0001);
 #endif
 }

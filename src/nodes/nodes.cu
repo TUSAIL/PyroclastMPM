@@ -45,7 +45,7 @@ namespace pyroclastmpm
     cpu_array<Vectori> node_ids_cpu = node_ids_gpu;
     cpu_array<Vectori> node_types_cpu = node_types_gpu;
 #if DIM == 1
-    for (size_t xi = 0; xi < num_nodes; xi++)
+    for (size_t xi = 0; xi < num_nodes(0); xi++)
     {
       size_t index = xi;
       node_ids_cpu[index] = Vectori(xi);

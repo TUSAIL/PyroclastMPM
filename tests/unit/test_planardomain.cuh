@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pyroclastmpm/boundaryconditions/planardomain/planardomain.cuh"
+#include "pyroclastmpm/boundaryconditions/planardomain.cuh"
 #include "pyroclastmpm/particles/particles.cuh"
 
 // Functions to test
