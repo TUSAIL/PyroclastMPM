@@ -168,7 +168,7 @@ namespace pyroclastmpm
     }
   }
 
-#if CUDA_ENABLED
+#ifdef CUDA_ENABLED
   __global__ void KERNEL_BIN_PARTICLES(int *cell_start,
                                        int *cell_end,
                                        const unsigned int *hashes_sorted,
@@ -185,7 +185,7 @@ namespace pyroclastmpm
    */
   void SpatialPartition::bin_particles()
   {
-#if CUDA_ENABLED
+#ifdef CUDA_ENABLED
     KERNEL_BIN_PARTICLES<<<launch_config.tpb, launch_config.bpg>>>(
         thrust::raw_pointer_cast(cell_start_gpu.data()),
         thrust::raw_pointer_cast(cell_end_gpu.data()),

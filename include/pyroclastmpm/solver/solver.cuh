@@ -7,22 +7,17 @@
 
 // Boundary conditions
 #include "pyroclastmpm/boundaryconditions/boundaryconditions.cuh"
-// #include "pyroclastmpm/boundaryconditions/bodyforce/bodyforce.cuh"
-// #include "pyroclastmpm/boundaryconditions/gravity/gravity.cuh"
-// #include "pyroclastmpm/boundaryconditions/noslipwall/noslipwall.cuh"
-// #include "pyroclastmpm/boundaryconditions/periodicwall/periodicwall.cuh"
+#include "pyroclastmpm/boundaryconditions/bodyforce.cuh"
+#include "pyroclastmpm/boundaryconditions/gravity.cuh"
 // #include "pyroclastmpm/boundaryconditions/rigidparticles/rigidparticles.cuh"
-// #include "pyroclastmpm/boundaryconditions/slipwall/slipwall.cuh"
-// #include "pyroclastmpm/boundaryconditions/planardomain/planardomain.cuh"
-// #include "pyroclastmpm/boundaryconditions/nodedomain/nodedomain.cuh"
+#include "pyroclastmpm/boundaryconditions/planardomain.cuh"
+#include "pyroclastmpm/boundaryconditions/nodedomain.cuh"
 
 // Materials
 #include "pyroclastmpm/materials/materials.cuh"
-// #include "pyroclastmpm/materials/druckerprager/druckerpragermat.cuh"
 #include "pyroclastmpm/materials/linearelastic.cuh"
-// #include "pyroclastmpm/materials/localrheo/localrheomat.cuh"
-
-// #include "pyroclastmpm/materials/newtonfluid/newtonfluidmat.cuh"
+#include "pyroclastmpm/materials/localrheo.cuh"
+#include "pyroclastmpm/materials/newtonfluid.cuh"
 
 // Particles, Nodes and shapefunctions
 #include "pyroclastmpm/nodes/nodes.cuh"
@@ -37,24 +32,21 @@ namespace pyroclastmpm
      *
      */
     using MaterialType = std::variant<Material,
-                                      LinearElastic
-                                      //   NewtonFluid,
-                                      //   LocalGranularRheology,
-                                      //   DruckerPrager
-                                      >;
+                                      LinearElastic,
+                                      NewtonFluid,
+                                      LocalGranularRheology>;
 
     /**
      * @brief Define the boundary condition type as a variant of all the possible
      * boundary conditions
      *
      */
-    using BoundaryConditionType = std::variant<BoundaryCondition
-                                               //                                            Gravity,
-                                               //                                            RigidParticles,
-                                               //                                            BodyForce,
-                                               //                                            PlanarDomain,
-                                               //                                            NodeDomain
-                                               >;
+    using BoundaryConditionType = std::variant<BoundaryCondition,
+                                               Gravity,
+                                               // RigidParticles,
+                                               BodyForce,
+                                               PlanarDomain,
+                                               NodeDomain>;
 
     /**
      * @brief MPM solver base class

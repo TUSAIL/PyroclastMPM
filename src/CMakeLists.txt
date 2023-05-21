@@ -1,9 +1,7 @@
-# "boundaryconditions/rigidsurface/rigidsurface.cu"
-# "boundaryconditions/rigidsurface/rigidsurface_kernels.cu"
+
 set(
   PyroclastSrc
 
-  # "boundaryconditions/bodyforce/bodyforce_kernels.cu"
   "boundaryconditions/bodyforce.cu"
   "boundaryconditions/gravity.cu"
   "boundaryconditions/rigidbodylevelset.cu"
@@ -19,6 +17,8 @@ set(
 
   "shapefunction/shapefunction.cu"
   "solver/usl/usl.cu"
+  # # future
+  # # "solver/apic/apic.cu"
   # "solver/musl/musl.cu"
   # "solver/tlmpm/tlmpm.cu"
 
@@ -32,14 +32,9 @@ set(
 
   "common/tools.cu"
   "spatialpartition/spatialpartition.cu"
-  # "spatialpartition/spatialpartition_kernels.cu"
 
-  # # future
-  # # "materials/nonlocalngf/nonlocalngfmat_kernels.cu"
-  # # "materials/nonlocalngf/nonlocalngfmat.cu"
 
-  # # "solver/apic/apic.cu"
-  # # "solver/apic/apic_kernels.cu"
+
 )
 
 add_library(pyroclastmpm ${PyroclastSrc})

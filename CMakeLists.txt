@@ -14,7 +14,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # Compilation options
 # option(DEFORMATION_MODE "Deformation mode" 2)
 # set(DEFORMATION_MODE 2)
-option(BUILD_CUDA "Enable CUDA Acceleration" OFF)
+option(BUILD_CUDA "Enable CUDA Acceleration" ON)
 # option(BUILD_OPENMP "Enable CUDA Acceleration" OFF) # later
 option(BUILD_PYTHON "Enable building of Python bindings" ON)
 option(BUILD_DOCS "Enable building of documentation" OFF)
@@ -35,7 +35,7 @@ endif()
 if(BUILD_CUDA)
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX CUDA)
     find_package(CUDAToolkit REQUIRED)
-    add_compile_definitions(CUDA_ENABLED)
+    # add_compile_definitions(CUDA_ENABLED)
 
 else()
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX)

@@ -56,7 +56,7 @@ namespace pyroclastmpm
       const Matrixr vel_grad = velocity_gradient;
       const Matrixr velgrad_T = vel_grad.transpose();
       const Matrixr deformation_matrix = 0.5 * (vel_grad + velgrad_T);
-#if CUDA_ENABLED
+#ifdef CUDA_ENABLED
       const Matrixr strain_increments = deformation_matrix * dt_gpu;
 #else
       const Matrixr strain_increments = deformation_matrix * dt_cpu;

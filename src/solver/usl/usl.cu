@@ -223,7 +223,7 @@ namespace pyroclastmpm
   void USL::P2G()
   {
 
-#if CUDA_ENABLED
+#ifdef CUDA_ENABLED
     KERNELS_USL_P2G<<<nodes.launch_config.tpb,
                       nodes.launch_config.bpg>>>(
         thrust::raw_pointer_cast(nodes.moments_gpu.data()),

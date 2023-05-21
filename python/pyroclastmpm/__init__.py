@@ -5,19 +5,19 @@ from .particles import ParticlesContainer
 from .nodes import NodesContainer
 
 from .boundaryconditions import (
-    # Gravity,
+    Gravity,
     BoundaryCondition,
-    # BodyForce,
+    BodyForce,
     # RigidParticles,
-    # PlanarDomain,
-    # NodeDomain
+    PlanarDomain,
+    NodeDomain
 )
 
 from .materials import (
     Material,
     LinearElastic,
     # NewtonFluid,
-    # LocalGranularRheology,
+    LocalGranularRheology,
     # DruckerPrager
     )
 
