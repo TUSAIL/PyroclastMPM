@@ -40,6 +40,12 @@ namespace pyroclastmpm
             Real mass = thrust::get<2>(tuple);
             Vectori node_bin = thrust::get<3>(tuple);
 
+            #ifndef CUDA_ENABLED
+            // to call std::max on CPU and avoid error occuring without max:
+            // `there are no arguments to 'max' that depend on a template parameter...`
+            using namespace std;
+            #endif
+
             #pragma unroll
             for (int i = 0; i < DIM; i++)
             {
@@ -82,15 +88,21 @@ namespace pyroclastmpm
     };
     void NodeDomain::apply_on_nodes_moments(NodesContainer &nodes_ref, ParticlesContainer &particles_ref)
     {
-        // KERNEL_APPLY_NODEDOMAIN<<<nodes_ref.launch_config.tpb,
-        //                           nodes_ref.launch_config.bpg>>>(
-        //     thrust::raw_pointer_cast(nodes_ref.moments_nt_gpu.data()),
-        //     thrust::raw_pointer_cast(nodes_ref.moments_gpu.data()),
-        //     thrust::raw_pointer_cast(nodes_ref.masses_gpu.data()),
-        //     thrust::raw_pointer_cast(nodes_ref.node_ids_gpu.data()),
-        //     nodes_ref.node_start, nodes_ref.node_end, nodes_ref.num_nodes,
-        //     nodes_ref.inv_node_spacing, axis0_mode, axis1_mode, nodes_ref.num_nodes_total);
-        // gpuErrchk(cudaDeviceSynchronize());
+
+        execution_policy exec;
+        PARALLEL_FOR_EACH_ZIP(exec,
+                                nodes_ref.num_nodes_total,
+                                ApplyNodeDomain(nodes_ref.node_start,
+                                                nodes_ref.node_end,
+                                                nodes_ref.num_nodes,
+                                                nodes_ref.inv_node_spacing,
+                                                axis0_mode,
+                                                axis1_mode),
+                                nodes_ref.moments_nt_gpu.data(),
+                                nodes_ref.moments_gpu.data(),
+                                nodes_ref.masses_gpu.data(),
+                                nodes_ref.node_ids_gpu.data());
+
     };
 
 
