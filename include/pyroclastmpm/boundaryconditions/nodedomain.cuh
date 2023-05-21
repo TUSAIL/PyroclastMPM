@@ -1,7 +1,6 @@
 #pragma once
 
 #include "pyroclastmpm/boundaryconditions/boundaryconditions.cuh"
-#include "pyroclastmpm/boundaryconditions/nodedomain/nodedomain_kernels.cuh"
 #include "pyroclastmpm/nodes/nodes.cuh"
 
 namespace pyroclastmpm

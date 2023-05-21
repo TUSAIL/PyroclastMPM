@@ -18,6 +18,7 @@
 #include "unit/test_bodyforce.cuh"
 // #include "unit/test_rigidparticles.cuh"
 // #include "unit/test_planardomain.cuh"
+#include "unit/test_nodedomain.cuh"
 
 // Particles, Nodes, Shape Functions
 #include "unit/test_particles.cuh"

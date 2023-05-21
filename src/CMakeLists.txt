@@ -10,8 +10,7 @@ set(
   # "boundaryconditions/rigidparticles/rigidparticles_kernels.cu"
   # "boundaryconditions/planardomain/planardomain.cu"
   # "boundaryconditions/planardomain/planardomain_kernels.cu"
-  # "boundaryconditions/nodedomain/nodedomain.cu"
-  # "boundaryconditions/nodedomain/nodedomain_kernels.cu"
+  "boundaryconditions/nodedomain.cu"
 
   # materials
   "materials/linearelastic.cu"
@@ -29,10 +28,8 @@ set(
   # "solver/tlmpm/tlmpm_kernels.cu"
 
   "particles/particles.cu"
-  # "particles/particles_kernels.cu"
   "nodes/nodes.cu"
 
-  # "nodes/nodes_kernels.cu"
 
   "common/helper.cu"
   "common/global_settings.cu"
