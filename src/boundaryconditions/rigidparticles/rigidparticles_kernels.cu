@@ -135,7 +135,6 @@ namespace pyroclastmpm
         {0, -1, 1},
         {1, -1, 1},
         {-1, -1, 1},
-
         {0, 0, -1},
         {1, 0, -1},
         {-1, 0, -1},
@@ -145,7 +144,6 @@ namespace pyroclastmpm
         {0, -1, -1},
         {1, -1, -1},
         {-1, -1, -1}
-
     };
 
 #pragma unroll

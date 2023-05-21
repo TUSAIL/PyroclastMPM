@@ -3,7 +3,6 @@
 #include <thrust/execution_policy.h>
 
 #include "pyroclastmpm/boundaryconditions/boundaryconditions.cuh"
-#include "pyroclastmpm/boundaryconditions/rigidparticles/rigidparticles_kernels.cuh"
 #include "pyroclastmpm/common/output.cuh"
 #include "pyroclastmpm/common/helper.cuh"
 #include "pyroclastmpm/nodes/nodes.cuh"
@@ -16,18 +15,18 @@ namespace pyroclastmpm
    * @brief Apply rigid particle boundary conditions
    *
    */
-  struct RigidParticles : BoundaryCondition
+  struct RigidBodyLevelSet : BoundaryCondition
   {
     // FUNCTIONS
 
-    RigidParticles(const cpu_array<Vectorr> _positions,
+    RigidBodyLevelSet(const cpu_array<Vectorr> _positions,
                    const cpu_array<int> _frames = {},
                    const cpu_array<Vectorr> _locations = {},
                    const cpu_array<Vectorr> _rotations = {},
                    const cpu_array<OutputType> _output_formats = {}
 
     );
-    ~RigidParticles(){};
+    ~RigidBodyLevelSet(){};
 
     void initialize(NodesContainer &nodes_ref, ParticlesContainer &particles_ref);
 
@@ -90,7 +89,7 @@ namespace pyroclastmpm
 
     gpu_array<Vectorr> velocities_gpu;
 
-    GPULaunchConfig launch_config;
+
 
     /** @brief spatial partitioning class */
     SpatialPartition spatial;
@@ -105,5 +104,10 @@ namespace pyroclastmpm
     cpu_array<Vectorr> rotations_cpu;
 
     cpu_array<OutputType> output_formats;
+
+    #ifdef CUDA_ENABLED
+    GPULaunchConfig launch_config;
+    #endif
+
   };
 } // namespace pyroclastmpm

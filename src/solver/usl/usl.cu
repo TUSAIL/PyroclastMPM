@@ -111,11 +111,13 @@ namespace pyroclastmpm
     Vectorr total_node_force_internal = Vectorr::Zero();
     Vectorr total_node_force_external = Vectorr::Zero();
     Real total_node_mass = 0.;
+
 #ifdef CUDA_ENABLED
     const int num_surround_nodes = num_surround_nodes_gpu;
 #else
     const int num_surround_nodes = num_surround_nodes_cpu;
 #endif
+
 #pragma unroll
     for (int sid = 0; sid < num_surround_nodes; sid++)
     {

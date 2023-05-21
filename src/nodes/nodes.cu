@@ -45,41 +45,41 @@ namespace pyroclastmpm
     cpu_array<Vectori> node_ids_cpu = node_ids_gpu;
     cpu_array<Vectori> node_types_cpu = node_types_gpu;
 #if DIM == 1
-    for (size_t xi = 0; xi < num_nodes(0); xi++)
+    for (int xi = 0; xi < num_nodes(0); xi++)
     {
-      size_t index = xi;
+      int index = xi;
       node_ids_cpu[index] = Vectori(xi);
     }
 #endif
 
 #if DIM == 2
-    for (size_t xi = 0; xi < num_nodes(0); xi++)
+    for (int xi = 0; xi < num_nodes(0); xi++)
     {
-      for (size_t yi = 0; yi < num_nodes(1); yi++)
+      for (int yi = 0; yi < num_nodes(1); yi++)
       {
-        size_t index = xi + yi * num_nodes(0);
+        int index = xi + yi * num_nodes(0);
         node_ids_cpu[index] = Vectori({xi, yi});
       }
     }
 #endif
 
 #if DIM == 3
-    for (size_t xi = 0; xi < num_nodes(0); xi++)
+    for (int xi = 0; xi < num_nodes(0); xi++)
     {
-      for (size_t yi = 0; yi < num_nodes(1); yi++)
+      for (int yi = 0; yi < num_nodes(1); yi++)
       {
-        for (size_t zi = 0; zi < num_nodes(2); zi++)
+        for (int zi = 0; zi < num_nodes(2); zi++)
         {
-          size_t index = xi + yi * num_nodes(0) + zi * num_nodes(0) * num_nodes(1);
+          int index = xi + yi * num_nodes(0) + zi * num_nodes(0) * num_nodes(1);
           node_ids_cpu[index] = Vectori({xi, yi, zi});
         }
       }
     }
 #endif
 
-    for (size_t index = 0; index < num_nodes_total; index++)
+    for (int index = 0; index < num_nodes_total; index++)
     {
-      for (size_t axis = 0; axis < DIM; axis++)
+      for (int axis = 0; axis < DIM; axis++)
       {
         if (shape_function_cpu == CubicShapeFunction)
         {

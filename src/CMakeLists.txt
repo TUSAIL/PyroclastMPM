@@ -6,10 +6,8 @@ set(
   # "boundaryconditions/bodyforce/bodyforce_kernels.cu"
   "boundaryconditions/bodyforce.cu"
   "boundaryconditions/gravity.cu"
-  # "boundaryconditions/rigidparticles/rigidparticles.cu"
-  # "boundaryconditions/rigidparticles/rigidparticles_kernels.cu"
+  "boundaryconditions/rigidbodylevelset.cu"
   "boundaryconditions/planardomain.cu"
-  # "boundaryconditions/planardomain/planardomain_kernels.cu"
   "boundaryconditions/nodedomain.cu"
 
   # materials
@@ -21,11 +19,8 @@ set(
 
   "shapefunction/shapefunction.cu"
   "solver/usl/usl.cu"
-  # "solver/usl/usl_kernels.cu"
   # "solver/musl/musl.cu"
-  # "solver/musl/musl_kernels.cu"
   # "solver/tlmpm/tlmpm.cu"
-  # "solver/tlmpm/tlmpm_kernels.cu"
 
   "particles/particles.cu"
   "nodes/nodes.cu"
