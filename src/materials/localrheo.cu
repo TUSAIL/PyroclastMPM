@@ -117,8 +117,13 @@ struct CalculateStress
       Real volume = thrust::get<2>(tuple);
       Real mass = thrust::get<3>(tuple);
       Real color = thrust::get<4>(tuple);
-
-      if (color != mat_id)
+      bool is_rigid = thrust::get<5>(tuple);
+      
+      if (is_rigid)
+      {
+        return;
+      }
+      if (color != mat_id) 
       {
         return;
       }
@@ -237,7 +242,8 @@ struct CalculateStress
                       particles_ref.velocity_gradient_gpu.begin(),
                       particles_ref.volumes_gpu.begin(),
                       particles_ref.masses_gpu.begin(),
-                      particles_ref.colors_gpu.begin());
+                      particles_ref.colors_gpu.begin(),
+                      particles_ref.is_rigid_gpu.begin());
 
   }
 

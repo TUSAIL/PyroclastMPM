@@ -8,7 +8,7 @@ from .boundaryconditions import (
     Gravity,
     BoundaryCondition,
     BodyForce,
-    # RigidParticles,
+    RigidBodyLevelSet,
     PlanarDomain,
     NodeDomain
 )
@@ -16,9 +16,9 @@ from .boundaryconditions import (
 from .materials import (
     Material,
     LinearElastic,
-    # NewtonFluid,
+    NewtonFluid,
     LocalGranularRheology,
-    # DruckerPrager
+
     )
 
 from .solver import (

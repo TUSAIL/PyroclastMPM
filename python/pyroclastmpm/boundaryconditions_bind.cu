@@ -6,7 +6,7 @@
 #include "pyroclastmpm/boundaryconditions/boundaryconditions.cuh"
 #include "pyroclastmpm/boundaryconditions/gravity.cuh"
 #include "pyroclastmpm/boundaryconditions/bodyforce.cuh"
-// #include "pyroclastmpm/boundaryconditions/rigidparticles/rigidparticles.cuh"
+#include "pyroclastmpm/boundaryconditions/rigidbodylevelset.cuh"
 #include "pyroclastmpm/boundaryconditions/planardomain.cuh"
 #include "pyroclastmpm/boundaryconditions/nodedomain.cuh"
 
@@ -29,13 +29,13 @@ namespace pyroclastmpm
                  py::arg("is_ramp"), py::arg("ramp_step"), py::arg("gravity_end"))
             .def_readwrite("gravity", &Gravity::gravity);
 
-        // py::class_<RigidParticles>(m, "RigidParticles")
-        //     .def(py::init<std::vector<Vectorr>, std::vector<int>,
-        //                   std::vector<Vectorr>, std::vector<Vectorr>,std::vector<OutputType>>(),
-        //          py::arg("positions"), py::arg("frames") = std::vector<int>(),
-        //          py::arg("locations") = std::vector<Vectorr>(),
-        //          py::arg("rotations") = std::vector<Vectorr>(),
-        //          py::arg("output_formats") = std::vector<OutputType>());
+        py::class_<RigidBodyLevelSet>(m, "RigidBodyLevelSet")
+            .def(py::init<std::vector<int>,
+                          std::vector<Vectorr>, std::vector<Vectorr>,std::vector<OutputType>>(),
+                 py::arg("frames") = std::vector<int>(),
+                 py::arg("locations") = std::vector<Vectorr>(),
+                 py::arg("rotations") = std::vector<Vectorr>(),
+                 py::arg("output_formats") = std::vector<OutputType>());
 
         py::class_<PlanarDomain>(m, "PlanarDomain")
             .def(py::init<Vectorr, Vectorr>(),

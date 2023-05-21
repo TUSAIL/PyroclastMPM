@@ -9,7 +9,7 @@
 #include "pyroclastmpm/boundaryconditions/boundaryconditions.cuh"
 #include "pyroclastmpm/boundaryconditions/bodyforce.cuh"
 #include "pyroclastmpm/boundaryconditions/gravity.cuh"
-// #include "pyroclastmpm/boundaryconditions/rigidparticles/rigidparticles.cuh"
+#include "pyroclastmpm/boundaryconditions/rigidbodylevelset.cuh"
 #include "pyroclastmpm/boundaryconditions/planardomain.cuh"
 #include "pyroclastmpm/boundaryconditions/nodedomain.cuh"
 
@@ -43,7 +43,7 @@ namespace pyroclastmpm
      */
     using BoundaryConditionType = std::variant<BoundaryCondition,
                                                Gravity,
-                                               // RigidParticles,
+                                               RigidBodyLevelSet,
                                                BodyForce,
                                                PlanarDomain,
                                                NodeDomain>;

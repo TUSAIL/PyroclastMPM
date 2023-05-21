@@ -20,6 +20,7 @@ namespace pyroclastmpm
         const cpu_array<Vectorr> _positions,
         const cpu_array<Vectorr> _velocities,
         const cpu_array<uint8_t> _colors,
+        const cpu_array<bool> _is_rigid,
         const cpu_array<Matrix3r> _stresses,
         const cpu_array<Real> _masses,
         const cpu_array<Real> _volumes,
@@ -31,6 +32,7 @@ namespace pyroclastmpm
         set_default_device<Vectorr>(num_particles, _positions, positions_gpu, Vectorr::Zero());
         set_default_device<Vectorr>(num_particles, _velocities, velocities_gpu, Vectorr::Zero());
         set_default_device<uint8_t>(num_particles, _colors, colors_gpu, 0);
+        set_default_device<bool>(num_particles, _is_rigid, is_rigid_gpu, false);
         set_default_device<Real>(num_particles, _masses, masses_gpu, -1.0);
         set_default_device<Real>(num_particles, _volumes, volumes_gpu, -1.0);
 
@@ -71,6 +73,9 @@ namespace pyroclastmpm
         reset(); // reset needed
     }
 
+
+
+
     void ParticlesContainer::reset(bool reset_psi)
     {
 
@@ -102,6 +107,7 @@ namespace pyroclastmpm
         reorder_device_array<Matrixr>(F_gpu, spatial.sorted_index_gpu);
         reorder_device_array<Vectorr>(dpsi_gpu, spatial.sorted_index_gpu);
         reorder_device_array<uint8_t>(colors_gpu, spatial.sorted_index_gpu);
+        reorder_device_array<bool>(is_rigid_gpu, spatial.sorted_index_gpu);
         reorder_device_array<Real>(volumes_gpu, spatial.sorted_index_gpu);
         reorder_device_array<Real>(volumes_original_gpu, spatial.sorted_index_gpu);
         reorder_device_array<Real>(masses_gpu, spatial.sorted_index_gpu);
@@ -142,6 +148,8 @@ namespace pyroclastmpm
         cpu_array<int> colors_cpu = colors_gpu;
         cpu_array<int> phases_cpu = phases_gpu;
 
+        cpu_array<int> is_rigid_cpu = is_rigid_gpu;
+
         // get pressure
         cpu_array<Real> pressures_cpu;
         pressures_cpu.resize(num_particles);
@@ -152,6 +160,7 @@ namespace pyroclastmpm
         }
 
         set_vtk_points(positions_cpu, polydata);
+        set_vtk_pointdata<int>(is_rigid_cpu, polydata, "isRigid");
         set_vtk_pointdata<Vectorr>(positions_cpu, polydata, "Positions");
         set_vtk_pointdata<Vectorr>(velocities_cpu, polydata, "Velocity");
         set_vtk_pointdata<Matrix3r>(stresses_cpu, polydata, "Stress");

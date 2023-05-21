@@ -69,6 +69,10 @@ namespace pyroclastmpm
     polydata->GetPointData()->AddArray(pointdata);
   }
 
+  template void set_vtk_pointdata<bool>(cpu_array<bool> input,
+                                           vtkSmartPointer<vtkPolyData> &polydata,
+                                           const std::string pointdata_name);
+
   template void set_vtk_pointdata<uint8_t>(cpu_array<uint8_t> input,
                                            vtkSmartPointer<vtkPolyData> &polydata,
                                            const std::string pointdata_name);

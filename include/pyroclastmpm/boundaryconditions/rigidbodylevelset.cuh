@@ -19,44 +19,36 @@ namespace pyroclastmpm
   {
     // FUNCTIONS
 
-    RigidBodyLevelSet(const cpu_array<Vectorr> _positions,
-                   const cpu_array<int> _frames = {},
-                   const cpu_array<Vectorr> _locations = {},
-                   const cpu_array<Vectorr> _rotations = {},
-                   const cpu_array<OutputType> _output_formats = {}
+    RigidBodyLevelSet(const cpu_array<int> _frames = {},
+                      const cpu_array<Vectorr> _locations = {},
+                      const cpu_array<Vectorr> _rotations = {},
+                      const cpu_array<OutputType> _output_formats = {}
 
     );
     ~RigidBodyLevelSet(){};
 
     void initialize(NodesContainer &nodes_ref, ParticlesContainer &particles_ref);
 
-    void calculate_non_rigid_grid_normals(NodesContainer &nodes_ref,
+    void calculate_grid_normals(NodesContainer &nodes_ref,
                                           ParticlesContainer &particles_ref);
 
-    void calculate_overlapping_rigidbody(NodesContainer &nodes_ref,
-                                         ParticlesContainer &particles_ref);
+    // void calculate_overlapping_rigidbody(NodesContainer &nodes_ref,
+    //                                      ParticlesContainer &particles_ref);
 
-    void update_grid_moments(NodesContainer &nodes_ref,
-                             ParticlesContainer &particles_ref);
+    // void update_grid_moments(NodesContainer &nodes_ref,
+    //                          ParticlesContainer &particles_ref);
 
-    void update_rigid_body(NodesContainer &nodes_ref,
-                           ParticlesContainer &particles_ref);
-
-    void find_nearest_rigid_body(NodesContainer &nodes_ref,
-                                 ParticlesContainer &particles_ref);
-
-    void partition();
+    // void update_rigid_body(NodesContainer &nodes_ref,
+    //                        ParticlesContainer &particles_ref);
 
     void apply_on_nodes_moments(NodesContainer &nodes_ref,
                                 ParticlesContainer &particles_ref) override;
 
-    void output_vtk() override;
+    // void output_vtk() override;
 
-    void calculate_velocities();
+    // void calculate_velocities();
 
     // VARIABLES
-    /** @brief number of rigid material points*/
-    int num_particles;
 
     /** @brief number of animation frames for rigid body */
     int num_frames;
@@ -84,16 +76,6 @@ namespace pyroclastmpm
     /** @brief  closest rigid particle*/
     gpu_array<int> closest_rigid_particle_gpu;
 
-    /** @brief particles' coordinates */
-    gpu_array<Vectorr> positions_gpu;
-
-    gpu_array<Vectorr> velocities_gpu;
-
-
-
-    /** @brief spatial partitioning class */
-    SpatialPartition spatial;
-
     /** @brief animations frames (steps) */
     cpu_array<int> frames_cpu;
 
@@ -104,10 +86,6 @@ namespace pyroclastmpm
     cpu_array<Vectorr> rotations_cpu;
 
     cpu_array<OutputType> output_formats;
-
-    #ifdef CUDA_ENABLED
-    GPULaunchConfig launch_config;
-    #endif
 
   };
 } // namespace pyroclastmpm

@@ -17,9 +17,9 @@ from .pyroclastmpm_pybind import (
     BodyForce as PyroBodyForce,
 )
 
-# from .pyroclastmpm_pybind import (
-#     RigidParticles as PyroRigidParticles,
-# )
+from .pyroclastmpm_pybind import (
+    RigidBodyLevelSet as PyroRigidBodyLevelSet,
+)
 
 from .pyroclastmpm_pybind import (
     PlanarDomain as PyroPlanarDomain,
@@ -68,18 +68,16 @@ class BodyForce(PyroBodyForce):
         super(BodyForce, self).__init__(mode=mode, values=values, mask=mask)
 
 
-# class RigidParticles(PyroRigidParticles):
-#     def __init__(
-#         self,
-#         positions: np.ndarray,
-#         frames: np.ndarray = [],
-#         locations: np.ndarray = [],
-#         rotations: np.ndarray = [],
-#         output_formats=[],
-#     ):
-#         super(RigidParticles, self).__init__(
-#             positions=positions, frames=frames, locations=locations, rotations=rotations, output_formats=output_formats,
-#         )
+class RigidBodyLevelSet(PyroRigidBodyLevelSet):
+    def __init__(
+        self,
+        frames: np.ndarray = [],
+        locations: np.ndarray = [],
+        rotations: np.ndarray = [],
+        output_formats=[],
+    ):
+        super(RigidBodyLevelSet, self).__init__( frames=frames, locations=locations, rotations=rotations, output_formats=output_formats,
+        )
 
 
 class PlanarDomain(PyroPlanarDomain):

@@ -33,6 +33,7 @@ namespace pyroclastmpm
         const cpu_array<Vectorr> _positions,
         const cpu_array<Vectorr> _velocities = {},
         const cpu_array<uint8_t> _colors = {},
+        const cpu_array<bool> _is_rigid = {},
         const cpu_array<Matrix3r> _stresses = {},
         const cpu_array<Real> _masses = {},
         const cpu_array<Real> _volumes = {},
@@ -123,6 +124,9 @@ namespace pyroclastmpm
 
     /*! @brief particles' colors (or material type) */
     gpu_array<uint8_t> colors_gpu;
+
+    /*! @brief particles' colors (or material type) */
+    gpu_array<bool> is_rigid_gpu;
 
     /*! * @brief granular fluidity d2g */
     gpu_array<Real> logJp_gpu;
