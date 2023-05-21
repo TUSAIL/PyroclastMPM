@@ -12,12 +12,23 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Compilation options
+# option(DEFORMATION_MODE "Deformation mode" 2)
+# set(DEFORMATION_MODE 2)
 option(BUILD_CUDA "Enable CUDA Acceleration" OFF)
 # option(BUILD_OPENMP "Enable CUDA Acceleration" OFF) # later
 option(BUILD_PYTHON "Enable building of Python bindings" ON)
 option(BUILD_DOCS "Enable building of documentation" OFF)
 option(BUILD_TESTING "Enable testing" ON)
 option(CMAKE_BUILD_TYPE "Make release build" Release)
+# option (DOUBLE_PRECISION "Use double precision" ON)
+
+
+# add_compile_definitions(DIM=${DEFORMATION_MODE})
+
+if (DOUBLE_PRECISION)
+    add_compile_definitions(USE_DOUBLES)
+endif()
+
 
 # make an if  else statekent if cuda is enabled
 

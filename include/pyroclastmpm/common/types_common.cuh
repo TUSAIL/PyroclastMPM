@@ -13,7 +13,6 @@ namespace pyroclastmpm
 {
 
 #define DIM 2
-
 #define USE_DOUBLES
 
 #ifndef USE_DOUBLES
