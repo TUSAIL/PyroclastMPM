@@ -56,41 +56,11 @@ namespace pyroclastmpm
       initialize(nodes_ref, particles_ref);
     }
 
-    // 1. for each rigid particle, mask neighnorhood of grid nodes
-
-    // 2. For each node, calculate grid normals of non rigid particles
-    // 3. For each node, find the nearest rigid particle
-    // 4. For each node, calculate the velocity correction
-
-    // 1. For each rigid particle, calculate position velocity of rigid body
-
-    // update rigid body position, velocity
-
-    // 1. Initialize spatial partitioning array for rigid particles
-    // TODO move this somewhere else?
-
-    // 2. Bin rigid particles into background grid
-    //   partition();
-
-    // 3. Calculate rigid body velocities
-    //   if (num_frames > 0) {
-    // calculate_velocities().;  // host bound
-    //   }
-
     // 4. Mask grid nodes that do not contribute to rigid body contact
-    //   calculate_overlapping_rigidbody(nodes_ref, particles_ref);
+    calculate_overlapping_rigidbody(nodes_ref, particles_ref);
 
     // 5. Get rigid body grid normals
     calculate_grid_normals(nodes_ref, particles_ref);
-
-    // find_nearest_rigid_body(nodes_ref, particles_ref);
-
-    //   if (num_frames > 0) {
-    //     update_rigid_body(nodes_ref, particles_ref);
-    //   }
-
-    //   // std::cout << rotation_matrix << "\n -----------------------------\n";
-    //   update_grid_moments(nodes_ref, particles_ref);
   };
 
   void RigidBodyLevelSet::initialize(NodesContainer &nodes_ref,
@@ -106,30 +76,14 @@ namespace pyroclastmpm
       ParticlesContainer &particles_ref)
   {
 
-
-    //   Vectorr *nodes_moments_gpu,
-    // Vectorr *nodes_moments_nt_gpu,
-    // const Vectori *node_ids_gpu,
-    // const Real *nodes_masses_gpu,
-    // const Vectorr *particles_velocities_gpu,
-    // const Vectorr *particles_dpsi_gpu,
-    // const Real *particles_masses_gpu,
-    // const int *particles_cells_start_gpu,
-    // const int *particles_cells_end_gpu,
-    // const int *particles_sorted_indices_gpu,
-    // const bool *particle_is_rigid_gpu,
-    // const Vectorr *particles_positions_gpu,
-    // const Vectorr origin,
-    // const Real inv_cell_size,
-    // const Vectori num_nodes,
-    // const int num_nodes_total
-
+#ifdef CUDA_ENABLED
     KERNELS_GRID_NORMALS_AND_NN_RIGID<<<nodes_ref.launch_config.tpb,
-                                nodes_ref.launch_config.bpg>>>(
+                                        nodes_ref.launch_config.bpg>>>(
         thrust::raw_pointer_cast(nodes_ref.moments_gpu.data()),
         thrust::raw_pointer_cast(nodes_ref.moments_nt_gpu.data()),
         thrust::raw_pointer_cast(nodes_ref.node_ids_gpu.data()),
         thrust::raw_pointer_cast(nodes_ref.masses_gpu.data()),
+        thrust::raw_pointer_cast(is_overlapping_gpu.data()),
         thrust::raw_pointer_cast(particles_ref.velocities_gpu.data()),
         thrust::raw_pointer_cast(particles_ref.dpsi_gpu.data()),
         thrust::raw_pointer_cast(particles_ref.masses_gpu.data()),
@@ -138,199 +92,68 @@ namespace pyroclastmpm
         thrust::raw_pointer_cast(particles_ref.spatial.sorted_index_gpu.data()),
         thrust::raw_pointer_cast(particles_ref.is_rigid_gpu.data()),
         thrust::raw_pointer_cast(particles_ref.positions_gpu.data()),
-        nodes_ref.node_start,nodes_ref.inv_node_spacing,
+        nodes_ref.node_start, nodes_ref.inv_node_spacing,
         particles_ref.spatial.num_cells, particles_ref.spatial.num_cells_total);
-    // printf("runs \n");
     gpuErrchk(cudaDeviceSynchronize());
+#else
+    for (int nid = 0; nid < nodes_ref.num_nodes_total; nid++)
+    {
+      calculate_grid_normals_nn_rigid(
+          nodes_ref.moments_cpu.data(),
+          nodes_ref.moments_nt_cpu.data(),
+          nodes_ref.node_ids_cpu.data(),
+          nodes_ref.masses_cpu.data(),
+          is_overlapping_cpu.data(),
+          particles_ref.velocities_cpu.data(),
+          particles_ref.dpsi_cpu.data(),
+          particles_ref.masses_cpu.data(),
+          particles_ref.spatial.cell_start_cpu.data(),
+          particles_ref.spatial.cell_end_cpu.data(),
+          particles_ref.spatial.sorted_index_cpu.data(),
+          particles_ref.is_rigid_cpu.data(),
+          particles_ref.positions_cpu.data(),
+          nodes_ref.node_start, nodes_ref.inv_node_spacing,
+          particles_ref.spatial.num_cells, particles_ref.spatial.num_cells_total,
+          nid);
+    }
+#endif
   }
 
-  // void RigidBodyLevelSet::calculate_overlapping_rigidbody(
-  //     NodesContainer &nodes_ref,
-  //     ParticlesContainer &particles_ref)
-  // {
-  //     // KERNEL_GET_OVERLAPPING_RIGID_BODY_GRID<<<nodes_ref.launch_config.tpb,
-  //     //                                       nodes_ref.launch_config.bpg>>>(
-  //     //     thrust::raw_pointer_cast(is_overlapping_gpu.data()),
-  //     //     thrust::raw_pointer_cast(nodes_ref.node_ids_gpu.data()),
-  //     //     thrust::raw_pointer_cast(positions_gpu.data()),
-  //     //     thrust::raw_pointer_cast(spatial.bins_gpu.data()),
-  //     //     particles_ref.spatial.num_cells, particles_ref.spatial.grid_start,
-  //     //     particles_ref.spatial.inv_cell_size,
-  //     //     particles_ref.spatial.num_cells_total, num_particles);
+  void RigidBodyLevelSet::calculate_overlapping_rigidbody(
+      NodesContainer &nodes_ref,
+      ParticlesContainer &particles_ref)
+  {
+    #ifdef CUDA_ENABLED
+    KERNEL_GET_OVERLAPPING_RIGID_BODY_GRID<<<particles_ref.launch_config.tpb,
+                                             particles_ref.launch_config.bpg>>>(
+        thrust::raw_pointer_cast(is_overlapping_gpu.data()),
+        thrust::raw_pointer_cast(nodes_ref.node_ids_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.positions_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.spatial.bins_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.is_rigid_gpu.data()),
+        particles_ref.spatial.num_cells,
+        particles_ref.spatial.grid_start,
+        particles_ref.spatial.inv_cell_size,
+        particles_ref.spatial.num_cells_total,
+        particles_ref.num_particles);
 
-  //     // gpuErrchk(cudaDeviceSynchronize());
-  // }
-
-  //     __device__ __host__ void CalculateGridNormals(
-  //         Vectorr *grid_normals_gpu,
-  //         const Vectori *node_ids_gpu,
-  //         const Vectorr *particles_dpsi_gpu,
-  //         const Real *particles_masses_gpu,
-  //         const int *particles_cells_start_gpu,
-  //         const int *particles_cells_end_gpu,
-  //         const int *particles_sorted_indices_gpu,
-  //         const Vectori num_nodes,
-  //         const int num_nodes_total,
-  //         const int node_mem_index)
-  //     {
-  //         Vectori node_bin = node_ids_gpu[node_mem_index];
-  //         Vectorr normal = Vectorr::Zero();
-
-  // #pragma unroll
-  //         for (int sid = 0; sid < 27; sid++)
-  //         {
-  //             const Vectori selected_bin = WINDOW_BIN(node_bin, linear_backward_window_3d, sid);
-
-  //             const unsigned int node_hash = NODE_MEM_INDEX(selected_bin, num_nodes);
-
-  //             if (node_hash >= num_nodes_total)
-  //             {
-  //                 continue;
-  //             }
-
-  //             const int cstart = particles_cells_start_gpu[node_hash];
-  //             const int cend = particles_cells_end_gpu[node_hash];
-
-  //             if ((cstart < 0) || (cend < 0))
-  //             {
-  //                 continue;
-  //             }
-
-  //             for (int j = cstart; j < cend; j++)
-  //             {
-  //                 const int particle_id = particles_sorted_indices_gpu[j];
-  //                 const Vectorr dpsi_particle = particles_dpsi_gpu[particle_id * 27 + sid];
-  //                 normal += dpsi_particle * particles_masses_gpu[particle_id];
-  //             }
-  //         }
-  //         normal.normalize();
-  //         grid_normals_gpu[node_mem_index] = normal;
-  //     };
-
-  //     void RigidBodyLevelSet::update_grid_moments(NodesContainer &nodes_ref,
-  //                                                 ParticlesContainer &particles_ref)
-  //     {
-  //         // KERNEL_VELOCITY_CORRECTOR<<<nodes_ref.launch_config.tpb,
-  //         //                                       nodes_ref.launch_config.bpg>>>(
-  //         //     thrust::raw_pointer_cast(nodes_ref.moments_nt_gpu.data()),
-  //         //     thrust::raw_pointer_cast(nodes_ref.moments_gpu.data()),
-  //         //     thrust::raw_pointer_cast(closest_rigid_particle_gpu.data()),
-  //         //     thrust::raw_pointer_cast(velocities_gpu.data()),
-  //         //     thrust::raw_pointer_cast(nodes_ref.node_ids_gpu.data()),
-  //         //     thrust::raw_pointer_cast(nodes_ref.masses_gpu.data()),
-  //         //     thrust::raw_pointer_cast(normals_gpu.data()),
-  //         //     thrust::raw_pointer_cast(is_overlapping_gpu.data()), rotation_matrix, COM,
-  //         //     translational_velocity, particles_ref.spatial.grid_start,
-  //         //     particles_ref.spatial.inv_cell_size,
-  //         //     particles_ref.spatial.num_cells_total);
-  //         // gpuErrchk(cudaDeviceSynchronize());
-  //     }
-
-  //     void RigidBodyLevelSet::update_rigid_body(NodesContainer &nodes_ref,
-  //                                               ParticlesContainer &particles_ref)
-
-  //     {
-  //         // KERNEL_UPDATE_POS_RIGID<<<nodes_ref.launch_config.tpb,
-  //         //                                       nodes_ref.launch_config.bpg>>>(
-  //         //     thrust::raw_pointer_cast(positions_gpu.data()),
-  //         //     thrust::raw_pointer_cast(velocities_gpu.data()), rotation_matrix, COM,
-  //         //     translational_velocity, num_particles);
-  //         // gpuErrchk(cudaDeviceSynchronize());
-  //     }
-
-  //     void RigidBodyLevelSet::calculate_velocities()
-  //     {
-  //         //         const Vectorr COM_nt = locations_cpu[global_step_cpu];
-  //         //         const Vectorr ROT_nt = rotations_cpu[global_step_cpu];
-
-  //         //         translational_velocity = (COM_nt - COM) / dt_cpu;
-
-  //         //         const Vectorr rotational_velocity = (ROT_nt - ROT);
-
-  //         // #if DIM == 3
-  //         //         const AngleAxisr rollAngle(rotational_velocity[0],
-  //         //                                    Vectorr::UnitX()); // pitch
-
-  //         //         const AngleAxisr yawAngle(rotational_velocity[1], Vectorr::UnitY()); // yaw
-
-  //         //         const AngleAxisr pitchAngle(rotational_velocity[2],
-  //         //                                     Vectorr::UnitZ()); // roll
-
-  //         //         Quaternionr q = rollAngle * yawAngle * pitchAngle;
-
-  //         //         // rotation_matrix = q.matrix();
-  //         //         rotation_matrix = Matrixr::Zero();
-  //         // #elif DIM == 2
-
-  //         //         // const AngleAxisr rollAngle(rotational_velocity[0],Vectorr::UnitX()); // pitch
-
-  //         //         // const AngleAxisr yawAngle(rotational_velocity[1], Vectorr::UnitY()); // yaw
-
-  //         //         // Quaternionr q = rollAngle * yawAngle;
-
-  //         //         // rotation_matrix = q.matrix();
-
-  //         // #else
-  //         //         rotation_matrix = Matrixr::Zero();
-  //         // #endif
-
-  //         // //           COM = COM_nt;
-  //         // //           ROT = ROT_nt;
-  //     }
-
-  // void RigidBodyLevelSet::find_nearest_rigid_body(NodesContainer &nodes_ref, ParticlesContainer &particles_ref){
-      //         // KERNEL_FIND_NEAREST_RIGIDPARTICLE<<<nodes_ref.launch_config.tpb,
-      //         //                                       nodes_ref.launch_config.bpg>>>(
-      //         //     thrust::raw_pointer_cast(closest_rigid_particle_gpu.data()),
-      //         //     thrust::raw_pointer_cast(positions_gpu.data()),
-      //         //     thrust::raw_pointer_cast(nodes_ref.node_ids_gpu.data()),
-      //         //     thrust::raw_pointer_cast(nodes_ref.masses_gpu.data()),
-      //         //     thrust::raw_pointer_cast(spatial.cell_start_gpu.data()),
-      //         //     thrust::raw_pointer_cast(spatial.cell_end_gpu.data()),
-      //         //     thrust::raw_pointer_cast(spatial.sorted_index_gpu.data()),
-      //         //     thrust::raw_pointer_cast(is_overlapping_gpu.data()), spatial.num_cells,
-      //         //     spatial.grid_start, spatial.inv_cell_size, spatial.num_cells_total);
-
-      //         // gpuErrchk(cudaDeviceSynchronize());
-  // };
-
-  //     void RigidBodyLevelSet::output_vtk()
-  //     {
-  //         //   vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
-
-  //         //   set_vtk_points(positions_gpu, polydata);
-
-  //         //   cpu_array<Vectorr> velocities_cpu = velocities_gpu;
-  //         //   set_vtk_pointdata<Vectorr>(velocities_cpu, polydata, "velocities");
-
-  //         // //   // cpu_array<Vector3r> velocities_cpu = velocities_gpu;
-  //         // //   // set_vtk_pointdata(velocities_cpu, polydata, "Velocity");
-
-  //         // //   vtkSmartPointer<vtkTransform> transform =
-  //         // //   vtkSmartPointer<vtkTransform>::New();
-
-  //         // //   // transform->Translate(0.575, 0.4  , 0.);
-  //         // //   // transform->RotateZ(90.0);
-  //         // //   // transform->Translate(-0.575, -0.4  , -0.);
-
-  //         // //   // vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter =
-  //         // //   vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-  //         // //   // transformFilter->SetInputData(polydata);
-  //         // //   // transformFilter->SetTransform(transform);
-  //         // //   // transformFilter->Update();
-
-  //         // //    vtkSmartPointer<vtkPolyData> polydata_transformed =
-  //         // //    vtkSmartPointer<vtkPolyData>::New();
-
-  //         // //   //  polydata_transformed = transformFilter->GetOutput();
-  //         // //   // transformFilter->
-
-  //         // //   write_vtk_polydata(polydata, "rigidbody");
-
-  //         // for (auto format : output_formats)
-  //         // {
-  //         //     write_vtk_polydata(polydata, "rigidbody", format);
-  //         // }
-  //     }
+      gpuErrchk(cudaDeviceSynchronize());
+    #else
+    for (int pid = 0; nid < particles_ref.num_particles; pid++)
+    {
+        get_overlapping_rigid_body_grid(
+            is_overlapping_cpu.data(),
+            nodes_ref.node_ids_cpu.data(),
+            particles_ref.positions_cpu.data(),
+            particles_ref.spatial.bins_cpu.data(),
+            particles_ref.is_rigid_cpu.data(),
+            particles_ref.spatial.num_cells,
+            particles_ref.spatial.grid_start,
+            particles_ref.spatial.inv_cell_size,
+            particles_ref.spatial.num_cells_total,
+            pid);
+    }
+    #endif
+  }
 
 } // namespace pyroclastmpm

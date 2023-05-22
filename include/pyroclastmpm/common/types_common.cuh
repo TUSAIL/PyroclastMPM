@@ -1,8 +1,6 @@
 #pragma once
 
-
 #define CUDA_ENABLED
-
 
 #ifdef CUDA_ENABLED
 #include <thrust/device_vector.h>
@@ -17,7 +15,7 @@ namespace pyroclastmpm
 {
 
 #define DIM 3
-// #define USE_DOUBLES
+  // #define USE_DOUBLES
 
 #ifndef USE_DOUBLES
   using Real = float;
@@ -166,5 +164,8 @@ namespace pyroclastmpm
                      thrust::make_zip_iterator(thrust::make_tuple(__VA_ARGS__)), \
                      N,                                                          \
                      functor)
+
+
+
 
 } // namespace pyroclastmpm

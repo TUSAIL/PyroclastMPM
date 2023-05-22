@@ -32,8 +32,8 @@ namespace pyroclastmpm
     void calculate_grid_normals(NodesContainer &nodes_ref,
                                           ParticlesContainer &particles_ref);
 
-    // void calculate_overlapping_rigidbody(NodesContainer &nodes_ref,
-    //                                      ParticlesContainer &particles_ref);
+    void calculate_overlapping_rigidbody(NodesContainer &nodes_ref,
+                                         ParticlesContainer &particles_ref);
 
     // void update_grid_moments(NodesContainer &nodes_ref,
     //                          ParticlesContainer &particles_ref);
