@@ -157,27 +157,29 @@ namespace pyroclastmpm
         for (int pi = 0; pi < num_particles; pi++)
         {
             pressures_cpu[pi] = -(stresses_cpu[pi].block(0, 0, DIM, DIM).trace() / DIM);
+            is_rigid_cpu[pi] = !is_rigid_cpu[pi]; // flip to make sure we don't output rigid particles
         }
 
-        set_vtk_points(positions_cpu, polydata);
-        set_vtk_pointdata<int>(is_rigid_cpu, polydata, "isRigid");
-        set_vtk_pointdata<Vectorr>(positions_cpu, polydata, "Positions");
-        set_vtk_pointdata<Vectorr>(velocities_cpu, polydata, "Velocity");
-        set_vtk_pointdata<Matrix3r>(stresses_cpu, polydata, "Stress");
-        set_vtk_pointdata<Matrixr>(velocity_gradient_cpu, polydata, "VelocityGradient");
-        set_vtk_pointdata<Matrixr>(F_cpu, polydata, "DeformationMatrix");
-        set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass");
-        set_vtk_pointdata<Real>(volumes_cpu, polydata, "Volume");
-        set_vtk_pointdata<Real>(volumes_original_cpu, polydata, "VolumeOriginal");
-        set_vtk_pointdata<uint8_t>(colors_cpu, polydata, "Color");
-        set_vtk_pointdata<Matrixr>(strain_increments_cpu, polydata, "Strain_Increments");
-        set_vtk_pointdata<Real>(densities_cpu, polydata, "Density");
-        set_vtk_pointdata<uint8_t>(phases_cpu, polydata, "Phase");
-        set_vtk_pointdata<Real>(pressures_cpu, polydata, "Pressure");
-        set_vtk_pointdata<Matrixr>(Fp_cpu, polydata, "PlasticDeformation");
-        set_vtk_pointdata<Real>(mu_cpu, polydata, "FrictionCoef");
-        set_vtk_pointdata<Real>(g_cpu, polydata, "G");
-        set_vtk_pointdata<Real>(ddg_cpu, polydata, "DDG");
+        bool exclude_rigid_from_output = true; // TODO make this an option?
+        set_vtk_points(positions_cpu, polydata, is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<int>(is_rigid_cpu, polydata, "isRigid", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Vectorr>(positions_cpu, polydata, "Positions", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Vectorr>(velocities_cpu, polydata, "Velocity", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Matrix3r>(stresses_cpu, polydata, "Stress", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Matrixr>(velocity_gradient_cpu, polydata, "VelocityGradient", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Matrixr>(F_cpu, polydata, "DeformationMatrix", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(volumes_cpu, polydata, "Volume",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(volumes_original_cpu, polydata, "VolumeOriginal", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<uint8_t>(colors_cpu, polydata, "Color",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Matrixr>(strain_increments_cpu, polydata, "Strain_Increments",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(densities_cpu, polydata, "Density",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<uint8_t>(phases_cpu, polydata, "Phase",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(pressures_cpu, polydata, "Pressure",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Matrixr>(Fp_cpu, polydata, "PlasticDeformation",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(mu_cpu, polydata, "FrictionCoef",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(g_cpu, polydata, "G",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(ddg_cpu, polydata, "DDG",is_rigid_cpu, exclude_rigid_from_output);
 
         // loop over output_formats
         for (auto format : output_formats)

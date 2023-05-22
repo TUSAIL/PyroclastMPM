@@ -20,14 +20,18 @@
 namespace pyroclastmpm
 {
     void set_vtk_points(cpu_array<Vectorr> input,
-                        vtkSmartPointer<vtkPolyData> &polydata);
+                        vtkSmartPointer<vtkPolyData> &polydata,
+                        cpu_array<bool> mask = {},
+                        bool use_mask = false);
 
     template <typename T>
     void set_vtk_pointdata(cpu_array<T> input,
                            vtkSmartPointer<vtkPolyData> &polydata,
-                           const std::string pointdata_name);
+                           const std::string pointdata_name,
+                           cpu_array<bool> mask = {},
+                           bool use_mask = false);
 
     void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
-                            const std::string filename, OutputType output_type= VTK);
+                            const std::string filename, OutputType output_type = VTK);
 
 } // namespace pyroclastmpm
