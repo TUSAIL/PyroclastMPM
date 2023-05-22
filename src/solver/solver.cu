@@ -3,6 +3,16 @@
 namespace pyroclastmpm
 {
 
+#ifdef CUDA_ENABLED
+  extern __constant__ SFType shape_function_gpu;
+  extern __constant__ int num_surround_nodes_gpu;
+  extern __constant__ int forward_window_gpu[64][3];
+#else
+  extern SFType shape_function_cpu;
+  extern int num_surround_nodes_cpu;
+  extern int forward_window_cpu[64][3];
+#endif
+
   /**
    * @brief global step counter for the cpu
    *
@@ -24,17 +34,11 @@ namespace pyroclastmpm
   Solver::Solver(ParticlesContainer _particles,
                  NodesContainer _nodes,
                  cpu_array<MaterialType> _materials,
-                 cpu_array<BoundaryConditionType> _boundaryconditions)
+                 cpu_array<BoundaryConditionType> _boundaryconditions) : particles(_particles),
+                                                                         nodes(_nodes),
+                                                                         materials(_materials),
+                                                                         boundaryconditions(_boundaryconditions)
   {
-
-    particles = _particles;
-
-    nodes = _nodes;
-
-    boundaryconditions = _boundaryconditions;
-
-    materials = _materials;
-
     particles.set_spatialpartition(nodes.node_start, nodes.node_end,
                                    nodes.node_spacing);
 
@@ -65,17 +69,8 @@ namespace pyroclastmpm
 
     for (int mat_id = 0; mat_id < materials.size(); mat_id++)
     {
-
       std::visit([&](auto &arg)
-                 {
-                   // printf(" particles stress_measure (before 1st convert) %d \n",particles.stress_measure);
-                   //  particles.convert_stress_measure(arg.stress_measure);
-                   //  printf(" particles stress_measure (before stress update) %d \n",particles.stress_measure);
-                   arg.stress_update(particles, mat_id);
-                   //  particles.convert_stress_measure(stress_measure); // TODO attached color/id to stress conversion
-                   //  printf(" particles stress_measure  (after second convert) %d\n",particles.stress_measure);
-                   //  printf("material stress measure %d solver stress measure %d  \n", arg.stress_measure,stress_measure);
-                 },
+                 { arg.stress_update(particles, mat_id); },
                  materials[mat_id]);
     }
   }
@@ -108,35 +103,10 @@ namespace pyroclastmpm
       // bc.output_vtk();
 
       std::visit([&](auto &arg)
-                 {
-                   // printf(" particles stress_measure (before 1st convert) %d \n",particles.stress_measure);
-                   //  particles.convert_stress_measure(arg.stress_measure);
-                   //  printf(" particles stress_measure (before stress update) %d \n",particles.stress_measure);
-                   arg.output_vtk();
-                   //  particles.convert_stress_measure(stress_measure); // TODO attached color/id to stress conversion
-                   //  printf(" particles stress_measure  (after second convert) %d\n",particles.stress_measure);
-                   //  printf("material stress measure %d solver stress measure %d  \n", arg.stress_measure,stress_measure);
-                 },
+                 { arg.output_vtk(); },
                  bc);
     }
   }
-
-  /**
-   * @brief Calculate the shapefunction values (and their gradients) for the particles and surrounding nodes
-   *
-   */
-  void Solver::calculate_shape_function()
-  {
-    KERNEL_CALC_SHP<<<particles.launch_config.tpb, particles.launch_config.bpg>>>(
-        thrust::raw_pointer_cast(particles.dpsi_gpu.data()),
-        thrust::raw_pointer_cast(particles.psi_gpu.data()),
-        thrust::raw_pointer_cast(particles.positions_gpu.data()),
-        thrust::raw_pointer_cast(particles.spatial.bins_gpu.data()),
-        thrust::raw_pointer_cast(nodes.node_types_gpu.data()), nodes.num_nodes,
-        nodes.node_start, nodes.inv_node_spacing, particles.num_particles,
-        nodes.num_nodes_total);
-    gpuErrchk(cudaDeviceSynchronize());
-  };
 
   /**
    * @brief Destroy the Solver:: Solver object
@@ -144,7 +114,6 @@ namespace pyroclastmpm
    */
   Solver::~Solver()
   {
-
     global_step_cpu = 0;
   }
 

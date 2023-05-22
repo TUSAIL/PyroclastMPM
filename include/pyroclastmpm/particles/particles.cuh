@@ -1,12 +1,12 @@
 #pragma once
 
-#include <thrust/execution_policy.h>
-#include <thrust/unique.h>
-#include <thrust/remove.h>
+// #include <thrust/execution_policy.h>
+// #include <thrust/unique.h>
+// #include <thrust/remove.h>
 #include "pyroclastmpm/common/types_common.cuh"
 #include "pyroclastmpm/common/helper.cuh"
 #include "pyroclastmpm/common/output.cuh"
-#include "pyroclastmpm/particles/particles_kernels.cuh"
+// #include "pyroclastmpm/particles/particles_kernels.cuh"
 #include "pyroclastmpm/spatialpartition/spatialpartition.cuh"
 
 namespace pyroclastmpm
@@ -33,6 +33,7 @@ namespace pyroclastmpm
         const cpu_array<Vectorr> _positions,
         const cpu_array<Vectorr> _velocities = {},
         const cpu_array<uint8_t> _colors = {},
+        const cpu_array<bool> _is_rigid = {},
         const cpu_array<Matrix3r> _stresses = {},
         const cpu_array<Real> _masses = {},
         const cpu_array<Real> _volumes = {},
@@ -73,7 +74,7 @@ namespace pyroclastmpm
     void set_spatialpartition(const Vectorr start,
                               const Vectorr end,
                               const Real spacing);
-    
+
     /*! @brief particles' stresses, we allways store 3x3 matrix for stresses */
     gpu_array<Matrix3r> stresses_gpu;
 
@@ -124,6 +125,9 @@ namespace pyroclastmpm
     /*! @brief particles' colors (or material type) */
     gpu_array<uint8_t> colors_gpu;
 
+    /*! @brief particles' colors (or material type) */
+    gpu_array<bool> is_rigid_gpu;
+
     /*! * @brief granular fluidity d2g */
     gpu_array<Real> logJp_gpu;
 
@@ -157,14 +161,15 @@ namespace pyroclastmpm
     /*! @brief Total Number of particles */
     int num_particles;
 
+#ifdef CUDA_ENABLED
     GPULaunchConfig launch_config;
+#endif
 
     cpu_array<OutputType> output_formats;
 
     bool isRestart = false;
 
     int numColors = 0;
-
   };
 
 } // namespace pyroclastmpm

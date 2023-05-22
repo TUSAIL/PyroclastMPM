@@ -8,17 +8,24 @@ from .boundaryconditions import (
     Gravity,
     BoundaryCondition,
     BodyForce,
-    RigidParticles,
+    RigidBodyLevelSet,
     PlanarDomain,
     NodeDomain
 )
 
-from .materials import (Material, LinearElastic, NewtonFluid,
-                        LocalGranularRheology,
-                        DruckerPrager
-                        )
+from .materials import (
+    Material,
+    LinearElastic,
+    NewtonFluid,
+    LocalGranularRheology,
 
-from .solver import USL, TLMPM, MUSL
+    )
+
+from .solver import (
+                     USL, 
+                    #  TLMPM,
+                    #  MUSL
+                     )
 
 from .pyroclastmpm_pybind import (
     LinearShapeFunction,

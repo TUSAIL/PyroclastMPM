@@ -1,5 +1,6 @@
-#include "pyroclastmpm/solver/solver.cuh"
-#include "pyroclastmpm/solver/usl/usl.cuh"
+#include "pyroclastmpm/shapefunction/shapefunction.cuh"
+
+
 // Functions to test
 // [x] LinearShapeFunction
 // [ ] QuadraticShapeFunction (to be fixed)
@@ -26,21 +27,19 @@ TEST(ShapeFunctions, LinearShapeFunction)
 
   ParticlesContainer particles = ParticlesContainer(pos);
 
-  Solver solver = Solver(particles, nodes);
+  particles.set_spatialpartition(nodes.node_start, nodes.node_end,
+    nodes.node_spacing);
 
-  solver.calculate_shape_function();
+  calculate_shape_function(nodes, particles);
 
-  cpu_array<Real> psi = solver.particles.psi_gpu;
-
-  cpu_array<Vectorr> dpsi = solver.particles.dpsi_gpu;
-
-
+  cpu_array<Real> psi = particles.psi_gpu;
+  cpu_array<Vectorr> dpsi = particles.dpsi_gpu;
+  
   Real sum_psi = 0.0;
   for (int i = 0; i < psi.size(); i++)
   {
     sum_psi += psi[i];
   }
-
   EXPECT_NEAR(sum_psi, 1., 0.0001);
   
 #if DIM == 3
@@ -56,24 +55,24 @@ TEST(ShapeFunctions, LinearShapeFunction)
 
   EXPECT_NEAR(dpsi[0][0], -9, 0.0001);
   EXPECT_NEAR(dpsi[0][1], -5, 0.0001);
-  EXPECT_NEAR(dpsi[0][2], -4.5, 0.0001);
+  EXPECT_NEAR(dpsi[0][2], 0., 0.0001);
 
   EXPECT_NEAR(dpsi[1][0], 0, 0.0001);
   EXPECT_NEAR(dpsi[1][1], 0, 0.0001);
-  EXPECT_NEAR(dpsi[1][2], 0, 0.0001);
+  EXPECT_NEAR(dpsi[1][2], 4.5, 0.0001);
 
   EXPECT_NEAR(dpsi[2][0], 9, 0.0001);
   EXPECT_NEAR(dpsi[2][1], -5, 0.0001);
-  EXPECT_NEAR(dpsi[2][2], -4.5, 0.0001);
+  EXPECT_NEAR(dpsi[2][2], 0, 0.0001);
   EXPECT_NEAR(dpsi[3][0], 0, 0.0001);
   EXPECT_NEAR(dpsi[3][1], 0, 0.0001);
-  EXPECT_NEAR(dpsi[3][2], 0, 0.0001);
+  EXPECT_NEAR(dpsi[3][2], 4.5, 0.0001);
   EXPECT_NEAR(dpsi[4][0], -1, 0.0001);
   EXPECT_NEAR(dpsi[4][1], 5, 0.0001);
-  EXPECT_NEAR(dpsi[4][2], -0.5, 0.0001);
+  EXPECT_NEAR(dpsi[4][2], 0, 0.0001);
   EXPECT_NEAR(dpsi[5][0], 0, 0.0001);
   EXPECT_NEAR(dpsi[5][1], 0, 0.0001);
-  EXPECT_NEAR(dpsi[5][2], 0, 0.0001);
+  EXPECT_NEAR(dpsi[5][2], 0.5, 0.0001);
 
 #elif DIM == 2
   EXPECT_NEAR(psi[0], 0.45, 0.0001);
@@ -95,7 +94,7 @@ TEST(ShapeFunctions, LinearShapeFunction)
   EXPECT_NEAR(psi[1], 0.4, 0.0001);
 
   EXPECT_NEAR(dpsi[0][0], -10, 0.0001);
-  EXPECT_NEAR(dpsi[0][1], 10, 0.0001);
+  EXPECT_NEAR(dpsi[1][0], 10, 0.0001);
 
 #endif
 }
@@ -108,7 +107,7 @@ TEST(ShapeFunctions, CubicShapeFunction)
 #elif DIM == 2
   std::vector<Vectorr> pos = {Vectorr({0.45, 0.21})};
 #else
-  std::vector<Vectorr> pos = {Vectorr(0.94)};
+  std::vector<Vectorr> pos = {Vectorr(0.45)};
 #endif
 
   Vectorr min = Vectorr::Zero();
@@ -116,16 +115,17 @@ TEST(ShapeFunctions, CubicShapeFunction)
   Real nodal_spacing = 0.1;
 
   NodesContainer nodes = NodesContainer(min, max, nodal_spacing);
-
   ParticlesContainer particles = ParticlesContainer(pos);
 
-  Solver solver = Solver(particles, nodes);
 
-  solver.calculate_shape_function();
+  particles.set_spatialpartition(nodes.node_start, nodes.node_end,
+    nodes.node_spacing);
+  
+  calculate_shape_function(nodes, particles);
 
-  cpu_array<Real> psi = solver.particles.psi_gpu;
+  cpu_array<Real> psi = particles.psi_gpu;
 
-  cpu_array<Vectorr> dpsi = solver.particles.dpsi_gpu;
+  cpu_array<Vectorr> dpsi = particles.dpsi_gpu;
 
   Real sum_psi = 0.0;
   for (int i = 0; i < psi.size(); i++)
@@ -138,7 +138,6 @@ TEST(ShapeFunctions, CubicShapeFunction)
   // we only check some nodes
   // should already give us an idea if the function is correct
 #if DIM == 3
-
   EXPECT_NEAR(psi[0], 0.00042187, 0.0001);
   EXPECT_NEAR(psi[1], 0.00168750, 0.0001);
   EXPECT_NEAR(psi[2], 0.00042187, 0.0001);
@@ -188,11 +187,10 @@ TEST(ShapeFunctions, CubicShapeFunction)
   EXPECT_NEAR(dpsi[3][1], -0.08437495, 0.0001);
 
 #else
-  EXPECT_NEAR(psi[0], 0.03600000, 0.0001);
-  EXPECT_NEAR(psi[1], 0.52799999, 0.0001);
+  EXPECT_NEAR(psi[0], 0.02083333, 0.0001);
+  EXPECT_NEAR(psi[1], 0.47916666, 0.0001);
 
-  EXPECT_NEAR(dpsi[0][0], -1.80000019, 0.0001);
-  EXPECT_NEAR(dpsi[0][1], -6.39999961, 0.0001);
-
+  EXPECT_NEAR(dpsi[0][0], -1.25, 0.0001);
+  EXPECT_NEAR(dpsi[1][0], -6.25, 0.0001);
 #endif
 }

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "pyroclastmpm/boundaryconditions/nodedomain/nodedomain.cuh"
+#include "pyroclastmpm/boundaryconditions/nodedomain.cuh"
 #include "pyroclastmpm/nodes/nodes.cuh"
 
 // Functions to test

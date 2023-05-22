@@ -3,29 +3,28 @@
 namespace pyroclastmpm
 {
 
+#ifdef CUDA_ENABLED
+  extern Real __constant__ dt_gpu;
+#else
+  extern Real dt_cpu;
+#endif
+
+  extern SFType shape_function_cpu;
+
+#include "nodes_inline.cuh"
+
   NodesContainer::NodesContainer(const Vectorr _node_start,
                                  const Vectorr _node_end,
                                  const Real _node_spacing,
                                  const cpu_array<OutputType> _output_formats)
+      : node_start(_node_start),
+        node_end(_node_end),
+        node_spacing(_node_spacing),
+        output_formats(_output_formats)
   {
-
-    output_formats = _output_formats;
-
-    node_start = _node_start;
-    node_end = _node_end;
-    node_spacing = _node_spacing;
-
-    inv_node_spacing = 1. / node_spacing;
-
+    inv_node_spacing = 1.0 / node_spacing;
     num_nodes_total = 1;
-
-#if DIM == 3
-    num_nodes = Vectori({1, 1, 1});
-#elif DIM == 2
-    num_nodes = Vectori({1, 1});
-#else
-    num_nodes = Vectori(1);
-#endif
+    num_nodes = Vectori::Ones();
 
     for (int axis = 0; axis < DIM; axis++)
     {
@@ -40,60 +39,130 @@ namespace pyroclastmpm
     set_default_device<Vectorr>(num_nodes_total, {}, forces_total_gpu, Vectorr::Zero());
     set_default_device<Real>(num_nodes_total, {}, masses_gpu, 0.);
     set_default_device<Vectori>(num_nodes_total, {}, node_ids_gpu, Vectori::Zero());
-    set_default_device<Vectori>(num_nodes_total, {}, node_types_gpu, Vectori::Zero()); // TODO make this Vectoru8 (Vector of 8bit unsigned ints)
-
-    gpuErrchk(cudaDeviceSynchronize());
-
+    set_default_device<Vectori>(num_nodes_total, {}, node_types_gpu, Vectori::Zero());
     reset();
 
-    launch_config.tpb = dim3(int((num_nodes_total) / BLOCKSIZE) + 1, 1, 1);
-    launch_config.bpg = dim3(BLOCKSIZE, 1, 1);
-
-#if DIM == 3
-    launch_config_map.tpb = dim3(BLOCKSIZE / pow(2, DIM), BLOCKSIZE / pow(2, DIM), BLOCKSIZE / pow(2, DIM));
-    launch_config_map.bpg = dim3((num_nodes(0) / launch_config_map.tpb.x) + 1,
-                                 (num_nodes(1) / launch_config_map.tpb.y) + 1,
-                                 (num_nodes(2) / launch_config_map.tpb.z) + 1);
-#elif DIM == 2
-    launch_config_map.tpb = dim3(BLOCKSIZE / pow(2, DIM), BLOCKSIZE / pow(2, DIM), 1);
-    launch_config_map.bpg = dim3((num_nodes(0) / launch_config_map.tpb.x) + 1,
-                                 (num_nodes(1) / launch_config_map.tpb.y) + 1, 1);
-#else
-    launch_config_map.tpb = dim3(BLOCKSIZE / pow(2, DIM), 1, 1);
-    launch_config_map.bpg = dim3((num_nodes(0) / launch_config_map.tpb.x) + 1, 1, 1);
+    // Calculate integer placement of nodes (x,y,z) along the grid
+    cpu_array<Vectori> node_ids_cpu = node_ids_gpu;
+    cpu_array<Vectori> node_types_cpu = node_types_gpu;
+#if DIM == 1
+    for (int xi = 0; xi < num_nodes(0); xi++)
+    {
+      int index = xi;
+      node_ids_cpu[index] = Vectori(xi);
+    }
 #endif
 
-    KERNEL_GIVE_NODE_IDS<<<launch_config_map.tpb, launch_config_map.bpg>>>(
-        thrust::raw_pointer_cast(node_ids_gpu.data()), num_nodes);
+#if DIM == 2
+    for (int xi = 0; xi < num_nodes(0); xi++)
+    {
+      for (int yi = 0; yi < num_nodes(1); yi++)
+      {
+        int index = xi + yi * num_nodes(0);
+        node_ids_cpu[index] = Vectori({xi, yi});
+      }
+    }
+#endif
 
+#if DIM == 3
+    for (int xi = 0; xi < num_nodes(0); xi++)
+    {
+      for (int yi = 0; yi < num_nodes(1); yi++)
+      {
+        for (int zi = 0; zi < num_nodes(2); zi++)
+        {
+          int index = xi + yi * num_nodes(0) + zi * num_nodes(0) * num_nodes(1);
+          node_ids_cpu[index] = Vectori({xi, yi, zi});
+        }
+      }
+    }
+#endif
+
+    for (int index = 0; index < num_nodes_total; index++)
+    {
+      for (int axis = 0; axis < DIM; axis++)
+      {
+        if (shape_function_cpu == CubicShapeFunction)
+        {
+          if ((node_ids_cpu[index][axis] == 0) | (node_ids_cpu[index][axis] == num_nodes[axis] - 1))
+          {
+            // Cell at boundary
+            node_types_cpu[index][axis] = 1;
+          }
+          else if (node_ids_cpu[index][axis] == 1)
+          {
+            // Cell right of boundary
+            node_types_cpu[index][axis] = 2;
+          }
+          else if (node_ids_cpu[index][axis] == node_ids_cpu[index][axis] - 2)
+          {
+            // Cell left of boundary
+            node_types_cpu[index][axis] = 4;
+          }
+          else
+          {
+            node_types_cpu[index][axis] = 3;
+          }
+        }
+      }
+    }
+    node_types_gpu = node_types_cpu;
+    node_ids_gpu = node_ids_cpu;
+
+#ifdef CUDA_ENABLED
+    launch_config.tpb = dim3(int((num_nodes_total) / BLOCKSIZE) + 1, 1, 1);
+    launch_config.bpg = dim3(BLOCKSIZE, 1, 1);
     gpuErrchk(cudaDeviceSynchronize());
-
-    KERNEL_SET_NODE_TYPES<<<launch_config_map.tpb, launch_config_map.bpg>>>(
-        thrust::raw_pointer_cast(node_types_gpu.data()), num_nodes);
-
-    gpuErrchk(cudaDeviceSynchronize());
+#endif
   }
 
   NodesContainer::~NodesContainer() {}
 
   void NodesContainer::reset()
   {
-    thrust::fill(thrust::device, moments_gpu.begin(), moments_gpu.end(),
+    execution_policy exec;
+    thrust::fill(exec, moments_gpu.begin(), moments_gpu.end(),
                  Vectorr::Zero());
-    thrust::fill(thrust::device, moments_nt_gpu.begin(), moments_nt_gpu.end(),
+    thrust::fill(exec, moments_nt_gpu.begin(), moments_nt_gpu.end(),
                  Vectorr::Zero());
-    thrust::fill(thrust::device, forces_external_gpu.begin(),
+    thrust::fill(exec, forces_external_gpu.begin(),
                  forces_external_gpu.end(), Vectorr::Zero());
-    thrust::fill(thrust::device, forces_internal_gpu.begin(),
+    thrust::fill(exec, forces_internal_gpu.begin(),
                  forces_internal_gpu.end(), Vectorr::Zero());
-    thrust::fill(thrust::device, forces_total_gpu.begin(), forces_total_gpu.end(),
+    thrust::fill(exec, forces_total_gpu.begin(), forces_total_gpu.end(),
                  Vectorr::Zero());
-    thrust::fill(thrust::device, masses_gpu.begin(), masses_gpu.end(), 0.);
-    gpuErrchk(cudaDeviceSynchronize());
+    thrust::fill(exec, masses_gpu.begin(), masses_gpu.end(), 0.);
   }
+
+  struct IntegrateFunctor
+  {
+    template <typename Tuple>
+    __host__ __device__ void operator()(Tuple tuple) const
+    {
+      Vectorr &moments_nt = thrust::get<0>(tuple);
+      Vectorr &forces_total = thrust::get<1>(tuple);
+      const Vectorr &forces_external = thrust::get<2>(tuple);
+      const Vectorr &forces_internal = thrust::get<3>(tuple);
+      const Vectorr &moments = thrust::get<4>(tuple);
+      const Real &mass = thrust::get<5>(tuple);
+      if (mass <= 0.000000001)
+      {
+        return;
+      }
+      const Vectorr ftotal = forces_internal + forces_external;
+      forces_total = ftotal;
+#ifdef CUDA_ENABLED
+      moments_nt = moments + ftotal * dt_gpu;
+#else
+      moments_nt = moments + ftotal * dt_cpu;
+#endif
+    }
+  };
 
   void NodesContainer::integrate()
   {
+
+#ifdef CUDA_ENABLED
     KERNEL_INTEGRATE<<<launch_config.tpb, launch_config.bpg>>>(
         thrust::raw_pointer_cast(moments_nt_gpu.data()),
         thrust::raw_pointer_cast(forces_total_gpu.data()),
@@ -102,36 +171,37 @@ namespace pyroclastmpm
         thrust::raw_pointer_cast(moments_gpu.data()),
         thrust::raw_pointer_cast(masses_gpu.data()), num_nodes_total);
     gpuErrchk(cudaDeviceSynchronize());
+#else
+    for (int nid = 0; nid < num_nodes_total; nid++)
+    {
+      integrate_nodes(
+          moments_nt_gpu.data(),
+          forces_total_gpu.data(),
+          forces_external_gpu.data(),
+          forces_internal_gpu.data(),
+          moments_gpu.data(),
+          masses_gpu.data(),
+          nid);
+    }
+#endif
   }
 
-  thrust::device_vector<Vectorr> NodesContainer::give_node_coords()
+  gpu_array<Vectorr> NodesContainer::give_node_coords()
   {
-    gpu_array<Vectorr> node_coords_gpu;
-
-    set_default_device<Vectorr>(num_nodes_total, {}, node_coords_gpu, Vectorr::Zero());
-
-    KERNEL_GIVE_NODE_COORDS<<<launch_config_map.tpb, launch_config_map.bpg>>>(
-        thrust::raw_pointer_cast(node_coords_gpu.data()), inv_node_spacing,
-        num_nodes);
-
-    cpu_array<Vectorr> node_coords;
-
-    node_coords = node_coords_gpu;
-
-    return node_coords;
+    gpu_array<Vectorr> node_coords_cpu;
+    node_coords_cpu.resize(num_nodes_total);
+    cpu_array<Vectori> node_ids_cpu = node_ids_gpu;
+    for (size_t i = 0; i < num_nodes_total; i++)
+    {
+      node_coords_cpu[i] = node_start + node_ids_cpu[i].cast<Real>() * node_spacing;
+    }
+    gpu_array<Vectorr> node_coords_gpu = node_coords_cpu;
+    return node_coords_gpu;
   }
 
   std::vector<Vectorr> NodesContainer::give_node_coords_stl()
   {
-
-    gpu_array<Vectorr> node_coords_gpu;
-
-    set_default_device<Vectorr>(num_nodes_total, {}, node_coords_gpu, Vectorr::Zero());
-
-    KERNEL_GIVE_NODE_COORDS<<<launch_config_map.tpb, launch_config_map.bpg>>>(
-        thrust::raw_pointer_cast(node_coords_gpu.data()), inv_node_spacing,
-        num_nodes);
-
+    gpu_array<Vectorr> node_coords_gpu = give_node_coords();
     return std::vector<Vectorr>(node_coords_gpu.begin(), node_coords_gpu.end());
   }
 

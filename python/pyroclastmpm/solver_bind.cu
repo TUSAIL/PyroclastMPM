@@ -9,8 +9,8 @@
 // SOLVERS
 #include "pyroclastmpm/solver/solver.cuh"
 #include "pyroclastmpm/solver/usl/usl.cuh"
-#include "pyroclastmpm/solver/tlmpm/tlmpm.cuh"
-#include "pyroclastmpm/solver/musl/musl.cuh"
+// #include "pyroclastmpm/solver/tlmpm/tlmpm.cuh"
+// #include "pyroclastmpm/solver/musl/musl.cuh"
 // #include "pyroclastmpm/solver/apic/apic.cuh"
 
 namespace py = pybind11;
@@ -67,22 +67,20 @@ namespace pyroclastmpm
                 std::vector<BoundaryConditionType>(),
             py::arg("alpha") = 0.99); // INIT
 
-
-        // MUSL SOLVER
-        py::class_<MUSL, USL>(m, "MUSL").def(
-            py::init<ParticlesContainer, NodesContainer, std::vector<MaterialType>,
-                     std::vector<BoundaryConditionType>, Real>(),
-            py::arg("particles"), py::arg("nodes"),
-            py::arg("materials") = std::vector<MaterialType>(),
-            py::arg("boundaryconditions") =
-                std::vector<BoundaryConditionType>(),
-            py::arg("alpha") = 0.99); // INIT
-
-        // TLMPM SOLVER
-        py::class_<TLMPM, MUSL>(m, "TLMPM").def(py::init<ParticlesContainer, NodesContainer, std::vector<MaterialType>, std::vector<BoundaryConditionType>, Real>(), py::arg("particles"), py::arg("nodes"), py::arg("materials") = std::vector<MaterialType>(), py::arg("boundaryconditions") = std::vector<BoundaryConditionType>(), py::arg("alpha") = 0.99); // INIT
-
-
         // // MUSL SOLVER
+        // py::class_<MUSL, USL>(m, "MUSL").def(
+        //     py::init<ParticlesContainer, NodesContainer, std::vector<MaterialType>,
+        //              std::vector<BoundaryConditionType>, Real>(),
+        //     py::arg("particles"), py::arg("nodes"),
+        //     py::arg("materials") = std::vector<MaterialType>(),
+        //     py::arg("boundaryconditions") =
+        //         std::vector<BoundaryConditionType>(),
+        //     py::arg("alpha") = 0.99); // INIT
+
+        // // TLMPM SOLVER
+        // py::class_<TLMPM, MUSL>(m, "TLMPM").def(py::init<ParticlesContainer, NodesContainer, std::vector<MaterialType>, std::vector<BoundaryConditionType>, Real>(), py::arg("particles"), py::arg("nodes"), py::arg("materials") = std::vector<MaterialType>(), py::arg("boundaryconditions") = std::vector<BoundaryConditionType>(), py::arg("alpha") = 0.99); // INIT
+
+        // // APIC SOLVER
         // py::class_<APIC, Solver>(m, "APIC").def(
         //     py::init<ParticlesContainer, NodesContainer, std::vector<MaterialType>,
         //              std::vector<BoundaryConditionType>>(),

@@ -16,11 +16,12 @@ namespace pyroclastmpm
   {
     py::class_<ParticlesContainer>(m, "ParticlesContainer")
         .def(py::init<std::vector<Vectorr>, std::vector<Vectorr>,
-                      std::vector<int>, std::vector<Matrix3r>, std::vector<Real>,
+                      std::vector<int>, std::vector<bool>, std::vector<Matrix3r>, std::vector<Real>,
                       std::vector<Real>, std::vector<OutputType>>(),
              py::arg("positions"),
              py::arg("velocities") = std::vector<Vectorr>(),
              py::arg("colors") = std::vector<int>(),
+             py::arg("is_rigid") = std::vector<bool>(),
              py::arg("stresses") = std::vector<Matrix3r>(),
              py::arg("masses") = std::vector<Real>(),
              py::arg("volumes") = std::vector<Real>(),
@@ -179,6 +180,7 @@ namespace pyroclastmpm
                   std::vector<Vectorr>(a.velocities_gpu.begin(),
                                        a.velocities_gpu.end()),
                   std::vector<int>(a.colors_gpu.begin(), a.colors_gpu.end()),
+                  std::vector<int>(a.is_rigid_gpu.begin(), a.is_rigid_gpu.end()),
                   std::vector<Matrix3r>(a.stresses_gpu.begin(),
                                         a.stresses_gpu.end()),
                   std::vector<Real>(a.masses_gpu.begin(), a.masses_gpu.end()),
@@ -205,21 +207,22 @@ namespace pyroclastmpm
                   t[0].cast<std::vector<Vectorr>>(),
                   t[1].cast<std::vector<Vectorr>>(),
                   t[2].cast<std::vector<int>>(),
-                  t[3].cast<std::vector<Matrix3r>>(),
-                  t[4].cast<std::vector<Real>>(),
+                  t[3].cast<std::vector<bool>>(),
+                  t[4].cast<std::vector<Matrix3r>>(),
                   t[5].cast<std::vector<Real>>(),
-                  t[6].cast<std::vector<OutputType>>());
-              particles.F_gpu = t[7].cast<std::vector<Matrixr>>();
+                  t[6].cast<std::vector<Real>>(),
+                  t[7].cast<std::vector<OutputType>>());
+              particles.F_gpu = t[8].cast<std::vector<Matrixr>>();
               particles.velocity_gradient_gpu =
-                  t[8].cast<std::vector<Matrixr>>();
-              particles.strain_increments_gpu =
                   t[9].cast<std::vector<Matrixr>>();
-              particles.dpsi_gpu = t[10].cast<std::vector<Vectorr>>();
-              particles.volumes_original_gpu = t[11].cast<std::vector<Real>>();
-              particles.psi_gpu = t[12].cast<std::vector<Real>>();
-              particles.densities_gpu = t[13].cast<std::vector<Real>>();
-              particles.pressures_gpu = t[14].cast<std::vector<Real>>();
-              particles.phases_gpu = t[15].cast<std::vector<int>>();
+              particles.strain_increments_gpu =
+                  t[10].cast<std::vector<Matrixr>>();
+              particles.dpsi_gpu = t[11].cast<std::vector<Vectorr>>();
+              particles.volumes_original_gpu = t[12].cast<std::vector<Real>>();
+              particles.psi_gpu = t[13].cast<std::vector<Real>>();
+              particles.densities_gpu = t[14].cast<std::vector<Real>>();
+              particles.pressures_gpu = t[15].cast<std::vector<Real>>();
+              particles.phases_gpu = t[16].cast<std::vector<int>>();
               return particles;
             }));
   };

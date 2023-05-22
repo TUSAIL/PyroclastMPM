@@ -6,7 +6,7 @@ from pyroclastmpm import (
     LinearElastic,
     ParticlesContainer,
     NodesContainer,
-    USL, MUSL,
+    USL, 
     LinearShapeFunction,
     set_globals,
     global_dimension,
@@ -78,7 +78,7 @@ material = LinearElastic(
     E=config['material']['E'],
     pois=config['material']['pois'])
 
-MPM = MUSL(
+MPM = USL(
     particles=particles,
     nodes=nodes,
     materials=[material, material],

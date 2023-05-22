@@ -20,19 +20,19 @@ namespace pyroclastmpm
         const cpu_array<Vectorr> _positions,
         const cpu_array<Vectorr> _velocities,
         const cpu_array<uint8_t> _colors,
+        const cpu_array<bool> _is_rigid,
         const cpu_array<Matrix3r> _stresses,
         const cpu_array<Real> _masses,
         const cpu_array<Real> _volumes,
-        const cpu_array<OutputType> _output_formats)
+        const cpu_array<OutputType> _output_formats) : output_formats(_output_formats)
     {
-
-        output_formats = _output_formats;
         num_particles = _positions.size();
 
         set_default_device<Matrix3r>(num_particles, _stresses, stresses_gpu, Matrix3r::Zero());
         set_default_device<Vectorr>(num_particles, _positions, positions_gpu, Vectorr::Zero());
         set_default_device<Vectorr>(num_particles, _velocities, velocities_gpu, Vectorr::Zero());
         set_default_device<uint8_t>(num_particles, _colors, colors_gpu, 0);
+        set_default_device<bool>(num_particles, _is_rigid, is_rigid_gpu, false);
         set_default_device<Real>(num_particles, _masses, masses_gpu, -1.0);
         set_default_device<Real>(num_particles, _volumes, volumes_gpu, -1.0);
 
@@ -64,32 +64,35 @@ namespace pyroclastmpm
 
         spatial = SpatialPartition(); // create a temporary partitioning object, since we are getting domain size
 
+#ifdef CUDA_ENABLED
         launch_config.tpb = dim3(int((num_particles) / BLOCKSIZE) + 1, 1, 1);
         launch_config.bpg = dim3(BLOCKSIZE, 1, 1);
-
         gpuErrchk(cudaDeviceSynchronize());
+#endif
 
         reset(); // reset needed
     }
 
+
+
+
     void ParticlesContainer::reset(bool reset_psi)
     {
 
+        execution_policy exec;
         if (reset_psi)
         {
-            thrust::fill(thrust::device, psi_gpu.begin(), psi_gpu.end(), 0.);
-            thrust::fill(thrust::device, dpsi_gpu.begin(), dpsi_gpu.end(),
+            thrust::fill(exec, psi_gpu.begin(), psi_gpu.end(), 0.);
+            thrust::fill(exec, dpsi_gpu.begin(), dpsi_gpu.end(),
                          Vectorr::Zero());
         }
-
-        thrust::fill(thrust::device, velocity_gradient_gpu.begin(),
+        thrust::fill(exec, velocity_gradient_gpu.begin(),
                      velocity_gradient_gpu.end(), Matrixr::Zero());
 
-        thrust::fill(thrust::device, pressures_gpu.begin(), pressures_gpu.end(), 0.);
+        thrust::fill(exec, pressures_gpu.begin(), pressures_gpu.end(), 0.);
 
-        thrust::fill(thrust::device, phases_gpu.begin(), phases_gpu.end(), -1);
-        thrust::fill(thrust::device, forces_external_gpu.begin(), forces_external_gpu.end(), Vectorr::Zero());
-
+        thrust::fill(exec, phases_gpu.begin(), phases_gpu.end(), -1);
+        thrust::fill(exec, forces_external_gpu.begin(), forces_external_gpu.end(), Vectorr::Zero());
     }
 
     void ParticlesContainer::reorder()
@@ -104,6 +107,7 @@ namespace pyroclastmpm
         reorder_device_array<Matrixr>(F_gpu, spatial.sorted_index_gpu);
         reorder_device_array<Vectorr>(dpsi_gpu, spatial.sorted_index_gpu);
         reorder_device_array<uint8_t>(colors_gpu, spatial.sorted_index_gpu);
+        reorder_device_array<bool>(is_rigid_gpu, spatial.sorted_index_gpu);
         reorder_device_array<Real>(volumes_gpu, spatial.sorted_index_gpu);
         reorder_device_array<Real>(volumes_original_gpu, spatial.sorted_index_gpu);
         reorder_device_array<Real>(masses_gpu, spatial.sorted_index_gpu);
@@ -144,6 +148,8 @@ namespace pyroclastmpm
         cpu_array<int> colors_cpu = colors_gpu;
         cpu_array<int> phases_cpu = phases_gpu;
 
+        cpu_array<int> is_rigid_cpu = is_rigid_gpu;
+
         // get pressure
         cpu_array<Real> pressures_cpu;
         pressures_cpu.resize(num_particles);
@@ -151,26 +157,29 @@ namespace pyroclastmpm
         for (int pi = 0; pi < num_particles; pi++)
         {
             pressures_cpu[pi] = -(stresses_cpu[pi].block(0, 0, DIM, DIM).trace() / DIM);
+            is_rigid_cpu[pi] = !is_rigid_cpu[pi]; // flip to make sure we don't output rigid particles
         }
 
-        set_vtk_points(positions_cpu, polydata);
-        set_vtk_pointdata<Vectorr>(positions_cpu, polydata, "Positions");
-        set_vtk_pointdata<Vectorr>(velocities_cpu, polydata, "Velocity");
-        set_vtk_pointdata<Matrix3r>(stresses_cpu, polydata, "Stress");
-        set_vtk_pointdata<Matrixr>(velocity_gradient_cpu, polydata, "VelocityGradient");
-        set_vtk_pointdata<Matrixr>(F_cpu, polydata, "DeformationMatrix");
-        set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass");
-        set_vtk_pointdata<Real>(volumes_cpu, polydata, "Volume");
-        set_vtk_pointdata<Real>(volumes_original_cpu, polydata, "VolumeOriginal");
-        set_vtk_pointdata<uint8_t>(colors_cpu, polydata, "Color");
-        set_vtk_pointdata<Matrixr>(strain_increments_cpu, polydata, "Strain_Increments");
-        set_vtk_pointdata<Real>(densities_cpu, polydata, "Density");
-        set_vtk_pointdata<uint8_t>(phases_cpu, polydata, "Phase");
-        set_vtk_pointdata<Real>(pressures_cpu, polydata, "Pressure");
-        set_vtk_pointdata<Matrixr>(Fp_cpu, polydata, "PlasticDeformation");
-        set_vtk_pointdata<Real>(mu_cpu, polydata, "FrictionCoef");
-        set_vtk_pointdata<Real>(g_cpu, polydata, "G");
-        set_vtk_pointdata<Real>(ddg_cpu, polydata, "DDG");
+        bool exclude_rigid_from_output = true; // TODO make this an option?
+        set_vtk_points(positions_cpu, polydata, is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<int>(is_rigid_cpu, polydata, "isRigid", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Vectorr>(positions_cpu, polydata, "Positions", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Vectorr>(velocities_cpu, polydata, "Velocity", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Matrix3r>(stresses_cpu, polydata, "Stress", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Matrixr>(velocity_gradient_cpu, polydata, "VelocityGradient", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Matrixr>(F_cpu, polydata, "DeformationMatrix", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(volumes_cpu, polydata, "Volume",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(volumes_original_cpu, polydata, "VolumeOriginal", is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<uint8_t>(colors_cpu, polydata, "Color",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Matrixr>(strain_increments_cpu, polydata, "Strain_Increments",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(densities_cpu, polydata, "Density",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<uint8_t>(phases_cpu, polydata, "Phase",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(pressures_cpu, polydata, "Pressure",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Matrixr>(Fp_cpu, polydata, "PlasticDeformation",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(mu_cpu, polydata, "FrictionCoef",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(g_cpu, polydata, "G",is_rigid_cpu, exclude_rigid_from_output);
+        set_vtk_pointdata<Real>(ddg_cpu, polydata, "DDG",is_rigid_cpu, exclude_rigid_from_output);
 
         // loop over output_formats
         for (auto format : output_formats)

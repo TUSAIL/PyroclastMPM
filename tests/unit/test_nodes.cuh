@@ -88,10 +88,10 @@ TEST(NodesContainer, CONSTRUCTOR)
   // TODO insert test for node types
 }
 
-/**
- * @brief Construct a new TEST object for integrating the nodes
- *
- */
+// /**
+//  * @brief Construct a new TEST object for integrating the nodes
+//  *
+//  */
 TEST(NodesContainer, INTEGRATE)
 {
   set_global_dt(0.1);

@@ -4,68 +4,69 @@
 #include "pyroclastmpm/nodes/nodes.cuh"
 #include "pyroclastmpm/particles/particles.cuh"
 
-namespace pyroclastmpm {
-
-/*!
- * @brief Boundary condition base class. The functions are called from a Solver class.
- */
-struct BoundaryCondition {
-
-  // FUNCTIONS
+namespace pyroclastmpm
+{
 
   /*!
-   * @brief default constructor
+   * @brief Boundary condition base class. The functions are called from a Solver class.
    */
-  BoundaryCondition() = default;
+  struct BoundaryCondition
+  {
 
-  /*!
-   * @brief default destructor
-   */
-  ~BoundaryCondition() = default;
+    // FUNCTIONS
 
-  /*!
-   * @brief Apply on node forces
-   * @param nodes_ref refernce to node container
-   */
-  virtual void apply_on_nodes_loads(NodesContainer& nodes_ref){};
+    /*!
+     * @brief default constructor
+     */
+    BoundaryCondition() = default;
 
-  /*!
-   * @brief Apply on node moments
-   * @param nodes_ref reference to node container
-   */
-  virtual void apply_on_nodes_moments(NodesContainer& nodes_ref, ParticlesContainer & particles_ref){};
+    /*!
+     * @brief default destructor
+     */
+    ~BoundaryCondition() = default;
 
-  /*!
-   * @brief Apply on nodes forces
-   * @param nodes_ref reference to node container
-   */
-  virtual void apply_on_nodes_f_ext(NodesContainer& nodes_ref){};
+    /*!
+     * @brief Apply on node forces
+     * @param nodes_ref refernce to node container
+     */
+    virtual void apply_on_nodes_loads(NodesContainer &nodes_ref){};
 
-  /*!
-   * @brief Apply on particles
-   * @param particles_ref reference to particles
-   */
-  virtual void apply_on_particles(ParticlesContainer& particles_ref){};
+    /*!
+     * @brief Apply on node moments
+     * @param nodes_ref reference to node container
+     */
+    virtual void apply_on_nodes_moments(NodesContainer &nodes_ref, ParticlesContainer &particles_ref){};
 
-  /*!
-   * @brief Output after certain number of steps 
-   */
-  virtual void output_vtk(){};
+    /*!
+     * @brief Apply on nodes forces
+     * @param nodes_ref reference to node container
+     */
+    virtual void apply_on_nodes_f_ext(NodesContainer &nodes_ref){};
 
-  // VARIABLES
+    /*!
+     * @brief Apply on particles
+     * @param particles_ref reference to particles
+     */
+    virtual void apply_on_particles(ParticlesContainer &particles_ref){};
 
-  /*!
-   * @brief Enum of type of boundary condition (NodeBoundaryCondition,
-   * ParticleBoundaryCondition)
-   */
-  BCType type;
+    /*!
+     * @brief Output after certain number of steps
+     */
+    virtual void output_vtk(){};
 
+    // VARIABLES
 
-  /**
-   * @brief Is the boundary condition active or not
-   * 
-   */
-  bool isActive= true;
-};
+    /*!
+     * @brief Enum of type of boundary condition (NodeBoundaryCondition,
+     * ParticleBoundaryCondition)
+     */
+    BCType type;
 
-}  // namespace pyroclastmpm
+    /**
+     * @brief Is the boundary condition active or not
+     *
+     */
+    bool isActive = true;
+  };
+
+} // namespace pyroclastmpm

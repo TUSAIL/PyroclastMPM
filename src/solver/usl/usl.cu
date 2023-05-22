@@ -3,6 +3,21 @@
 namespace pyroclastmpm
 {
 
+#ifdef CUDA_ENABLED
+  extern __constant__ Real dt_gpu;
+  extern __constant__ int num_surround_nodes_gpu;
+  extern __constant__ int forward_window_gpu[64][3];
+  extern __constant__ int backward_window_gpu[64][3];
+#else
+  extern Real dt_cpu;
+  extern int num_surround_nodes_cpu;
+  extern int forward_window_cpu[64][3];
+  extern int backward_window_cpu[64][3];
+#endif
+
+  // include private header with kernels here to inline them
+  #include "usl_inline.cuh"
+
   USL::USL(
       ParticlesContainer _particles,
       NodesContainer _nodes,
@@ -34,7 +49,9 @@ namespace pyroclastmpm
 
     particles.partition();
 
-    calculate_shape_function();
+    calculate_shape_function(
+        nodes,
+        particles);
 
     for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++)
     {
@@ -79,6 +96,8 @@ namespace pyroclastmpm
    */
   void USL::P2G()
   {
+
+#ifdef CUDA_ENABLED
     KERNELS_USL_P2G<<<nodes.launch_config.tpb,
                       nodes.launch_config.bpg>>>(
         thrust::raw_pointer_cast(nodes.moments_gpu.data()),
@@ -95,9 +114,34 @@ namespace pyroclastmpm
         thrust::raw_pointer_cast(particles.spatial.cell_start_gpu.data()),
         thrust::raw_pointer_cast(particles.spatial.cell_end_gpu.data()),
         thrust::raw_pointer_cast(particles.spatial.sorted_index_gpu.data()),
+        thrust::raw_pointer_cast(particles.is_rigid_gpu.data()),
         nodes.num_nodes, nodes.inv_node_spacing, nodes.num_nodes_total);
-
     gpuErrchk(cudaDeviceSynchronize());
+#else
+    for (size_t ti = 0; ti < nodes.num_nodes_total; ti++)
+    {
+
+      usl_p2g_kernel(nodes.moments_gpu.data(),
+                     nodes.forces_internal_gpu.data(),
+                     nodes.masses_gpu.data(),
+                     nodes.node_ids_gpu.data(),
+                     particles.stresses_gpu.data(),
+                     particles.forces_external_gpu.data(),
+                     particles.velocities_gpu.data(),
+                     particles.dpsi_gpu.data(),
+                     particles.psi_gpu.data(),
+                     particles.masses_gpu.data(),
+                     particles.volumes_gpu.data(),
+                     particles.spatial.cell_start_gpu.data(),
+                     particles.spatial.cell_end_gpu.data(),
+                     particles.spatial.sorted_index_gpu.data(),
+                     particles.is_rigid_gpu.data(),
+                     nodes.num_nodes,
+                     nodes.inv_node_spacing,
+                     nodes.num_nodes_total,
+                     ti);
+    }
+#endif
   }
 
   /**
@@ -106,6 +150,7 @@ namespace pyroclastmpm
    */
   void USL::G2P()
   {
+#ifdef CUDA_ENABLED
     KERNEL_USL_G2P<<<particles.launch_config.tpb, particles.launch_config.bpg>>>(
         thrust::raw_pointer_cast(particles.velocity_gradient_gpu.data()),
         thrust::raw_pointer_cast(particles.F_gpu.data()),
@@ -117,11 +162,35 @@ namespace pyroclastmpm
         thrust::raw_pointer_cast(particles.volumes_original_gpu.data()),
         thrust::raw_pointer_cast(particles.psi_gpu.data()),
         thrust::raw_pointer_cast(particles.masses_gpu.data()),
+        thrust::raw_pointer_cast(particles.is_rigid_gpu.data()),
         thrust::raw_pointer_cast(nodes.moments_gpu.data()),
         thrust::raw_pointer_cast(nodes.moments_nt_gpu.data()),
         thrust::raw_pointer_cast(nodes.masses_gpu.data()),
         particles.spatial.num_cells, particles.num_particles, alpha);
     gpuErrchk(cudaDeviceSynchronize());
-  };
+#else
+    for (size_t ti = 0; ti < particles.num_particles; ti++)
+    {
+      usl_g2p_kernel(
+          particles.velocity_gradient_gpu.data(),
+          particles.F_gpu.data(),
+          particles.velocities_gpu.data(),
+          particles.positions_gpu.data(),
+          particles.volumes_gpu.data(),
+          particles.dpsi_gpu.data(),
+          particles.spatial.bins_gpu.data(),
+          particles.volumes_original_gpu.data(),
+          particles.psi_gpu.data(),
+          particles.masses_gpu.data(),
+          particles.is_rigid_gpu.data(),
+          nodes.moments_gpu.data(),
+          nodes.moments_nt_gpu.data(),
+          nodes.masses_gpu.data(),
+          particles.spatial.num_cells,
+          alpha,
+          ti);
+    }
 
+#endif
+  };
 } // namespace pyroclastmpm

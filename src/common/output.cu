@@ -13,13 +13,22 @@ namespace pyroclastmpm
   extern Real dt_cpu;
 
   void set_vtk_points(cpu_array<Vectorr> input,
-                      vtkSmartPointer<vtkPolyData> &polydata)
+                      vtkSmartPointer<vtkPolyData> &polydata,
+                      cpu_array<bool> mask,
+                      bool use_mask)
 
   {
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
     for (int id = 0; id < input.size(); id++)
     {
+      if (use_mask)
+      {
+        if (!mask[id])
+        {
+          continue;
+        }
+      }
 #if DIM == 3
       points->InsertNextPoint(input[id][0], input[id][1], input[id][2]);
 #elif DIM == 2
@@ -34,7 +43,9 @@ namespace pyroclastmpm
   template <typename T>
   void set_vtk_pointdata(cpu_array<T> input,
                          vtkSmartPointer<vtkPolyData> &polydata,
-                         const std::string pointdata_name)
+                         const std::string pointdata_name,
+                         cpu_array<bool> mask,
+                         bool use_mask)
   {
 
     vtkSmartPointer<vtkDoubleArray> pointdata =
@@ -55,6 +66,13 @@ namespace pyroclastmpm
 
     for (int id = 0; id < input.size(); id++)
     {
+      if (use_mask)
+      {
+        if (!mask[id])
+        {
+          continue;
+        }
+      }
       if constexpr (std::is_same_v<T, Matrixr> || std::is_same_v<T, Vectorr> || std::is_same_v<T, Matrix3r>)
       {
         Real *data = input[0].data();
@@ -69,34 +87,53 @@ namespace pyroclastmpm
     polydata->GetPointData()->AddArray(pointdata);
   }
 
+  template void set_vtk_pointdata<bool>(cpu_array<bool> input,
+                                        vtkSmartPointer<vtkPolyData> &polydata,
+                                        const std::string pointdata_name,
+                                        cpu_array<bool> mask,
+                                        bool use_mask);
+
   template void set_vtk_pointdata<uint8_t>(cpu_array<uint8_t> input,
                                            vtkSmartPointer<vtkPolyData> &polydata,
-                                           const std::string pointdata_name);
+                                           const std::string pointdata_name,
+                                           cpu_array<bool> mask,
+                                           bool use_mask);
 
   template void set_vtk_pointdata<int>(cpu_array<int> input,
                                        vtkSmartPointer<vtkPolyData> &polydata,
-                                       const std::string pointdata_name);
+                                       const std::string pointdata_name,
+                                       cpu_array<bool> mask,
+                                       bool use_mask);
 
   template void set_vtk_pointdata<Real>(cpu_array<Real> input,
                                         vtkSmartPointer<vtkPolyData> &polydata,
-                                        const std::string pointdata_name);
+                                        const std::string pointdata_name,
+                                        cpu_array<bool> mask,
+                                        bool use_mask);
 
   template void set_vtk_pointdata<Vectorr>(cpu_array<Vectorr> input,
                                            vtkSmartPointer<vtkPolyData> &polydata,
-                                           const std::string pointdata_name);
+                                           const std::string pointdata_name,
+                                           cpu_array<bool> mask,
+                                           bool use_mask);
 
 // Since Matri3r is a typedef of Matrixr is same as Vector (explicitly initiated )
 #if DIM != 1
   template void set_vtk_pointdata<Matrixr>(cpu_array<Matrixr> input,
                                            vtkSmartPointer<vtkPolyData> &polydata,
-                                           const std::string pointdata_name);
+                                           const std::string pointdata_name,
+                                           cpu_array<bool> mask,
+                                           bool use_mask);
+
 #endif
 
 // Since Matri3r is the same as Matrixr, (explicitly initiated )
 #if DIM != 3
   template void set_vtk_pointdata<Matrix3r>(cpu_array<Matrix3r> input,
                                             vtkSmartPointer<vtkPolyData> &polydata,
-                                            const std::string pointdata_name);
+                                            const std::string pointdata_name,
+                                            cpu_array<bool> mask,
+                                            bool use_mask);
 #endif
 
   void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
@@ -116,7 +153,7 @@ namespace pyroclastmpm
 
     std::string output_directory = output_directory_cpu;
     std::string filename =
-        output_directory + "/" + filestem +  std::to_string(global_step_cpu);
+        output_directory + "/" + filestem + std::to_string(global_step_cpu);
 
     if (output_type == VTK)
     {

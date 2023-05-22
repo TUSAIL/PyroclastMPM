@@ -1,10 +1,8 @@
 #pragma once
-#include <thrust/execution_policy.h>
 
 #include "pyroclastmpm/common/types_common.cuh"
 #include "pyroclastmpm/common/helper.cuh"
 #include "pyroclastmpm/common/output.cuh"
-#include "pyroclastmpm/nodes/nodes_kernels.cuh"
 
 namespace pyroclastmpm
 {
@@ -74,6 +72,7 @@ namespace pyroclastmpm
     /** @brief Masses of the nodes */
     gpu_array<Vectori> node_ids_gpu;
 
+    /** @brief Masses of the nodes */
     gpu_array<Vectori> node_types_gpu;
 
     /** @brief Simulation start domain */
@@ -94,11 +93,9 @@ namespace pyroclastmpm
     /** @brief Inverse grid size of the background grid */
     Real inv_node_spacing;
 
+#ifdef CUDA_ENABLED
     GPULaunchConfig launch_config;
-
-    // temp for mapping grid to ids
-    GPULaunchConfig launch_config_map;
-
+#endif
 
     cpu_array<OutputType> output_formats;
   };

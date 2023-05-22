@@ -1,0 +1,25 @@
+{
+  "name": "PyroclastMPM dev CPU",
+  "build": { "dockerfile": "Dockerfile" },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+		"dbaeumer.vscode-eslint",
+		"twxs.cmake",
+		"ms-vscode.cmake-tools",
+		"ms-vscode.cpptools"
+	]
+    },
+    "terminal.integrated.shell.linux": "bash",
+    "terminal.integrated.profiles.linux": {
+      "bash (container default)": {
+        "path": "/usr/bin/bash",
+        "overrideName": true
+      }
+    }
+  },
+  
+  "postCreateCommand":"git submodule update --init --recursive &&  poetry -n install", // install no prompt
+  // "forwardPorts": [3000]
+}
