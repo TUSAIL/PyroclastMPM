@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "pyroclastmpm/boundaryconditions/rigidparticles/rigidparticles.cuh"
+#include "pyroclastmpm/boundaryconditions/rigidbodylevelset.cuh"
 #include "pyroclastmpm/nodes/nodes.cuh"
 #include "pyroclastmpm/particles/particles.cuh"
 

@@ -9,8 +9,9 @@ namespace pyroclastmpm
   extern Real dt_cpu;
 #endif
 
-
   extern SFType shape_function_cpu;
+
+#include "nodes_inline.cuh"
 
   NodesContainer::NodesContainer(const Vectorr _node_start,
                                  const Vectorr _node_end,
@@ -160,16 +161,29 @@ namespace pyroclastmpm
 
   void NodesContainer::integrate()
   {
-    execution_policy exec;
-    PARALLEL_FOR_EACH_ZIP(exec,
-                          num_nodes_total,
-                          IntegrateFunctor(),
-                          moments_nt_gpu.begin(),
-                          forces_total_gpu.begin(),
-                          forces_external_gpu.begin(),
-                          forces_internal_gpu.begin(),
-                          moments_gpu.begin(),
-                          masses_gpu.begin());
+
+#ifdef CUDA_ENABLED
+    KERNEL_INTEGRATE<<<launch_config.tpb, launch_config.bpg>>>(
+        thrust::raw_pointer_cast(moments_nt_gpu.data()),
+        thrust::raw_pointer_cast(forces_total_gpu.data()),
+        thrust::raw_pointer_cast(forces_external_gpu.data()),
+        thrust::raw_pointer_cast(forces_internal_gpu.data()),
+        thrust::raw_pointer_cast(moments_gpu.data()),
+        thrust::raw_pointer_cast(masses_gpu.data()), num_nodes_total);
+    gpuErrchk(cudaDeviceSynchronize());
+#else
+    for (int nid = 0; nid < num_nodes_total; nid++)
+    {
+      integrate_nodes(
+          moments_nt_gpu.data(),
+          forces_total_gpu.data(),
+          forces_external_gpu.data(),
+          forces_internal_gpu.data(),
+          moments_gpu.data(),
+          masses_gpu.data(),
+          nid);
+    }
+#endif
   }
 
   gpu_array<Vectorr> NodesContainer::give_node_coords()
@@ -194,28 +208,28 @@ namespace pyroclastmpm
   void NodesContainer::output_vtk()
   {
 
-        vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+    vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 
-        cpu_array<Vectorr> positions_cpu = give_node_coords();
-        cpu_array<Vectorr> moments_cpu = moments_gpu;
-        cpu_array<Vectorr> moments_nt_cpu = moments_nt_gpu;
-        cpu_array<Vectorr> forces_external_cpu = forces_external_gpu;
-        cpu_array<Vectorr> forces_internal_cpu = forces_internal_gpu;
-        cpu_array<Vectorr> forces_total_cpu = forces_total_gpu;
-        cpu_array<Real> masses_cpu = masses_gpu;
+    cpu_array<Vectorr> positions_cpu = give_node_coords();
+    cpu_array<Vectorr> moments_cpu = moments_gpu;
+    cpu_array<Vectorr> moments_nt_cpu = moments_nt_gpu;
+    cpu_array<Vectorr> forces_external_cpu = forces_external_gpu;
+    cpu_array<Vectorr> forces_internal_cpu = forces_internal_gpu;
+    cpu_array<Vectorr> forces_total_cpu = forces_total_gpu;
+    cpu_array<Real> masses_cpu = masses_gpu;
 
-        set_vtk_points(positions_cpu, polydata);
-        set_vtk_pointdata<Vectorr>(moments_cpu, polydata, "Moments");
-        set_vtk_pointdata<Vectorr>(moments_nt_cpu, polydata, "MomentsNT");
-        set_vtk_pointdata<Vectorr>(forces_external_cpu, polydata, "ForcesExternal");
-        set_vtk_pointdata<Vectorr>(forces_internal_cpu, polydata, "ForcesInternal");
-        set_vtk_pointdata<Vectorr>(forces_total_cpu, polydata, "ForcesTotal");
-        set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass");
+    set_vtk_points(positions_cpu, polydata);
+    set_vtk_pointdata<Vectorr>(moments_cpu, polydata, "Moments");
+    set_vtk_pointdata<Vectorr>(moments_nt_cpu, polydata, "MomentsNT");
+    set_vtk_pointdata<Vectorr>(forces_external_cpu, polydata, "ForcesExternal");
+    set_vtk_pointdata<Vectorr>(forces_internal_cpu, polydata, "ForcesInternal");
+    set_vtk_pointdata<Vectorr>(forces_total_cpu, polydata, "ForcesTotal");
+    set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass");
 
-        // loop over output_formats
-        for (auto format : output_formats)
-        {
-          write_vtk_polydata(polydata, "nodes", format);
-        }
+    // loop over output_formats
+    for (auto format : output_formats)
+    {
+      write_vtk_polydata(polydata, "nodes", format);
+    }
   }
 } // namespace pyroclastmpm

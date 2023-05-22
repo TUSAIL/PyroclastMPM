@@ -12,7 +12,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Compilation options
-set(DIM 2) # 1, 2, 3D
+# set(DIM 3)
+# set(<variable> <value>... CACHE <type> <docstring>
+set(DIM 3)
 option(BUILD_CUDA "Enable CUDA Acceleration" ON)
 # option(BUILD_OPENMP "Enable CUDA Acceleration" OFF) # later
 option(BUILD_PYTHON "Enable building of Python bindings" ON)
@@ -32,18 +34,13 @@ if(BUILD_CUDA)
     add_definitions(-DCUDA_ENABLED) 
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX CUDA)
     find_package(CUDAToolkit REQUIRED)
-    # add_compile_definitions(CUDA_ENABLED)
 
 else()
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX)
-
     # Thrust
     add_subdirectory(ext/thrust thrust)
-
     #solves https://github.com/NVIDIA/thrust/issues/386
     add_compile_definitions(THRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
-
-    
 endif()
 
 # EIGEN3
@@ -65,10 +62,7 @@ find_package(VTK REQUIRED
     IOGeometry
     IOXML
     IOHDF
-    # IOXdmf
 )
-
-# include_directories(${VTK_INCLUDE_DIRS})
 
 # main ompile the library
 add_subdirectory(src)

@@ -3,6 +3,8 @@
 namespace pyroclastmpm
 {
 
+#include "spatialpartition_inline.cuh"
+
   /**
    * @brief Construct a new Spatial Partition:: Spatial Partition object
    *
@@ -40,11 +42,10 @@ namespace pyroclastmpm
     set_default_device<Vectori>(num_elements, {}, bins_gpu, Vectori::Zero());
     reset();
 
-
 #ifdef CUDA_ENABLED
-        launch_config.tpb = dim3(int((num_cells_total) / BLOCKSIZE) + 1, 1, 1);
-        launch_config.bpg = dim3(BLOCKSIZE, 1, 1);
-        gpuErrchk(cudaDeviceSynchronize());
+    launch_config.tpb = dim3(int((num_cells_total) / BLOCKSIZE) + 1, 1, 1);
+    launch_config.bpg = dim3(BLOCKSIZE, 1, 1);
+    gpuErrchk(cudaDeviceSynchronize());
 #endif
   }
 
@@ -68,34 +69,6 @@ namespace pyroclastmpm
     thrust::fill(bins_gpu.begin(), bins_gpu.end(), Vectori::Zero());
   }
 
-  struct CalculateHash
-  {
-    Vectorr grid_start;
-    Vectorr grid_end;
-    Vectori num_cells;
-    Real inv_cell_size;
-    CalculateHash(
-        const Vectorr _grid_start,
-        const Vectorr _grid_end,
-        const Vectori _num_cells,
-        const Real _inv_cell_size) : grid_start(_grid_start),
-                                     grid_end(_grid_end),
-                                     num_cells(_num_cells),
-                                     inv_cell_size(_inv_cell_size){};
-
-    template <typename Tuple>
-    __host__ __device__ void operator()(Tuple tuple) const
-    {
-      Vectori &bin = thrust::get<0>(tuple);
-      unsigned int &hash_unsorted = thrust::get<1>(tuple);
-      Vectorr position = thrust::get<2>(tuple);
-
-      const Vectorr relative_position = (position - grid_start) * inv_cell_size;
-      bin = relative_position.cast<int>();
-      hash_unsorted = NODE_MEM_INDEX(bin, num_cells); // MACRO defined in type_commons.cuh
-    }
-  };
-
   /**
    * @brief Sorts the particles by their hash value
    *
@@ -104,17 +77,29 @@ namespace pyroclastmpm
   void SpatialPartition::calculate_hash(
       gpu_array<Vectorr> &positions_gpu)
   {
-    execution_policy exec;
+#ifdef CUDA_ENABLED
+    KERNEL_CALC_HASH<<<launch_config.tpb, launch_config.bpg>>>(
+        thrust::raw_pointer_cast(bins_gpu.data()),
+        thrust::raw_pointer_cast(hash_unsorted_gpu.data()),
+        thrust::raw_pointer_cast(positions_gpu.data()), grid_start, grid_end,
+        num_cells, inv_cell_size, num_elements);
+    gpuErrchk(cudaDeviceSynchronize());
+#else
 
-    PARALLEL_FOR_EACH_ZIP(exec,
-                          num_elements,
-                          CalculateHash(grid_start,
-                                        grid_end,
-                                        num_cells,
-                                        inv_cell_size),
-                          bins_gpu.begin(),
-                          hash_unsorted_gpu.begin(),
-                          positions_gpu.begin());
+    for (int hi = 0; hi < num_elements; hi++)
+    {
+      /* code */
+      calculate_hashes(bins_gpu.data(),
+                       hash_unsorted_gpu.data(),
+                       positions_gpu.data(),
+                       grid_start,
+                       grid_end,
+                       num_cells,
+                       inv_cell_size,
+                       hi);
+    }
+
+#endif
 
     hash_sorted_gpu = hash_unsorted_gpu; // move this inside kernel?
   }
@@ -128,56 +113,6 @@ namespace pyroclastmpm
     thrust::stable_sort_by_key(hash_sorted_gpu.begin(), hash_sorted_gpu.end(),
                                sorted_index_gpu.begin());
   }
-
-  __host__ __device__ inline void bin_particles_kernel(
-      int *cell_start,
-      int *cell_end,
-      const unsigned int *hashes_sorted,
-      const int num_elements,
-      const int tid)
-  {
-
-    if (tid >= num_elements)
-    {
-      return;
-    } // block access threads
-
-    unsigned int hash, nexthash;
-    hash = hashes_sorted[tid];
-
-    if (tid < num_elements - 1)
-    {
-      nexthash = hashes_sorted[tid + 1];
-
-      if (tid == 0)
-      {
-        cell_start[hash] = tid;
-      }
-
-      if (hash != nexthash)
-      {
-        cell_end[hash] = tid + 1;
-
-        cell_start[nexthash] = tid + 1;
-      }
-    }
-
-    if (tid == num_elements - 1)
-    {
-      cell_end[hash] = tid + 1;
-    }
-  }
-
-#ifdef CUDA_ENABLED
-  __global__ void KERNEL_BIN_PARTICLES(int *cell_start,
-                                       int *cell_end,
-                                       const unsigned int *hashes_sorted,
-                                       const int num_elements)
-  {
-    int tid = blockDim.x * blockIdx.x + threadIdx.x;
-    bin_particles_kernel(cell_start, cell_end, hashes_sorted, num_elements, tid);
-  }
-#endif
 
   /**
    * @brief calculates the start and end of each cell in the grid containing the particles

@@ -9,6 +9,8 @@ namespace pyroclastmpm
   extern Real dt_cpu;
 #endif
 
+#include "linearelastic_inline.cuh"
+
   /**
    * @brief Construct a new Linear Elastic:: Linear Elastic object
    *
@@ -29,58 +31,6 @@ namespace pyroclastmpm
     name = "LinearElastic";
   }
 
-  struct CalculateStress
-  {
-    Real shear_modulus;
-    Real lame_modulus;
-    int mat_id;
-    CalculateStress(
-        const Real _shear_modulus,
-        const Real _lame_modulus,
-        const int _mat_id) : shear_modulus(_shear_modulus),
-                             lame_modulus(_lame_modulus),
-                             mat_id(_mat_id){};
-
-    template <typename Tuple>
-    __host__ __device__ void operator()(Tuple tuple) const
-    {
-      Matrix3r &stress = thrust::get<0>(tuple);
-      Matrixr velocity_gradient = thrust::get<1>(tuple);
-      int color = thrust::get<2>(tuple);
-
-      if (color != mat_id)
-      {
-        return;
-      }
-
-      const Matrixr vel_grad = velocity_gradient;
-      const Matrixr velgrad_T = vel_grad.transpose();
-      const Matrixr deformation_matrix = 0.5 * (vel_grad + velgrad_T);
-#ifdef CUDA_ENABLED
-      const Matrixr strain_increments = deformation_matrix * dt_gpu;
-#else
-      const Matrixr strain_increments = deformation_matrix * dt_cpu;
-#endif
-
-#if DIM == 3
-      Matrixr cauchy_stress = stress;
-#else
-      Matrix3r cauchy_stress_3d = stress;
-      Matrixr cauchy_stress = cauchy_stress_3d.block(0, 0, DIM, DIM);
-#endif
-
-      cauchy_stress += lame_modulus * strain_increments *
-                           Matrixr::Identity() +
-                       2. * shear_modulus * strain_increments;
-#if DIM == 3
-      stress = cauchy_stress;
-#else
-      cauchy_stress_3d.block(0, 0, DIM, DIM) = cauchy_stress;
-      stress = cauchy_stress_3d;
-#endif
-    }
-  };
-
   /**
    * @brief Compute the stress tensor for the material
    *
@@ -91,16 +41,32 @@ namespace pyroclastmpm
                                     int mat_id)
   {
 
-    execution_policy exec;
+#ifdef CUDA_ENABLED
+    KERNEL_STRESS_UPDATE_LINEARELASTIC<<<particles_ref.launch_config.tpb,
+                                         particles_ref.launch_config.bpg>>>(
+        thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.masses_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
+        particles_ref.num_particles, shear_modulus, lame_modulus, mat_id);
 
-    PARALLEL_FOR_EACH_ZIP(exec,
-                          particles_ref.num_particles,
-                          CalculateStress(shear_modulus,
-                                          lame_modulus,
-                                          mat_id),
-                          particles_ref.stresses_gpu.begin(),
-                          particles_ref.velocity_gradient_gpu.begin(),
-                          particles_ref.colors_gpu.begin());
+    gpuErrchk(cudaDeviceSynchronize());
+#else
+    for (int pid = 0; pid < particles_ref.num_particles; pid++)
+    {
+      update_linearelastic(
+          particles_ref.stresses_gpu.data(),
+          particles_ref.velocity_gradient_gpu.data(),
+          particles_ref.volumes_gpu.data(),
+          particles_ref.masses_gpu.data(),
+          particles_ref.colors_gpu.data(),
+          shear_modulus,
+          lame_modulus,
+          mat_id,
+          pid);
+    }
+#endif
   }
 
   /**

@@ -16,7 +16,7 @@
 // // Boundary conditions
 #include "unit/test_gravity.cuh"
 #include "unit/test_bodyforce.cuh"
-// #include "unit/test_rigidparticles.cuh"
+#include "unit/test_rigidbodylevelset.cuh"
 #include "unit/test_planardomain.cuh"
 #include "unit/test_nodedomain.cuh"
 

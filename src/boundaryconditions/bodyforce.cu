@@ -3,6 +3,8 @@
 namespace pyroclastmpm
 {
 
+#include "bodyforce_inline.cuh"
+
   BodyForce::BodyForce(const std::string _mode,
                        const cpu_array<Vectorr> _values,
                        const cpu_array<bool> _mask)
@@ -27,23 +29,6 @@ namespace pyroclastmpm
     // TODO add "checker for each class"
   }
 
-  struct ApplyBodyForce
-  {
-    template <typename Tuple>
-    __host__ __device__ void operator()(Tuple tuple) const
-    {
-
-      Vectorr &f_ext = thrust::get<0>(tuple);
-      const Vectorr value = thrust::get<1>(tuple);
-      const bool mask = thrust::get<2>(tuple);
-
-      if (mask)
-      {
-        f_ext += value;
-      }
-    }
-  };
-
   void BodyForce::apply_on_nodes_f_ext(NodesContainer &nodes_ref)
   {
     if (!isActive)
@@ -53,44 +38,21 @@ namespace pyroclastmpm
 
     if (mode_id == 0) // apply on external forces
     {
-      execution_policy exec;
-      PARALLEL_FOR_EACH_ZIP(exec,
-                            nodes_ref.num_nodes_total,
-                            ApplyBodyForce(),
-                            nodes_ref.forces_external_gpu.data(),
-                            values_gpu.data(),
-                            mask_gpu.data());
-    }
-  };
-
-  struct ApplyBodyMoments
-  {
-
-    bool isFixed;
-    ApplyBodyMoments(bool _isFixed) : isFixed(_isFixed){};
-
-    template <typename Tuple>
-    __host__ __device__ void operator()(Tuple tuple) const
-    {
-      Vectorr &moment_nt = thrust::get<0>(tuple);
-      Vectorr &moment = thrust::get<1>(tuple);
-      const Vectorr value = thrust::get<2>(tuple);
-      const bool mask = thrust::get<3>(tuple);
-
-      if (mask)
+#ifdef CUDA_ENABLED
+      KERNEL_APPLY_BODYFORCE<<<nodes_ref.launch_config.tpb,
+                               nodes_ref.launch_config.bpg>>>(
+          thrust::raw_pointer_cast(nodes_ref.forces_external_gpu.data()),
+          thrust::raw_pointer_cast(values_gpu.data()),
+          thrust::raw_pointer_cast(mask_gpu.data()), nodes_ref.num_nodes_total);
+#else
+      for (int nid = 0; nid < nodes_ref.num_nodes_total; nid++)
       {
-        if (isFixed)
-        {
-          moment = value;
-          moment_nt = value;
-        }
-        else
-        {
-          moment += value;
-
-          // TODO check if nodes_moments_nt needs to be incremented?
-        }
+        apply_bodyforce(nodes_ref.forces_external_gpu.data(),
+                        values_gpu.data(),
+                        mask_gpu.data(), nid);
       }
+
+#endif
     }
   };
 
@@ -102,30 +64,25 @@ namespace pyroclastmpm
       return;
     }
 
-    if (mode_id == 1) // apply on moment
+    bool isFixed = (mode_id == 2);
+
+#ifdef CUDA_ENABLED
+    KERNEL_APPLY_BODYMOMENT<<<nodes_ref.launch_config.tpb,
+                              nodes_ref.launch_config.bpg>>>(
+        thrust::raw_pointer_cast(nodes_ref.moments_nt_gpu.data()),
+        thrust::raw_pointer_cast(nodes_ref.moments_gpu.data()),
+        thrust::raw_pointer_cast(values_gpu.data()),
+        thrust::raw_pointer_cast(mask_gpu.data()), isFixed, nodes_ref.num_nodes_total);
+#else
+    for (int nid = 0; nid < nodes_ref.num_nodes_total; nid++)
     {
 
-      execution_policy exec;
-      PARALLEL_FOR_EACH_ZIP(exec,
-                            nodes_ref.num_nodes_total,
-                            ApplyBodyMoments(false),
-                            nodes_ref.moments_nt_gpu.data(),
-                            nodes_ref.moments_gpu.data(),
-                            values_gpu.data(),
-                            mask_gpu.data());
+      apply_bodymoments(nodes_ref.moments_nt_gpu.data(),
+                       nodes_ref.moments_gpu.data(),
+                       values_gpu.data(),
+                       mask_gpu.data(), isFixed, nid);
     }
-    else if (mode_id == 2) // fixed moment
-    {
-
-      execution_policy exec;
-      PARALLEL_FOR_EACH_ZIP(exec,
-                            nodes_ref.num_nodes_total,
-                            ApplyBodyMoments(true),
-                            nodes_ref.moments_nt_gpu.data(),
-                            nodes_ref.moments_gpu.data(),
-                            values_gpu.data(),
-                            mask_gpu.data());
-    }
+#endif
   };
 
 } // namespace pyroclastmpm
