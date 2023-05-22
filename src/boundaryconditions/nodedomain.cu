@@ -60,8 +60,8 @@ namespace pyroclastmpm
                     else if (axis0_mode(i) == 1)
                     {
                         // slip
-                        moment(i) = max(0., moment(i));
-                        moment_nt(i) = max(0., moment_nt(i));
+                        moment(i) = max(0., moment.cast<double>()[i]); // cast to double to avoid error with std::max
+                        moment_nt(i) = max(0., moment_nt.cast<double>()[i]);
                     }
                 }
                 else if (node_bin[i] >= num_nodes(i) - 1)
@@ -75,8 +75,8 @@ namespace pyroclastmpm
                     else if (axis1_mode(i) == 1)
                     {
                         // slip
-                        moment(i) = max(0., moment(i));
-                        moment_nt(i) = max(0., moment_nt(i));
+                        moment(i) = max(0.,  moment.cast<double>()[i]);
+                        moment_nt(i) =  max(0., moment_nt.cast<double>()[i]);
                     }
                 }
             }

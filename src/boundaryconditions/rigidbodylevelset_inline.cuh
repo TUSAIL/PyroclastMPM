@@ -54,7 +54,7 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
 #ifdef CUDA_ENABLED
         const Vectori selected_bin = WINDOW_BIN(node_bin, backward_window_gpu, sid);
 #else
-        const Vectori selected_bin = WINDOW_BIN(node_bin, backward_window_gpu, sid);
+        const Vectori selected_bin = WINDOW_BIN(node_bin, backward_window_cpu, sid);
 #endif
 
         const unsigned int node_hash = NODE_MEM_INDEX(selected_bin, num_nodes);
@@ -139,6 +139,7 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
     }
 }
 
+#ifdef CUDA_ENABLED
 __global__ void KERNELS_GRID_NORMALS_AND_NN_RIGID(
     Vectorr *nodes_moments_gpu,
     Vectorr *nodes_moments_nt_gpu,
@@ -185,6 +186,9 @@ __global__ void KERNELS_GRID_NORMALS_AND_NN_RIGID(
         num_nodes_total,
         node_mem_index);
 }
+
+#endif
+
 
 __device__ __host__ inline void get_overlapping_rigid_body_grid(
     bool *is_overlapping_gpu,
@@ -251,6 +255,8 @@ __device__ __host__ inline void get_overlapping_rigid_body_grid(
     }
 }
 
+
+#ifdef CUDA_ENABLED
 __global__ void KERNEL_GET_OVERLAPPING_RIGID_BODY_GRID(
     bool *is_overlapping_gpu,
     const Vectori *node_ids_gpu,
@@ -284,3 +290,5 @@ __global__ void KERNEL_GET_OVERLAPPING_RIGID_BODY_GRID(
         tid);
     
 }
+
+#endif

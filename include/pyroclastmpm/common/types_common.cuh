@@ -1,6 +1,6 @@
 #pragma once
 
-#define CUDA_ENABLED
+// #define CUDA_ENABLED
 
 #ifdef CUDA_ENABLED
 #include <thrust/device_vector.h>
@@ -13,9 +13,6 @@
 
 namespace pyroclastmpm
 {
-
-#define DIM 3
-  // #define USE_DOUBLES
 
 #ifndef USE_DOUBLES
   using Real = float;

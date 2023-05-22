@@ -99,19 +99,19 @@ namespace pyroclastmpm
     for (int nid = 0; nid < nodes_ref.num_nodes_total; nid++)
     {
       calculate_grid_normals_nn_rigid(
-          nodes_ref.moments_cpu.data(),
-          nodes_ref.moments_nt_cpu.data(),
-          nodes_ref.node_ids_cpu.data(),
-          nodes_ref.masses_cpu.data(),
-          is_overlapping_cpu.data(),
-          particles_ref.velocities_cpu.data(),
-          particles_ref.dpsi_cpu.data(),
-          particles_ref.masses_cpu.data(),
-          particles_ref.spatial.cell_start_cpu.data(),
-          particles_ref.spatial.cell_end_cpu.data(),
-          particles_ref.spatial.sorted_index_cpu.data(),
-          particles_ref.is_rigid_cpu.data(),
-          particles_ref.positions_cpu.data(),
+          nodes_ref.moments_gpu.data(),
+          nodes_ref.moments_nt_gpu.data(),
+          nodes_ref.node_ids_gpu.data(),
+          nodes_ref.masses_gpu.data(),
+          is_overlapping_gpu.data(),
+          particles_ref.velocities_gpu.data(),
+          particles_ref.dpsi_gpu.data(),
+          particles_ref.masses_gpu.data(),
+          particles_ref.spatial.cell_start_gpu.data(),
+          particles_ref.spatial.cell_end_gpu.data(),
+          particles_ref.spatial.sorted_index_gpu.data(),
+          particles_ref.is_rigid_gpu.data(),
+          particles_ref.positions_gpu.data(),
           nodes_ref.node_start, nodes_ref.inv_node_spacing,
           particles_ref.spatial.num_cells, particles_ref.spatial.num_cells_total,
           nid);
@@ -139,14 +139,14 @@ namespace pyroclastmpm
 
       gpuErrchk(cudaDeviceSynchronize());
     #else
-    for (int pid = 0; nid < particles_ref.num_particles; pid++)
+    for (int pid = 0; pid < particles_ref.num_particles; pid++)
     {
         get_overlapping_rigid_body_grid(
-            is_overlapping_cpu.data(),
-            nodes_ref.node_ids_cpu.data(),
-            particles_ref.positions_cpu.data(),
-            particles_ref.spatial.bins_cpu.data(),
-            particles_ref.is_rigid_cpu.data(),
+            is_overlapping_gpu.data(),
+            nodes_ref.node_ids_gpu.data(),
+            particles_ref.positions_gpu.data(),
+            particles_ref.spatial.bins_gpu.data(),
+            particles_ref.is_rigid_gpu.data(),
             particles_ref.spatial.num_cells,
             particles_ref.spatial.grid_start,
             particles_ref.spatial.inv_cell_size,
