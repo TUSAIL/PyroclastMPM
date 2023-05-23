@@ -46,21 +46,8 @@ namespace pyroclastmpm
         // Visuals
         // TODO we need to find a way to store these optionally . . hopefully this
         // becomes more clear later
-        set_default_device<uint8_t>(num_particles, {}, phases_gpu, 0);
-        set_default_device<Matrixr>(num_particles, {}, strain_increments_gpu,
-                                    Matrixr::Zero());
-        set_default_device<Real>(num_particles, {}, densities_gpu, 0.0);
-        set_default_device<Real>(num_particles, {}, pressures_gpu, 0.0);
-
-        /*Drucker prager*/
-        set_default_device<Real>(num_particles, {}, logJp_gpu, 0.0);
-
-        /* Non Local Granular fluidity */
-        /*! * @brief plastic deformation matrix */
-        set_default_device<Matrixr>(num_particles, {}, FP_gpu, Matrixr::Identity());
-        set_default_device<Real>(num_particles, {}, mu_gpu, 0.0);
-        set_default_device<Real>(num_particles, {}, g_gpu, 0.0);
-        set_default_device<Real>(num_particles, {}, ddg_gpu, 0.0);
+        // set_default_device<Real>(num_particles, {}, densities_gpu, 0.0);
+        // set_default_device<Real>(num_particles, {}, pressures_gpu, 0.0);
 
         spatial = SpatialPartition(); // create a temporary partitioning object, since we are getting domain size
 
@@ -89,10 +76,9 @@ namespace pyroclastmpm
         thrust::fill(exec, velocity_gradient_gpu.begin(),
                      velocity_gradient_gpu.end(), Matrixr::Zero());
 
-        thrust::fill(exec, pressures_gpu.begin(), pressures_gpu.end(), 0.);
+        // thrust::fill(exec, pressures_gpu.begin(), pressures_gpu.end(), 0.);
 
-        thrust::fill(exec, phases_gpu.begin(), phases_gpu.end(), -1);
-        thrust::fill(exec, forces_external_gpu.begin(), forces_external_gpu.end(), Vectorr::Zero());
+        // thrust::fill(exec, forces_external_gpu.begin(), forces_external_gpu.end(), Vectorr::Zero());
     }
 
     void ParticlesContainer::reorder()
@@ -114,16 +100,10 @@ namespace pyroclastmpm
         reorder_device_array<Real>(psi_gpu, spatial.sorted_index_gpu);
         reorder_device_array<Vectorr>(forces_external_gpu, spatial.sorted_index_gpu);
 
-        reorder_device_array<Real>(densities_gpu, spatial.sorted_index_gpu);
-        reorder_device_array<Real>(pressures_gpu, spatial.sorted_index_gpu);
-        reorder_device_array<uint8_t>(phases_gpu, spatial.sorted_index_gpu);
-        reorder_device_array<Matrixr>(strain_increments_gpu, spatial.sorted_index_gpu);
+        // reorder_device_array<Real>(densities_gpu, spatial.sorted_index_gpu);
+        // reorder_device_array<Real>(pressures_gpu, spatial.sorted_index_gpu);
 
-        reorder_device_array<Matrixr>(FP_gpu, spatial.sorted_index_gpu);
-        reorder_device_array<Real>(mu_gpu, spatial.sorted_index_gpu);
-        reorder_device_array<Real>(g_gpu, spatial.sorted_index_gpu);
-        reorder_device_array<Real>(ddg_gpu, spatial.sorted_index_gpu);
-        reorder_device_array<Real>(logJp_gpu, spatial.sorted_index_gpu);
+
     }
 
     void ParticlesContainer::output_vtk()
@@ -134,29 +114,23 @@ namespace pyroclastmpm
         cpu_array<Matrix3r> stresses_cpu = stresses_gpu;
         cpu_array<Matrixr> velocity_gradient_cpu = velocity_gradient_gpu;
         cpu_array<Matrixr> F_cpu = F_gpu;
-        cpu_array<Matrixr> Fp_cpu = FP_gpu;
-        cpu_array<Matrixr> strain_increments_cpu = strain_increments_gpu;
         cpu_array<Vectorr> velocities_cpu = velocities_gpu;
         cpu_array<Vectorr> positions_cpu = positions_gpu;
         cpu_array<Real> masses_cpu = masses_gpu;
         cpu_array<Real> volumes_cpu = volumes_gpu;
         cpu_array<Real> volumes_original_cpu = volumes_original_gpu;
-        cpu_array<Real> densities_cpu = densities_gpu;
-        cpu_array<Real> mu_cpu = mu_gpu;
-        cpu_array<Real> g_cpu = g_gpu;
-        cpu_array<Real> ddg_cpu = ddg_gpu;
+        // cpu_array<Real> densities_cpu = densities_gpu;
         cpu_array<int> colors_cpu = colors_gpu;
-        cpu_array<int> phases_cpu = phases_gpu;
 
         cpu_array<int> is_rigid_cpu = is_rigid_gpu;
 
         // get pressure
-        cpu_array<Real> pressures_cpu;
-        pressures_cpu.resize(num_particles);
+        // cpu_array<Real> pressures_cpu;
+        // pressures_cpu.resize(num_particles);
 
         for (int pi = 0; pi < num_particles; pi++)
         {
-            pressures_cpu[pi] = -(stresses_cpu[pi].block(0, 0, DIM, DIM).trace() / DIM);
+            // pressures_cpu[pi] = -(stresses_cpu[pi].block(0, 0, DIM, DIM).trace() / DIM);
             is_rigid_cpu[pi] = !is_rigid_cpu[pi]; // flip to make sure we don't output rigid particles
         }
 
@@ -172,14 +146,8 @@ namespace pyroclastmpm
         set_vtk_pointdata<Real>(volumes_cpu, polydata, "Volume",is_rigid_cpu, exclude_rigid_from_output);
         set_vtk_pointdata<Real>(volumes_original_cpu, polydata, "VolumeOriginal", is_rigid_cpu, exclude_rigid_from_output);
         set_vtk_pointdata<uint8_t>(colors_cpu, polydata, "Color",is_rigid_cpu, exclude_rigid_from_output);
-        set_vtk_pointdata<Matrixr>(strain_increments_cpu, polydata, "Strain_Increments",is_rigid_cpu, exclude_rigid_from_output);
-        set_vtk_pointdata<Real>(densities_cpu, polydata, "Density",is_rigid_cpu, exclude_rigid_from_output);
-        set_vtk_pointdata<uint8_t>(phases_cpu, polydata, "Phase",is_rigid_cpu, exclude_rigid_from_output);
-        set_vtk_pointdata<Real>(pressures_cpu, polydata, "Pressure",is_rigid_cpu, exclude_rigid_from_output);
-        set_vtk_pointdata<Matrixr>(Fp_cpu, polydata, "PlasticDeformation",is_rigid_cpu, exclude_rigid_from_output);
-        set_vtk_pointdata<Real>(mu_cpu, polydata, "FrictionCoef",is_rigid_cpu, exclude_rigid_from_output);
-        set_vtk_pointdata<Real>(g_cpu, polydata, "G",is_rigid_cpu, exclude_rigid_from_output);
-        set_vtk_pointdata<Real>(ddg_cpu, polydata, "DDG",is_rigid_cpu, exclude_rigid_from_output);
+        // set_vtk_pointdata<Real>(densities_cpu, polydata, "Density",is_rigid_cpu, exclude_rigid_from_output);
+        // set_vtk_pointdata<Real>(pressures_cpu, polydata, "Pressure",is_rigid_cpu, exclude_rigid_from_output);
 
         // loop over output_formats
         for (auto format : output_formats)

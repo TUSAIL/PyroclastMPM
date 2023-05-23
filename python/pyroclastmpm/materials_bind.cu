@@ -13,6 +13,21 @@ namespace py = pybind11;
 namespace pyroclastmpm
 {
 
+
+    // py::class_<ParticlesContainer>(m, "ParticlesContainer")
+    //     .def(py::init<std::vector<Vectorr>, std::vector<Vectorr>,
+    //                   std::vector<int>, std::vector<bool>, std::vector<Matrix3r>, std::vector<Real>,
+    //                   std::vector<Real>, std::vector<OutputType>>(),
+    //          py::arg("positions"),
+    //          py::arg("velocities") = std::vector<Vectorr>(),
+    //          py::arg("colors") = std::vector<int>(),
+    //          py::arg("is_rigid") = std::vector<bool>(),
+    //          py::arg("stresses") = std::vector<Matrix3r>(),
+    //          py::arg("masses") = std::vector<Real>(),
+    //          py::arg("volumes") = std::vector<Real>(),
+    //          py::arg("output_formats") = std::vector<OutputType>())
+    //     .def("partition", &ParticlesContainer::partition)
+
   /**
    * @brief Create a pybind11 module for the materials module.
    *
@@ -22,6 +37,7 @@ namespace pyroclastmpm
   {
     py::class_<Material>(m, "Material")
         .def(py::init<>())
+        .def("stress_update", &Material::stress_update)
         .def_readwrite("density", &Material::density)
         .def_readwrite("name", &Material::name)
         .def(py::pickle(

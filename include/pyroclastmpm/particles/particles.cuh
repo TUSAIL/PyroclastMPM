@@ -1,12 +1,8 @@
 #pragma once
 
-// #include <thrust/execution_policy.h>
-// #include <thrust/unique.h>
-// #include <thrust/remove.h>
 #include "pyroclastmpm/common/types_common.cuh"
 #include "pyroclastmpm/common/helper.cuh"
 #include "pyroclastmpm/common/output.cuh"
-// #include "pyroclastmpm/particles/particles_kernels.cuh"
 #include "pyroclastmpm/spatialpartition/spatialpartition.cuh"
 
 namespace pyroclastmpm
@@ -84,11 +80,6 @@ namespace pyroclastmpm
     /*! @brief particles' deformation matrices */
     gpu_array<Matrixr> F_gpu;
 
-    /* TODO is this needed*/
-    /*! @brief particles' strain increments, stored only if
-     * store_strain_increments=true */
-    gpu_array<Matrixr> strain_increments_gpu;
-
     /*! @brief particles' shape function gradients */
     gpu_array<Vectorr> dpsi_gpu;
 
@@ -114,13 +105,10 @@ namespace pyroclastmpm
     gpu_array<Real> psi_gpu;
 
     /*! @brief particles' densities (updated each step)*/
-    gpu_array<Real> densities_gpu;
+    // gpu_array<Real> densities_gpu; /*base*/
 
     /*! * @brief particles' pressure (updated each step) */
-    gpu_array<Real> pressures_gpu;
-
-    /*! @brief particles' phases (updated each step) */
-    gpu_array<uint8_t> phases_gpu;
+    // gpu_array<Real> pressures_gpu; /*base*/
 
     /*! @brief particles' colors (or material type) */
     gpu_array<uint8_t> colors_gpu;
@@ -128,35 +116,12 @@ namespace pyroclastmpm
     /*! @brief particles' colors (or material type) */
     gpu_array<bool> is_rigid_gpu;
 
-    /*! * @brief granular fluidity d2g */
-    gpu_array<Real> logJp_gpu;
-
-    /*! * @brief plastic deformation matrix */
-    gpu_array<Matrixr> FP_gpu;
-
-    /*! * @brief shear stress */
-    gpu_array<Real> mu_gpu;
-
-    /*! * @brief granular fluidity */
-    gpu_array<Real> g_gpu;
-
-    /*! * @brief granular fluidity d2g */
-    gpu_array<Real> ddg_gpu;
-
     /*! @brief spatial partitioning class */
     SpatialPartition spatial;
-
-    /*! @brief array lags */
-    bool store_density, store_volume_corrector;
-
-    /*! @brief store pressure */
-    bool store_pressure;
 
     /*! @brief store strain increment */
     bool store_strain_increments;
 
-    /*! @brief store phases (solid 0, fluid 1, gas 2) */
-    bool store_phases;
 
     /*! @brief Total Number of particles */
     int num_particles;

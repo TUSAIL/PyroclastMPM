@@ -94,19 +94,6 @@ namespace pyroclastmpm
             } // setter
             ) // VELOCITY GRADIENT
         .def_property(
-            "pressures",
-            [](ParticlesContainer &self)
-            {
-              return std::vector<Real>(self.pressures_gpu.begin(),
-                                       self.pressures_gpu.end());
-            }, // getter
-            [](ParticlesContainer &self, const std::vector<Real> &value)
-            {
-              cpu_array<Real> host_val = value;
-              self.pressures_gpu = host_val;
-            } // setter
-            ) // PRESSURES
-        .def_property(
             "masses",
             [](ParticlesContainer &self)
             {
@@ -158,13 +145,12 @@ namespace pyroclastmpm
               self.colors_gpu = host_val;
             } // setter
             ) // COLORS
-
         .def_property(
             "output_formats",
             [](ParticlesContainer &self)
             {
               return std::vector<OutputType>(self.output_formats.begin(),
-                                      self.output_formats.end());
+                                             self.output_formats.end());
             }, // getter
             [](ParticlesContainer &self, const std::vector<OutputType> &value)
             {
@@ -189,17 +175,15 @@ namespace pyroclastmpm
                   std::vector<Matrixr>(a.F_gpu.begin(), a.F_gpu.end()),
                   std::vector<Matrixr>(a.velocity_gradient_gpu.begin(),
                                        a.velocity_gradient_gpu.end()),
-                  std::vector<Matrixr>(a.strain_increments_gpu.begin(),
-                                       a.strain_increments_gpu.end()),
                   std::vector<Vectorr>(a.dpsi_gpu.begin(), a.dpsi_gpu.end()),
                   std::vector<Real>(a.volumes_original_gpu.begin(),
                                     a.volumes_original_gpu.end()),
-                  std::vector<Real>(a.psi_gpu.begin(), a.psi_gpu.end()),
-                  std::vector<Real>(a.densities_gpu.begin(),
-                                    a.densities_gpu.end()),
-                  std::vector<Real>(a.pressures_gpu.begin(),
-                                    a.pressures_gpu.end()),
-                  std::vector<int>(a.phases_gpu.begin(), a.phases_gpu.end()));
+                  std::vector<Real>(a.psi_gpu.begin(), a.psi_gpu.end())
+                  // std::vector<Real>(a.densities_gpu.begin(),
+                                    // a.densities_gpu.end()),
+                  // std::vector<Real>(a.pressures_gpu.begin(),
+                                    // a.pressures_gpu.end()),
+                  );
 
             },
             [](py::tuple t) { // load
@@ -215,14 +199,11 @@ namespace pyroclastmpm
               particles.F_gpu = t[8].cast<std::vector<Matrixr>>();
               particles.velocity_gradient_gpu =
                   t[9].cast<std::vector<Matrixr>>();
-              particles.strain_increments_gpu =
-                  t[10].cast<std::vector<Matrixr>>();
-              particles.dpsi_gpu = t[11].cast<std::vector<Vectorr>>();
-              particles.volumes_original_gpu = t[12].cast<std::vector<Real>>();
-              particles.psi_gpu = t[13].cast<std::vector<Real>>();
-              particles.densities_gpu = t[14].cast<std::vector<Real>>();
-              particles.pressures_gpu = t[15].cast<std::vector<Real>>();
-              particles.phases_gpu = t[16].cast<std::vector<int>>();
+              particles.dpsi_gpu = t[10].cast<std::vector<Vectorr>>();
+              particles.volumes_original_gpu = t[11].cast<std::vector<Real>>();
+              particles.psi_gpu = t[12].cast<std::vector<Real>>();
+              // particles.densities_gpu = t[14].cast<std::vector<Real>>();
+              // particles.pressures_gpu = t[15].cast<std::vector<Real>>();
               return particles;
             }));
   };

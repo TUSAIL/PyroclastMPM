@@ -35,6 +35,7 @@ namespace pyroclastmpm
 
     Real calculate_timestep(Real cell_size, Real factor = 0.1) override;
 
+
     // VARIABLES
 
     /** @brief Youngs modulus */
