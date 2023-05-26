@@ -26,6 +26,7 @@ namespace pyroclastmpm
              py::arg("masses") = std::vector<Real>(),
              py::arg("volumes") = std::vector<Real>(),
              py::arg("output_formats") = std::vector<OutputType>())
+        .def("output_vtk", &ParticlesContainer::output_vtk)
         .def("partition", &ParticlesContainer::partition)
         .def_readonly("num_particles",
                       &ParticlesContainer::num_particles) // NUM PARTICLES

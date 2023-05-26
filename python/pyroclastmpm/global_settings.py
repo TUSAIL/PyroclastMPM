@@ -9,9 +9,13 @@ from .pyroclastmpm_pybind import (
     set_global_output_directory as pyro_set_global_output_directory,
 )
 
+from pyroclastmpm.pyroclastmpm_pybind import (
+ set_global_step as pyro_set_global_step   
+)
 from .pyroclastmpm_pybind import VTK, CSV, OBJ
 
 import typing as t
+
 
 def set_global_timestep(dt: float):
     """Set the simulation timestep in global memory.
@@ -38,19 +42,19 @@ def set_global_shapefunction(
 
 
 def set_global_output_directory(
-    output_directory: str,
-    out_type: t.Union[
-        t.Type["VTK"],
-        t.Type["CSV"],
-        t.Type["OBJ"],
-    ]):
+        output_directory: str):
     """Sets the output folder
 
     :param output_directory: input simulation shape function
     """
 
-    pyro_set_global_output_directory(output_directory, out_type)
+    pyro_set_global_output_directory(output_directory)
 
+def set_global_step(step: int):
+    """Sets the global step counter
+    """
+
+    pyro_set_global_step(step)
 
 def set_globals(
     dt: float,

@@ -4,6 +4,7 @@ from typing import List
 
 from .pyroclastmpm_pybind import Material as PyroMaterial
 from .pyroclastmpm_pybind import LinearElastic as PyroLinearElastic
+from .pyroclastmpm_pybind import VonMises as PyroVonMises
 from .pyroclastmpm_pybind import NewtonFluid as PyroNewtonFluid
 from .pyroclastmpm_pybind import LocalGranularRheology as PyroLocalGranularRheology
 
@@ -45,6 +46,42 @@ class LinearElastic(PyroLinearElastic):
         """
         super(LinearElastic, self).__init__(density=density, E=E, pois=pois)
 
+
+class VonMises(PyroVonMises):
+    """Associated Drucker Prager inheritrs from the C++ class through pybind11."""
+
+    #: pybind11 binding for material name
+    name: str
+
+    #: pybind11 binding for Young's modulus
+    density: float
+
+    #: pybind11 binding for Young's modulus
+    E: float
+
+    #: pybind11 binding for Poisson's ratio
+    pois: float
+
+    #: pybind11 binding for shear modulus
+    shear_modulus: float
+
+    #: pybind11 binding for lame modulus
+    lame_modulus: float
+
+    def __init__(self, density: float, E: float, pois: float = 0, yield_stress:float =0, H:float  =1 ):  # NOSONAR
+        """_summary_
+
+        :param density: Material density
+        :param E: Youngs modulus
+        :param pois: Poisson's ratio, defaults to 0
+        """
+        super(VonMises, self).__init__(
+            density=density,
+            E=E,
+            pois=pois,
+            yield_stress=yield_stress,
+            H=H
+            )
 
 class NewtonFluid(PyroNewtonFluid):
 
@@ -141,66 +178,3 @@ class LocalGranularRheology(PyroLocalGranularRheology):
             particle_diameter=particle_diameter,
             particle_density=particle_density,
         )
-
-# class DruckerPrager(PyroDruckerPrager):
-#     """Drucker-Prager model inherits from the C++ class through pybind11."""
-
-#     #: pybind11 binding for material name
-#     name: str
-
-#     #: pybind binding for density of the granular material
-#     density: float
-
-#     #: pybind11 binding for Young's modulus
-#     E: float
-
-#     #: pybind11 binding for Poisson's ratio
-#     pois: float
-
-#     #: pybind11 binding for shear modulus
-#     shear_modulus: float
-
-#     #: pybind11 binding for lame modulus
-#     lame_modulus: float
-
-#     #: friction_angle
-#     friction_angle: float
-
-#     #: cohesion
-#     cohesion: float
-
-#     #: vcs
-#     vcs: float
-
-#     def __init__(
-#         self,
-#         density: float,
-#         E: float,
-#         pois: float,
-#         friction_angle: float,
-#         cohesion: float,
-#         vcs: float
-#     ):  #  NOSONAR
-#         """Drucker-Prager model based on Gergely Klare (2015), Chuyuan Fu (2018).
-
-#         :param E: Youngs modulus
-#         :param pois: Poisson's ratio
-#         :param h0: hardening parameter
-#         :param h1: hardening parameter
-#         :param h2: hardening parameter
-#         :param h3: hardening parameter
-
-#         """
-#         super(DruckerPrager, self).__init__(
-#             density=density,
-#             E=E,
-#             pois=pois,
-#             friction_angle=friction_angle,
-#             cohesion=cohesion,
-#             vcs=vcs
-#         )
-
-#     def py_stress_update(self, stress, Fe,  logJp,  Fp_tr, alpha,dim):  # NOSONAR
-#         return super(DruckerPrager, self).py_stress_update(
-#             stress, Fe, logJp,  Fp_tr, alpha, dim
-#         )

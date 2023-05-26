@@ -18,14 +18,14 @@ from .materials import (
     LinearElastic,
     NewtonFluid,
     LocalGranularRheology,
-
-    )
+    VonMises
+)
 
 from .solver import (
-                     USL, 
-                    #  TLMPM,
-                    #  MUSL
-                     )
+    USL,
+    #  TLMPM,
+    #  MUSL
+)
 
 from .pyroclastmpm_pybind import (
     LinearShapeFunction,
@@ -44,6 +44,7 @@ from .global_settings import (
     set_globals,
     set_global_output_directory,
     set_global_timestep,
+    set_global_step
 )
 
 from .tools import (
