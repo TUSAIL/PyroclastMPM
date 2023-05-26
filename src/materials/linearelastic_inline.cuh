@@ -26,8 +26,8 @@ __device__ __host__ inline void update_linearelastic(
 
     const Matrixr vel_grad = particles_velocity_gradient_gpu[tid];
     const Matrixr velgrad_T = vel_grad.transpose();
-    const Matrixr deformation_matrix = 0.5 * (vel_grad + velgrad_T);
-    const Matrixr strain_increments = deformation_matrix * dt;
+    const Matrixr deformation_matrix = 0.5 * (vel_grad + velgrad_T); //infinitesimal strain
+    const Matrixr strain_increments = deformation_matrix * dt; // pseudeo strain rate
 
 #if DIM == 3
     Matrixr cauchy_stress = particles_stresses_gpu[tid];

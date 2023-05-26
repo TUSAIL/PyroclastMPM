@@ -12,6 +12,7 @@ set(
   "materials/linearelastic.cu"
   "materials/newtonfluid.cu"
   "materials/localrheo.cu"
+  "materials/vonmises.cu"
   "solver/solver.cu"
 
 

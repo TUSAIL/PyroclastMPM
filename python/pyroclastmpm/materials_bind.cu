@@ -7,11 +7,25 @@
 #include "pyroclastmpm/nodes/nodes.cuh"
 #include "pyroclastmpm/materials/newtonfluid.cuh"
 #include "pyroclastmpm/materials/localrheo.cuh"
+#include "pyroclastmpm/materials/vonmises.cuh"
 
 namespace py = pybind11;
 
 namespace pyroclastmpm
 {
+  // py::class_<ParticlesContainer>(m, "ParticlesContainer")
+  //     .def(py::init<std::vector<Vectorr>, std::vector<Vectorr>,
+  //                   std::vector<int>, std::vector<bool>, std::vector<Matrix3r>, std::vector<Real>,
+  //                   std::vector<Real>, std::vector<OutputType>>(),
+  //          py::arg("positions"),
+  //          py::arg("velocities") = std::vector<Vectorr>(),
+  //          py::arg("colors") = std::vector<int>(),
+  //          py::arg("is_rigid") = std::vector<bool>(),
+  //          py::arg("stresses") = std::vector<Matrix3r>(),
+  //          py::arg("masses") = std::vector<Real>(),
+  //          py::arg("volumes") = std::vector<Real>(),
+  //          py::arg("output_formats") = std::vector<OutputType>())
+  //     .def("partition", &ParticlesContainer::partition)
 
   /**
    * @brief Create a pybind11 module for the materials module.
@@ -35,6 +49,12 @@ namespace pyroclastmpm
     py::class_<LinearElastic>(m, "LinearElastic")
         .def(py::init<Real, Real, Real>(), py::arg("density"), py::arg("E"),
              py::arg("pois") = 0.)
+        .def("stress_update",
+             [](LinearElastic &self, ParticlesContainer particles_ref, int mat_id)
+             {
+               self.stress_update(particles_ref, mat_id);
+               return std::make_tuple(particles_ref, mat_id);
+             })
         .def_readwrite("E", &LinearElastic::E)
         .def_readwrite("pois", &LinearElastic::pois)
         .def_readwrite("shear_modulus", &LinearElastic::shear_modulus)
@@ -58,6 +78,35 @@ namespace pyroclastmpm
               mat.bulk_modulus = t[6].cast<Real>();
               return mat;
             }));
+
+
+    py::class_<VonMises>(m, "VonMises")
+        .def(py::init<Real, Real, Real, Real, Real>(),
+             py::arg("density"),
+             py::arg("E"),
+             py::arg("pois"),
+             py::arg("yield_stress"),
+             py::arg("H"))
+        .def("stress_update",
+             [](VonMises &self, ParticlesContainer particles_ref, int mat_id)
+             {
+               self.stress_update(particles_ref, mat_id);
+               return std::make_tuple(particles_ref, mat_id);
+             })
+        .def("initialize",
+             [](VonMises &self, ParticlesContainer particles_ref, int mat_id)
+             {
+               self.initialize(particles_ref, mat_id);
+               return std::make_tuple(particles_ref, mat_id);
+             })
+        .def_readwrite("E", &VonMises::E)
+        .def_readwrite("pois", &VonMises::pois)
+        .def_readwrite("shear_modulus", &VonMises::shear_modulus)
+        .def_readwrite("lame_modulus", &VonMises::lame_modulus)
+        .def_readwrite("bulk_modulus", &VonMises::bulk_modulus)
+        .def_readwrite("density", &VonMises::density)
+        .def_readwrite("name", &VonMises::name);
+
 
     py::class_<NewtonFluid>(m, "NewtonFluid")
         .def(py::init<Real, Real, Real, Real>(), py::arg("density"),
@@ -85,6 +134,12 @@ namespace pyroclastmpm
              py::arg("density"), py::arg("E"), py::arg("pois"), py::arg("I0"),
              py::arg("mu_s"), py::arg("mu_2"), py::arg("rho_c"),
              py::arg("particle_diameter"), py::arg("particle_density"))
+        .def("stress_update",
+             [](LocalGranularRheology &self, ParticlesContainer particles_ref, int mat_id)
+             {
+               self.stress_update(particles_ref, mat_id);
+               return std::make_tuple(particles_ref, mat_id);
+             })
         .def_readwrite("density", &LocalGranularRheology::density)
         .def_readwrite("name", &LocalGranularRheology::name)
         .def_readwrite("E", &LocalGranularRheology::E)
@@ -120,19 +175,18 @@ namespace pyroclastmpm
               mat.EPS = t[13].cast<Real>();
               return mat;
             }));
-        // .def(
-        //     "mp_benchmark",
-        //     [](LocalGranularRheology &self,
-        //     std::vector<Matrix3r> _stress_cpu,
-        //     std::vector<uint8_t> _phases_cpu,
-        //     std::vector<Matrixr> _velocity_gradient_cpu,
-        //     std::vector<Real> _volume_cpu,
-        //     std::vector<Real> _mass_cpu)
-        //     {
-        //       self.mp_benchmark( _stress_cpu, _phases_cpu, _velocity_gradient_cpu, _volume_cpu, _mass_cpu);
-        //       return std::make_tuple(_stress_cpu, _phases_cpu);
-        //     });
-
+    // .def(
+    //     "mp_benchmark",
+    //     [](LocalGranularRheology &self,
+    //     std::vector<Matrix3r> _stress_cpu,
+    //     std::vector<uint8_t> _phases_cpu,
+    //     std::vector<Matrixr> _velocity_gradient_cpu,
+    //     std::vector<Real> _volume_cpu,
+    //     std::vector<Real> _mass_cpu)
+    //     {
+    //       self.mp_benchmark( _stress_cpu, _phases_cpu, _velocity_gradient_cpu, _volume_cpu, _mass_cpu);
+    //       return std::make_tuple(_stress_cpu, _phases_cpu);
+    //     });
   };
 
 } // namespace pyroclastmpm

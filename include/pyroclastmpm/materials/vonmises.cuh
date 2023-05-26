@@ -11,7 +11,7 @@ namespace pyroclastmpm
    * @brief Linear elastic material
    *
    */
-  struct LinearElastic : Material
+  struct VonMises : Material
   {
     // FUNCTIONS
 
@@ -21,9 +21,15 @@ namespace pyroclastmpm
      * @param _E Young's modulus
      * @param _pois Poisson's ratio
      */
-    LinearElastic(const Real _density, const Real _E, const Real _pois = 0.);
+    VonMises(
+      const Real _density,
+      const Real _E,
+      const Real _pois,
+      const Real _yield_stress,
+      const Real _H
+      );
 
-    ~LinearElastic();
+    ~VonMises();
 
     /**
      * @brief Perform stress update
@@ -35,8 +41,15 @@ namespace pyroclastmpm
 
     Real calculate_timestep(Real cell_size, Real factor = 0.1) override;
 
+    void initialize(ParticlesContainer &particles_ref, int mat_id);
 
     // VARIABLES
+
+    /* initial yield stress sigma y_0*/
+    Real yield_stress;
+
+    /* hardening coefficient H */
+    Real H;
 
     /** @brief Youngs modulus */
     Real E;
@@ -52,6 +65,13 @@ namespace pyroclastmpm
 
     /** @brief Bulk modulus */
     Real bulk_modulus;
+
+    /*! @brief elastic strain (infinitesimal) */
+    gpu_array<Matrixr> eps_e_gpu;
+
+    /*! @brief accumulated plastic strain (history) for hardening */
+    gpu_array<Real> acc_eps_p_gpu;
+
   };
 
 } // namespace pyroclastmpm

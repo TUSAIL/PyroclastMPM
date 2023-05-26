@@ -40,6 +40,7 @@ __device__ __host__ inline void stress_update_newtonfluid(
 #else
     particles_stresses_gpu[tid].block(0, 0, DIM, DIM) = cauchy_stress;
 #endif
+
 }
 
 

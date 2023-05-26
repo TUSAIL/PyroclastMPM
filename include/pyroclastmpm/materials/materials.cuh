@@ -46,9 +46,12 @@ namespace pyroclastmpm
       return 100000;
     };
 
+    gpu_array<Real> densities_gpu;
+    gpu_array<Real> pressures_gpu;
+
     Real density = 0.0;
 
-    std::string name = "None";
+    std::string name = "Base";
   };
 
 } // namespace pyroclastmpm

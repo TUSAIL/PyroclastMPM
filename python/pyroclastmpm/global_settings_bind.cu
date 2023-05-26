@@ -28,6 +28,7 @@ void global_settings_module(py::module& m) {
   m.def("set_global_shapefunction", &set_global_shapefunction,
         "Set the global shape function based on a dimension");
   m.def("set_global_timestep", &set_global_dt, "Set the global timestep");
+  m.def("set_global_step", &set_global_step, "Set the global step");
   m.def("set_global_output_directory", &set_global_output_directory,
         "Set the global output directory");
 
