@@ -164,6 +164,18 @@ namespace pyroclastmpm
       writer->SetFileName(filename.c_str());
       writer->SetInputData(polydata);
       writer->Write();
+    }else if (output_type == GTFL)
+    {
+      filename += ".gtfl";
+      vtkSmartPointer<vtkMultiBlockDataSet> multiblock =
+          vtkSmartPointer<vtkMultiBlockDataSet>::New();
+      multiblock->SetNumberOfBlocks(1);
+      multiblock->SetBlock(0, polydata);
+      vtkSmartPointer<vtkGLTFWriter> writer =
+          vtkSmartPointer<vtkGLTFWriter>::New();
+      writer->SetFileName(filename.c_str());
+      writer->SetInputData(multiblock);
+      writer->Write();
     }
     else if (output_type == OBJ)
     {

@@ -8,9 +8,11 @@
 #include <vtkOBJWriter.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
+#include <vtkMultiBlockDataSet.h>
 #include <vtkSmartPointer.h>
 #include <vtkTable.h>
 #include <vtkXMLPolyDataWriter.h>
+#include <vtkGLTFWriter.h>
 #include <filesystem>
 #include <iostream>
 #include <type_traits>

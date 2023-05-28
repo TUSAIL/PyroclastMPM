@@ -88,7 +88,8 @@ namespace pyroclastmpm
     VTK,
     OBJ,
     CSV,
-    HDF5
+    HDF5,
+    GTFL
   };
 
   enum StressMeasure
