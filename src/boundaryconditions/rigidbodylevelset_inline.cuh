@@ -1,4 +1,108 @@
 
+__device__ __host__ inline void update_rigid_velocity(
+    Vectorr *particles_velocities_gpu,
+    const Vectorr *particles_positions_gpu,
+    const bool *particle_is_rigid_gpu,
+    const Vectorr body_velocity,
+    const Vectorr COM,
+    const Vectorr angular_velocities,
+    const Vectorr euler_angles,
+    const int tid)
+{
+
+    if (!particle_is_rigid_gpu[tid])
+    {
+        return;
+    }
+
+    const Real theta = euler_angles[0];
+    const Real phi = euler_angles[1];
+    const Real psi = euler_angles[2];
+
+    const Real dtheta = angular_velocities[0];
+    const Real dphi = angular_velocities[1];
+    const Real dpsi = angular_velocities[2];
+
+    Vectorr omega = Vectorr::Zero();
+    omega[0] = dphi * sin(theta) * sin(psi) + dtheta * cos(psi);
+    omega[1] = dphi * sin(theta) * cos(psi) - dtheta * sin(psi);
+    omega[2] = dphi * cos(theta) + dpsi;
+
+    const Vectorr rotational_velocity = omega.cross(particles_positions_gpu[tid] - COM);
+
+    particles_velocities_gpu[tid] = body_velocity + rotational_velocity;
+}
+
+#ifdef CUDA_ENABLED
+__global__ void KERNEL_UPDATE_RIGID_VELOCITY(
+    Vectorr *particles_velocities_gpu,
+    const Vectorr *particles_positions_gpu,
+    const bool *particle_is_rigid_gpu,
+    const Vectorr body_velocity,
+    const Vectorr COM,
+    const Vectorr angular_velocities,
+    const Vectorr euler_angles,
+    const int num_particles)
+{
+    const int tid = blockDim.x * blockIdx.x + threadIdx.x;
+
+    if (tid >= num_particles)
+    {
+        return;
+    } // block access threads
+
+    update_rigid_velocity(
+        particles_velocities_gpu,
+        particles_positions_gpu,
+        particle_is_rigid_gpu,
+        body_velocity,
+        COM,
+        angular_velocities,
+        euler_angles,
+        tid);
+}
+#endif
+
+__device__ __host__ inline void update_rigid_position(
+    Vectorr *particles_positions_gpu,
+    const Vectorr *particles_velocities_gpu,
+    const bool *particle_is_rigid_gpu,
+    const int tid)
+{
+
+    if (!particle_is_rigid_gpu[tid])
+    {
+        return;
+    }
+
+#ifdef CUDA_ENABLED
+    particles_positions_gpu[tid] += particles_velocities_gpu[tid] * dt_gpu;
+#else
+    particles_positions_gpu[tid] += particles_velocities_gpu[tid] * dt_cpu;
+#endif
+}
+
+#ifdef CUDA_ENABLED
+__global__ void KERNEL_UPDATE_RIGID_POSITION(
+    Vectorr *particles_positions_gpu,
+    const Vectorr *particles_velocities_gpu,
+    const bool *particle_is_rigid_gpu,
+    const int num_particles)
+{
+    const int tid = blockDim.x * blockIdx.x + threadIdx.x;
+
+    if (tid >= num_particles)
+    {
+        return;
+    } // block access threads
+
+    update_rigid_position(
+        particles_positions_gpu,
+        particles_velocities_gpu,
+        particle_is_rigid_gpu,
+        tid);
+}
+#endif
 
 __device__ __host__ inline void calculate_grid_normals_nn_rigid(
     Vectorr *nodes_moments_gpu,
@@ -189,7 +293,6 @@ __global__ void KERNELS_GRID_NORMALS_AND_NN_RIGID(
 
 #endif
 
-
 __device__ __host__ inline void get_overlapping_rigid_body_grid(
     bool *is_overlapping_gpu,
     const Vectori *node_ids_gpu,
@@ -255,7 +358,6 @@ __device__ __host__ inline void get_overlapping_rigid_body_grid(
     }
 }
 
-
 #ifdef CUDA_ENABLED
 __global__ void KERNEL_GET_OVERLAPPING_RIGID_BODY_GRID(
     bool *is_overlapping_gpu,
@@ -276,7 +378,6 @@ __global__ void KERNEL_GET_OVERLAPPING_RIGID_BODY_GRID(
         return;
     } // block access threads
 
-
     get_overlapping_rigid_body_grid(
         is_overlapping_gpu,
         node_ids_gpu,
@@ -288,7 +389,6 @@ __global__ void KERNEL_GET_OVERLAPPING_RIGID_BODY_GRID(
         inv_cell_size,
         num_nodes_total,
         tid);
-    
 }
 
 #endif

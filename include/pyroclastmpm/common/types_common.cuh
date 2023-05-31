@@ -65,6 +65,9 @@ namespace pyroclastmpm
   using Quaternionr = Eigen::Quaternion<Real>;
   using AngleAxisr = Eigen::AngleAxis<Real>;
 
+
+# define PI   3.14159265358979323846
+
 #ifdef CUDA_ENABLED
   // using execution_policy = thrust::device;
   struct execution_policy : thrust::device_execution_policy<execution_policy>

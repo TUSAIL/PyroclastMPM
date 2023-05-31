@@ -14,7 +14,7 @@ from pyroclastmpm import (
     grid_points_on_surface,
     RigidBodyLevelSet,
     LocalGranularRheology,
-    VTK,CSV,
+    VTK,CSV,GTFL,
     global_dimension
 )
 
@@ -78,7 +78,7 @@ particles = ParticlesContainer(
     positions=particle_positions, 
     velocities=particle_velocites,
     is_rigid=rigid_mask,
-    output_formats=[VTK,CSV]
+    output_formats=[VTK]
     )
 
 print(f"num_p {particles.num_particles}, num_c {nodes.num_nodes_total} \n")
@@ -91,10 +91,10 @@ locations = np.vstack([lx, ly, lz]).T
 rotations = np.vstack([rx, ry, rz]).T
 
 rigidboundary = RigidBodyLevelSet(
-    # frames=frames.astype(int),
-    # locations=locations,
-    # rotations=rotations,
-    output_formats=[VTK]
+    frames=frames.astype(int),
+    locations=locations,
+    rotations=rotations,
+    output_formats=[GTFL]
 )
 
 domain = NodeDomain(

@@ -99,6 +99,7 @@ for i in range(0, config['global']['total_steps'],config['global']['output_steps
 if (filenotfound):
     print("File not found, could be incomplete run.")
 # Be sure to close the plotter when finished
+pl.export_gltf('plots/output.gltf')  
 pl.close()
 
 

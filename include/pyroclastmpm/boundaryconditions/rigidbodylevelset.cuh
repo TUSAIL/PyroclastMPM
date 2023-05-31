@@ -19,7 +19,8 @@ namespace pyroclastmpm
   {
     // FUNCTIONS
 
-    RigidBodyLevelSet(const cpu_array<int> _frames = {},
+    RigidBodyLevelSet(const Vectorr _COM = Vectorr(0, 0, 0),
+                      const cpu_array<int> _frames = {},
                       const cpu_array<Vectorr> _locations = {},
                       const cpu_array<Vectorr> _rotations = {},
                       const cpu_array<OutputType> _output_formats = {}
@@ -35,18 +36,16 @@ namespace pyroclastmpm
     void calculate_overlapping_rigidbody(NodesContainer &nodes_ref,
                                          ParticlesContainer &particles_ref);
 
-    // void update_grid_moments(NodesContainer &nodes_ref,
-    //                          ParticlesContainer &particles_ref);
 
-    // void update_rigid_body(NodesContainer &nodes_ref,
-    //                        ParticlesContainer &particles_ref);
+
+    void set_velocities(ParticlesContainer &particles_ref);
+
+
+    void set_position(ParticlesContainer &particles_ref);
+
 
     void apply_on_nodes_moments(NodesContainer &nodes_ref,
                                 ParticlesContainer &particles_ref) override;
-
-    // void output_vtk() override;
-
-    // void calculate_velocities();
 
     // VARIABLES
 
@@ -85,7 +84,11 @@ namespace pyroclastmpm
     /** @brief animations euler angles */
     cpu_array<Vectorr> rotations_cpu;
 
+    int current_frame =0;
     cpu_array<OutputType> output_formats;
+
+    Vectorr euler_angles;
+    Vectorr angular_velocities;
 
   };
 } // namespace pyroclastmpm
