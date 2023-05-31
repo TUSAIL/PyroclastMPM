@@ -134,7 +134,7 @@ namespace pyroclastmpm
             is_rigid_cpu[pi] = !is_rigid_cpu[pi]; // flip to make sure we don't output rigid particles
         }
 
-        bool exclude_rigid_from_output = true; // TODO make this an option?
+        bool exclude_rigid_from_output = false; // TODO make this an option?
         set_vtk_points(positions_cpu, polydata, is_rigid_cpu, exclude_rigid_from_output);
         set_vtk_pointdata<int>(is_rigid_cpu, polydata, "isRigid", is_rigid_cpu, exclude_rigid_from_output);
         set_vtk_pointdata<Vectorr>(positions_cpu, polydata, "Positions", is_rigid_cpu, exclude_rigid_from_output);

@@ -30,8 +30,10 @@ namespace pyroclastmpm
             .def_readwrite("gravity", &Gravity::gravity);
 
         py::class_<RigidBodyLevelSet>(m, "RigidBodyLevelSet")
-            .def(py::init<std::vector<int>,
-                          std::vector<Vectorr>, std::vector<Vectorr>,std::vector<OutputType>>(),
+            .def(py::init<Vectorr,
+                          std::vector<int>,
+                          std::vector<Vectorr>, std::vector<Vectorr>, std::vector<OutputType>>(),
+                 py::arg("COM") = Vectorr::Zero(),
                  py::arg("frames") = std::vector<int>(),
                  py::arg("locations") = std::vector<Vectorr>(),
                  py::arg("rotations") = std::vector<Vectorr>(),

@@ -79,7 +79,6 @@ namespace pyroclastmpm
               return mat;
             }));
 
-
     py::class_<VonMises>(m, "VonMises")
         .def(py::init<Real, Real, Real, Real, Real>(),
              py::arg("density"),
@@ -99,6 +98,19 @@ namespace pyroclastmpm
                self.initialize(particles_ref, mat_id);
                return std::make_tuple(particles_ref, mat_id);
              })
+        .def_property(
+            "eps_e",
+            [](VonMises &self)
+            {
+              return std::vector<Matrixr>(self.eps_e_gpu.begin(),
+                                          self.eps_e_gpu.end());
+            }, // getter
+            [](VonMises &self, const std::vector<Matrixr> &value)
+            {
+              cpu_array<Matrixr> host_val = value;
+              self.eps_e_gpu = host_val;
+            } // setter
+            ) // elastic strain (infinitesimal)
         .def_readwrite("E", &VonMises::E)
         .def_readwrite("pois", &VonMises::pois)
         .def_readwrite("shear_modulus", &VonMises::shear_modulus)
@@ -106,7 +118,6 @@ namespace pyroclastmpm
         .def_readwrite("bulk_modulus", &VonMises::bulk_modulus)
         .def_readwrite("density", &VonMises::density)
         .def_readwrite("name", &VonMises::name);
-
 
     py::class_<NewtonFluid>(m, "NewtonFluid")
         .def(py::init<Real, Real, Real, Real>(), py::arg("density"),

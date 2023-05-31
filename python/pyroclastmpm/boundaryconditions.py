@@ -71,12 +71,13 @@ class BodyForce(PyroBodyForce):
 class RigidBodyLevelSet(PyroRigidBodyLevelSet):
     def __init__(
         self,
+        COM: np.ndarray = np.zeros(3),
         frames: np.ndarray = [],
         locations: np.ndarray = [],
         rotations: np.ndarray = [],
         output_formats=[],
     ):
-        super(RigidBodyLevelSet, self).__init__( frames=frames, locations=locations, rotations=rotations, output_formats=output_formats,
+        super(RigidBodyLevelSet, self).__init__(COM = COM, frames=frames, locations=locations, rotations=rotations, output_formats=output_formats,
         )
 
 

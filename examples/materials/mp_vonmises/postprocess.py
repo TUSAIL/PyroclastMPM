@@ -91,4 +91,5 @@ plot_utils.plot_principal(
     "./plots/simpleshear/principal.png",
     "Simple shear - principle stresses plot",res=50)
 
+plot_utils.plot_stress_subplot(stresses, range(stresses.shape[0]), "./plots/simpleshear/strain_stress", "Simple shear strain-stress curves")
 # %%
