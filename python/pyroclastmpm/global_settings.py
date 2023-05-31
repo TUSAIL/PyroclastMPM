@@ -12,7 +12,7 @@ from .pyroclastmpm_pybind import (
 from pyroclastmpm.pyroclastmpm_pybind import (
  set_global_step as pyro_set_global_step   
 )
-from .pyroclastmpm_pybind import VTK, CSV, OBJ
+from .pyroclastmpm_pybind import VTK, CSV, OBJ,GTFL
 
 import typing as t
 

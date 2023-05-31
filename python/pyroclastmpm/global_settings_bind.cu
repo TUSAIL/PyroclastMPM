@@ -23,6 +23,7 @@ void global_settings_module(py::module& m) {
       .value("VTK", VTK)
       .value("OBJ", OBJ)
       .value("CSV", CSV)
+      .value("GTFL", GTFL)
       .export_values();
 
   m.def("set_global_shapefunction", &set_global_shapefunction,

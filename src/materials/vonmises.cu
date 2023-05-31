@@ -37,14 +37,10 @@ namespace pyroclastmpm
 
     name = "VonMises";
 
-    #if DIM != 3
-      printf("VonMises material only implemented for 3D\n");
-      exit(1);
-    #endif
-
-    #ifdef CUDA_ENABLED
-    printf("VonMises material only implemented for CPU (at the moment) \n");
-    #endif
+#if DIM != 3
+    printf("VonMises material only implemented for 3D\n");
+    exit(1);
+#endif
 
   }
 
@@ -64,20 +60,26 @@ namespace pyroclastmpm
    * @param mat_id material id
    */
   void VonMises::stress_update(ParticlesContainer &particles_ref,
-                                          int mat_id)
+                               int mat_id)
   {
 
 #ifdef CUDA_ENABLED
-//     KERNEL_STRESS_UPDATE_LINEARELASTIC<<<particles_ref.launch_config.tpb,
-//                                          particles_ref.launch_config.bpg>>>(
-//         thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
-//         thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
-//         thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
-//         thrust::raw_pointer_cast(particles_ref.masses_gpu.data()),
-//         thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
-//         particles_ref.num_particles, shear_modulus, lame_modulus, mat_id);
-
-//     gpuErrchk(cudaDeviceSynchronize());
+    KERNEL_STRESS_UPDATE_VONMISES<<<particles_ref.launch_config.tpb,
+                                    particles_ref.launch_config.bpg>>>(
+        // Matrix3r *particles_stresses_gpu,
+        thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
+        thrust::raw_pointer_cast(eps_e_gpu.data()),
+        thrust::raw_pointer_cast(acc_eps_p_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.F_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
+        bulk_modulus,
+        shear_modulus,
+        yield_stress,
+        H,
+        mat_id,
+        particles_ref.num_particles);
+    gpuErrchk(cudaDeviceSynchronize());
 #else
     for (int pid = 0; pid < particles_ref.num_particles; pid++)
     {

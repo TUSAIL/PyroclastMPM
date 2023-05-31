@@ -16,12 +16,16 @@ namespace pyroclastmpm
 
   extern int global_step_cpu;
 
+#ifdef CUDA_ENABLED
+  extern Real __constant__ dt_gpu;
+#endif
   extern Real dt_cpu;
 
 // include private header with kernels here to inline them
 #include "rigidbodylevelset_inline.cuh"
 
-  RigidBodyLevelSet::RigidBodyLevelSet(const cpu_array<int> _frames,
+  RigidBodyLevelSet::RigidBodyLevelSet(const Vectorr _COM,
+                                       const cpu_array<int> _frames,
                                        const cpu_array<Vectorr> _locations,
                                        const cpu_array<Vectorr> _rotations,
                                        const cpu_array<OutputType> _output_formats) : output_formats(_output_formats),
@@ -36,16 +40,11 @@ namespace pyroclastmpm
       printf("Rigid body level set only supports 3D simulations\n");
       exit(1);
     }
+    COM = _locations[0];
+    current_frame = 0;
 
-    // COM = Vectorr::Zero(); // initial Center of mass
-    // for (int pid = 0; pid < num_particles; pid++)
-    // {
-    //     COM += _positions[pid];
-    // }
-    // COM /= num_particles;
-    // translational_velocity = Vectorr::Zero(); // initial translational_velocity
-    // ROT = Vectorr::Zero();                    // initial euler angles
-    // rotation_matrix = Matrixr::Zero();        // initial rotation matrix
+    euler_angles = _rotations[0];
+
   }
   void RigidBodyLevelSet::apply_on_nodes_moments(NodesContainer &nodes_ref,
                                                  ParticlesContainer &particles_ref)
@@ -55,12 +54,86 @@ namespace pyroclastmpm
     {
       initialize(nodes_ref, particles_ref);
     }
+    // Set velocity
+
+    set_velocities(particles_ref);
 
     // 4. Mask grid nodes that do not contribute to rigid body contact
     calculate_overlapping_rigidbody(nodes_ref, particles_ref);
 
     // 5. Get rigid body grid normals
     calculate_grid_normals(nodes_ref, particles_ref);
+
+    // update rigid body position
+    set_position(particles_ref);
+
+    current_frame += 1;
+  };
+
+  void RigidBodyLevelSet::set_velocities(ParticlesContainer &particles_ref)
+  {
+    if (current_frame >= num_frames-1)
+    {
+      return;
+    }
+
+    translational_velocity = (locations_cpu[current_frame+1] - COM) / dt_cpu;
+    // radians to degrees
+    angular_velocities = (rotations_cpu[current_frame+1]*(PI / 180) - euler_angles) / dt_cpu;
+
+#ifdef CUDA_ENABLED
+
+    KERNEL_UPDATE_RIGID_VELOCITY<<<particles_ref.launch_config.tpb,
+                                   particles_ref.launch_config.bpg>>>(
+        thrust::raw_pointer_cast(particles_ref.velocities_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.positions_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.is_rigid_gpu.data()),
+        translational_velocity,
+        COM,
+        angular_velocities,
+        euler_angles,
+        particles_ref.num_particles);
+#else
+    for (int pid = 0; pid < particles_ref.num_particles; pid++)
+    {
+      update_rigid_velocity(
+          particles_ref.velocities_gpu.data(),
+          particles_ref.positions_gpu.data(),
+          particles_ref.is_rigid_gpu.data(),
+          translational_velocity,
+          COM,
+          angular_velocities,
+          euler_angles,
+          pid);
+    }
+#endif
+  };
+
+  void RigidBodyLevelSet::set_position(ParticlesContainer &particles_ref)
+  {
+#ifdef CUDA_ENABLED
+    KERNEL_UPDATE_RIGID_POSITION<<<particles_ref.launch_config.tpb,
+                                   particles_ref.launch_config.bpg>>>(
+        thrust::raw_pointer_cast(particles_ref.positions_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.velocities_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.is_rigid_gpu.data()),
+        particles_ref.num_particles
+
+    );
+#else
+
+    for (int pid = 0; pid < particles_ref.num_particles; pid++)
+    {
+      update_rigid_position(
+          particles_ref.positions_gpu.data(),
+          particles_ref.velocities_gpu.data(),
+          particles_ref.is_rigid_gpu.data(),
+          pid);
+    }
+#endif
+
+    COM += translational_velocity * dt_cpu;
+    euler_angles += angular_velocities * dt_cpu;
   };
 
   void RigidBodyLevelSet::initialize(NodesContainer &nodes_ref,
@@ -123,7 +196,7 @@ namespace pyroclastmpm
       NodesContainer &nodes_ref,
       ParticlesContainer &particles_ref)
   {
-    #ifdef CUDA_ENABLED
+#ifdef CUDA_ENABLED
     KERNEL_GET_OVERLAPPING_RIGID_BODY_GRID<<<particles_ref.launch_config.tpb,
                                              particles_ref.launch_config.bpg>>>(
         thrust::raw_pointer_cast(is_overlapping_gpu.data()),
@@ -137,23 +210,23 @@ namespace pyroclastmpm
         particles_ref.spatial.num_cells_total,
         particles_ref.num_particles);
 
-      gpuErrchk(cudaDeviceSynchronize());
-    #else
+    gpuErrchk(cudaDeviceSynchronize());
+#else
     for (int pid = 0; pid < particles_ref.num_particles; pid++)
     {
-        get_overlapping_rigid_body_grid(
-            is_overlapping_gpu.data(),
-            nodes_ref.node_ids_gpu.data(),
-            particles_ref.positions_gpu.data(),
-            particles_ref.spatial.bins_gpu.data(),
-            particles_ref.is_rigid_gpu.data(),
-            particles_ref.spatial.num_cells,
-            particles_ref.spatial.grid_start,
-            particles_ref.spatial.inv_cell_size,
-            particles_ref.spatial.num_cells_total,
-            pid);
+      get_overlapping_rigid_body_grid(
+          is_overlapping_gpu.data(),
+          nodes_ref.node_ids_gpu.data(),
+          particles_ref.positions_gpu.data(),
+          particles_ref.spatial.bins_gpu.data(),
+          particles_ref.is_rigid_gpu.data(),
+          particles_ref.spatial.num_cells,
+          particles_ref.spatial.grid_start,
+          particles_ref.spatial.inv_cell_size,
+          particles_ref.spatial.num_cells_total,
+          pid);
     }
-    #endif
+#endif
   }
 
 } // namespace pyroclastmpm

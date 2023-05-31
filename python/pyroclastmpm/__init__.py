@@ -37,6 +37,7 @@ from .pyroclastmpm_pybind import (
     VTK,
     CSV,
     OBJ,
+    GTFL
 )
 
 from .global_settings import (

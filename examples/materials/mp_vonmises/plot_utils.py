@@ -132,6 +132,24 @@ def plot_principal(stresses, file, title,res =25):
     bbox_inches='tight'
     )
     plt.clf()
+
+def plot_stress_subplot(stresses, steps, file, title):
+    fig, axs = plt.subplots(3, 3,  sharex=True, sharey=False)
+    fig.suptitle(title)
+    for i in range(3):
+        for j in range(3):
+            axs[i,j].scatter(steps, stresses[:,i,j], color='red')
+            nx = i+1 # x component of stress/strain component
+            ny = j+1 # y component of stress/strain component
+            axs[i,j].set_ylabel(f'$\sigma_{{{nx}{ny}}}$ ')
+            # axs[i,j].set_ylabel(f'$\varepsilon_{{{nx}{ny}}}$ ')
+            axs[i,j].grid()
     
-# sigma_y = 20
-# 
+    plt.tight_layout()
+    plt.savefig(
+        file,
+        # dpi=300, 
+        transparent=False, 
+        bbox_inches='tight'
+        )
+    plt.clf()

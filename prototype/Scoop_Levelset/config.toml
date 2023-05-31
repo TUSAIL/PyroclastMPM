@@ -8,7 +8,7 @@ output_directory = "output"
 total_steps = 3000
 output_steps = 100 #frequency
 output_start = 0
-cell_size_ratio = 60.0
+cell_size_ratio = 40.0
 
 [nodes]
 node_start = [0.0, 0.0]
@@ -45,7 +45,7 @@ axis1_mode=[1,1,1]
 domain_file = "domain.stl"
 material_file = "material.stl"
 scoop_file = "scoop.stl"
-scoop_motion_file = "scoop.chan"
+scoop_motion_file = "move_up.chan"
 
 [postprocess]
 movie_file = "plots/scoop.gif"
