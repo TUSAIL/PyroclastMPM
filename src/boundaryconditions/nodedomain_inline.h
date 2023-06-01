@@ -23,7 +23,7 @@ apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
         nodes_moments_gpu[node_mem_index] = Vectorr::Zero();
         nodes_moments_nt_gpu[node_mem_index] = Vectorr::Zero();
       } else if (axis0_mode(i) == 1) {
-        // slip
+        // stick
         nodes_moments_gpu[node_mem_index][i] =
             max(0., nodes_moments_gpu[node_mem_index]
                         .cast<double>()[i]); // cast to double to avoid error

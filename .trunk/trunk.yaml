@@ -9,6 +9,9 @@ plugins:
 lint:
   enabled:
     - black@23.3.0
+    - flake8@6.0.0:
+        packages:
+          - flake8-bugbear@23.5.9
     - git-diff-check
     - gitleaks@8.16.3
     - hadolint@2.12.0
@@ -21,6 +24,9 @@ lint:
     - yamllint@1.32.0
     - clang-format@14.0.0
     - clang-tidy@15.0.6
+    - codespell@2.2.4
+    - markdownlint@0.28.1
+
 runtimes:
   enabled:
     - go@1.19.5
