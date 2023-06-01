@@ -1,0 +1,224 @@
+#include "pyroclastmpm/particles/particles.h"
+
+namespace pyroclastmpm {
+
+// number of nodes surrounding each element
+extern int num_surround_nodes_cpu;
+extern int particles_per_cell_cpu;
+
+/*!
+ * @brief Constructs Particle container class
+ * @param _positions particle positions
+ * @param _velocities particle velocities
+ * @param _colors particle types (optional)
+ * @param _stresses particle stresses (optional)
+ * @param _masses particle masses (optional)
+ * @param _volumes particle volumes (optional)
+ */
+ParticlesContainer::ParticlesContainer(
+    const cpu_array<Vectorr> _positions, const cpu_array<Vectorr> _velocities,
+    const cpu_array<uint8_t> _colors, const cpu_array<bool> _is_rigid,
+    const cpu_array<Matrix3r> _stresses, const cpu_array<Real> _masses,
+    const cpu_array<Real> _volumes, const cpu_array<OutputType> _output_formats)
+    : output_formats(_output_formats) {
+  num_particles = _positions.size();
+
+  set_default_device<Matrix3r>(num_particles, _stresses, stresses_gpu,
+                               Matrix3r::Zero());
+  set_default_device<Vectorr>(num_particles, _positions, positions_gpu,
+                              Vectorr::Zero());
+  set_default_device<Vectorr>(num_particles, _velocities, velocities_gpu,
+                              Vectorr::Zero());
+  set_default_device<uint8_t>(num_particles, _colors, colors_gpu, 0);
+  set_default_device<bool>(num_particles, _is_rigid, is_rigid_gpu, false);
+  set_default_device<Real>(num_particles, _masses, masses_gpu, -1.0);
+  set_default_device<Real>(num_particles, _volumes, volumes_gpu, -1.0);
+
+  set_default_device<Matrixr>(num_particles, {}, velocity_gradient_gpu,
+                              Matrixr::Zero());
+  set_default_device<Matrixr>(num_particles, {}, F_gpu, Matrixr::Identity());
+  set_default_device<Vectorr>(num_surround_nodes_cpu * num_particles, {},
+                              dpsi_gpu, Vectorr::Zero());
+  set_default_device<Real>(num_particles, _volumes, volumes_original_gpu, -1.0);
+  set_default_device<Real>(num_surround_nodes_cpu * num_particles, {}, psi_gpu,
+                           0.0);
+
+  set_default_device<Vectorr>(num_particles, {}, forces_external_gpu,
+                              Vectorr::Zero());
+  // Visuals
+  // TODO we need to find a way to store these optionally . . hopefully this
+  // becomes more clear later
+  // set_default_device<Real>(num_particles, {}, densities_gpu, 0.0);
+  // set_default_device<Real>(num_particles, {}, pressures_gpu, 0.0);
+
+  spatial = SpatialPartition(); // create a temporary partitioning object, since
+                                // we are getting domain size
+
+#ifdef CUDA_ENABLED
+  launch_config.tpb = dim3(int((num_particles) / BLOCKSIZE) + 1, 1, 1);
+  launch_config.bpg = dim3(BLOCKSIZE, 1, 1);
+  gpuErrchk(cudaDeviceSynchronize());
+#endif
+
+  reset(); // reset needed
+}
+
+void ParticlesContainer::reset(bool reset_psi) {
+
+  execution_policy exec;
+  if (reset_psi) {
+    thrust::fill(exec, psi_gpu.begin(), psi_gpu.end(), 0.);
+    thrust::fill(exec, dpsi_gpu.begin(), dpsi_gpu.end(), Vectorr::Zero());
+  }
+  thrust::fill(exec, velocity_gradient_gpu.begin(), velocity_gradient_gpu.end(),
+               Matrixr::Zero());
+
+  // thrust::fill(exec, pressures_gpu.begin(), pressures_gpu.end(), 0.);
+
+  // thrust::fill(exec, forces_external_gpu.begin(), forces_external_gpu.end(),
+  // Vectorr::Zero());
+}
+
+void ParticlesContainer::reorder() {
+  // TODO fix reordering
+  printf("Reorder not working correctly \n");
+  reorder_device_array<Vectorr>(positions_gpu, spatial.sorted_index_gpu);
+  reorder_device_array<Vectorr>(velocities_gpu, spatial.sorted_index_gpu);
+  reorder_device_array<Matrix3r>(stresses_gpu, spatial.sorted_index_gpu);
+
+  reorder_device_array<Matrixr>(velocity_gradient_gpu,
+                                spatial.sorted_index_gpu);
+  reorder_device_array<Matrixr>(F_gpu, spatial.sorted_index_gpu);
+  reorder_device_array<Vectorr>(dpsi_gpu, spatial.sorted_index_gpu);
+  reorder_device_array<uint8_t>(colors_gpu, spatial.sorted_index_gpu);
+  reorder_device_array<bool>(is_rigid_gpu, spatial.sorted_index_gpu);
+  reorder_device_array<Real>(volumes_gpu, spatial.sorted_index_gpu);
+  reorder_device_array<Real>(volumes_original_gpu, spatial.sorted_index_gpu);
+  reorder_device_array<Real>(masses_gpu, spatial.sorted_index_gpu);
+  reorder_device_array<Real>(psi_gpu, spatial.sorted_index_gpu);
+  reorder_device_array<Vectorr>(forces_external_gpu, spatial.sorted_index_gpu);
+
+  // reorder_device_array<Real>(densities_gpu, spatial.sorted_index_gpu);
+  // reorder_device_array<Real>(pressures_gpu, spatial.sorted_index_gpu);
+}
+
+void ParticlesContainer::output_vtk() {
+
+  vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+
+  cpu_array<Matrix3r> stresses_cpu = stresses_gpu;
+  cpu_array<Matrixr> velocity_gradient_cpu = velocity_gradient_gpu;
+  cpu_array<Matrixr> F_cpu = F_gpu;
+  cpu_array<Vectorr> velocities_cpu = velocities_gpu;
+  cpu_array<Vectorr> positions_cpu = positions_gpu;
+  cpu_array<Real> masses_cpu = masses_gpu;
+  cpu_array<Real> volumes_cpu = volumes_gpu;
+  cpu_array<Real> volumes_original_cpu = volumes_original_gpu;
+  // cpu_array<Real> densities_cpu = densities_gpu;
+  cpu_array<int> colors_cpu = colors_gpu;
+
+  cpu_array<int> is_rigid_cpu = is_rigid_gpu;
+
+  // get pressure
+  // cpu_array<Real> pressures_cpu;
+  // pressures_cpu.resize(num_particles);
+
+  for (int pi = 0; pi < num_particles; pi++) {
+    // pressures_cpu[pi] = -(stresses_cpu[pi].block(0, 0, DIM, DIM).trace() /
+    // DIM);
+    is_rigid_cpu[pi] =
+        !is_rigid_cpu[pi]; // flip to make sure we don't output rigid particles
+  }
+
+  bool exclude_rigid_from_output = false; // TODO make this an option?
+  set_vtk_points(positions_cpu, polydata, is_rigid_cpu,
+                 exclude_rigid_from_output);
+  set_vtk_pointdata<int>(is_rigid_cpu, polydata, "isRigid", is_rigid_cpu,
+                         exclude_rigid_from_output);
+  set_vtk_pointdata<Vectorr>(positions_cpu, polydata, "Positions", is_rigid_cpu,
+                             exclude_rigid_from_output);
+  set_vtk_pointdata<Vectorr>(velocities_cpu, polydata, "Velocity", is_rigid_cpu,
+                             exclude_rigid_from_output);
+  set_vtk_pointdata<Matrix3r>(stresses_cpu, polydata, "Stress", is_rigid_cpu,
+                              exclude_rigid_from_output);
+  set_vtk_pointdata<Matrixr>(velocity_gradient_cpu, polydata,
+                             "VelocityGradient", is_rigid_cpu,
+                             exclude_rigid_from_output);
+  set_vtk_pointdata<Matrixr>(F_cpu, polydata, "DeformationMatrix", is_rigid_cpu,
+                             exclude_rigid_from_output);
+  set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass", is_rigid_cpu,
+                          exclude_rigid_from_output);
+  set_vtk_pointdata<Real>(volumes_cpu, polydata, "Volume", is_rigid_cpu,
+                          exclude_rigid_from_output);
+  set_vtk_pointdata<Real>(volumes_original_cpu, polydata, "VolumeOriginal",
+                          is_rigid_cpu, exclude_rigid_from_output);
+  set_vtk_pointdata<uint8_t>(colors_cpu, polydata, "Color", is_rigid_cpu,
+                             exclude_rigid_from_output);
+  // set_vtk_pointdata<Real>(densities_cpu, polydata, "Density",is_rigid_cpu,
+  // exclude_rigid_from_output); set_vtk_pointdata<Real>(pressures_cpu,
+  // polydata, "Pressure",is_rigid_cpu, exclude_rigid_from_output);
+
+  // loop over output_formats
+  for (auto format : output_formats) {
+    write_vtk_polydata(polydata, "particles", format);
+  }
+}
+
+void ParticlesContainer::set_spatialpartition(const Vectorr start,
+                                              const Vectorr end,
+                                              const Real spacing) {
+  spatial = SpatialPartition(start, end, spacing, num_particles);
+  partition();
+}
+
+void ParticlesContainer::partition() {
+  spatial.calculate_hash(positions_gpu);
+
+  spatial.sort_hashes();
+
+  spatial.bin_particles();
+};
+
+void ParticlesContainer::calculate_initial_volumes() {
+  if (isRestart) {
+    return;
+  }
+  cpu_array<Real> volumes_cpu = volumes_gpu;
+  for (int pi = 0; pi < num_particles; pi++) {
+
+    if (volumes_cpu[pi] > 0.) {
+      continue;
+    }
+#if DIM == 3
+    volumes_cpu[pi] = spatial.cell_size * spatial.cell_size * spatial.cell_size;
+#elif DIM == 2
+    volumes_cpu[pi] = spatial.cell_size * spatial.cell_size;
+#else
+    volumes_cpu[pi] = spatial.cell_size;
+#endif
+    volumes_cpu[pi] /= particles_per_cell_cpu;
+  }
+  volumes_gpu = volumes_cpu;
+  volumes_original_gpu = volumes_cpu;
+}
+
+void ParticlesContainer::calculate_initial_masses(int mat_id, Real density) {
+  if (isRestart) {
+    return;
+  }
+  cpu_array<int> colors_cpu = colors_gpu;
+  cpu_array<Real> masses_cpu = masses_gpu;
+  cpu_array<Real> volumes_cpu = volumes_gpu;
+
+  for (int pi = 0; pi < num_particles; pi++) {
+    if ((colors_cpu[pi] != mat_id) || (masses_cpu[pi] > 0.)) {
+      continue;
+    }
+
+    masses_cpu[pi] = density * volumes_cpu[pi];
+  }
+
+  masses_gpu = masses_cpu;
+}
+
+} // namespace pyroclastmpm

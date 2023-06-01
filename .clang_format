@@ -1,0 +1,32 @@
+---
+BasedOnStyle: Google
+IndentWidth: 4
+TabWidth:    8
+Language:        Cpp
+
+IncludeBlocks:   Regroup
+IncludeCategories:
+  - Regex:           '^".*Fwd\.hpp"'
+    Priority:        9
+  - Regex:           '^<.*Fwd\.hpp>'
+    Priority:        11
+  - Regex:           '^".*\.h.*"'
+    Priority:        2
+  - Regex:           '^".*\.cuh"'
+    Priority:        3
+  - Regex:           '^".*'
+    Priority:        4
+  - Regex:           '^<.*\.h.*>'
+    Priority:        5
+  - Regex:           '^<.*\.cuh>'
+    Priority:        7
+  - Regex:           '^<.*'
+    Priority:        8
+  - Regex:           '[^.]+'
+    Priority:        11
+  - Regex:           '.*'
+    Priority:        12
+
+HeaderFilterRegex: \./.+
+
+Standard:        c++17

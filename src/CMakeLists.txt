@@ -1,48 +1,43 @@
-
 set(
   PyroclastSrc
 
-  "boundaryconditions/bodyforce.cu"
-  "boundaryconditions/gravity.cu"
-  "boundaryconditions/rigidbodylevelset.cu"
-  "boundaryconditions/planardomain.cu"
-  "boundaryconditions/nodedomain.cu"
+  "boundaryconditions/bodyforce.cpp"
+  "boundaryconditions/gravity.cpp"
+  "boundaryconditions/rigidbodylevelset.cpp"
+  "boundaryconditions/planardomain.cpp"
+  "boundaryconditions/nodedomain.cpp"
 
-  # materials
-  "materials/linearelastic.cu"
-  "materials/newtonfluid.cu"
-  "materials/localrheo.cu"
-  "materials/vonmises.cu"
-  "solver/solver.cu"
+  "materials/linearelastic.cpp"
+  "materials/newtonfluid.cpp"
+  "materials/localrheo.cpp"
+  "materials/vonmises.cpp"
+  "solver/solver.cpp"
 
+  "shapefunction/shapefunction.cpp"
+  "solver/usl/usl.cpp"
+  "particles/particles.cpp"
+  "nodes/nodes.cpp"
 
-  "shapefunction/shapefunction.cu"
-  "solver/usl/usl.cu"
-  # # future
-  # # "solver/apic/apic.cu"
-  # "solver/musl/musl.cu"
-  # "solver/tlmpm/tlmpm.cu"
+  "common/helper.cpp"
+  "common/global_settings.cpp"
+  "common/output.cpp"
+  "common/tools.cpp"
 
-  "particles/particles.cu"
-  "nodes/nodes.cu"
-
-
-  "common/helper.cu"
-  "common/global_settings.cu"
-  "common/output.cu"
-
-  "common/tools.cu"
-  "spatialpartition/spatialpartition.cu"
+  "spatialpartition/spatialpartition.cpp"
 
 
 
 )
 
+
+  # # future
+  # # "solver/apic/apic.cu"
+  # "solver/musl/musl.cu"
+  # "solver/tlmpm/tlmpm.cu"
+
 add_library(pyroclastmpm ${PyroclastSrc})
 
 target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen ${VTK_LIBRARIES} )
-
-# target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen )
 
 
 if(BUILD_CUDA)
@@ -52,9 +47,10 @@ if(BUILD_CUDA)
     --relocatable-device-code=true
     -O3
     --expt-relaxed-constexpr
-    -x cu
     >
   )
+
+  set_source_files_properties(${PyroclastSrc} PROPERTIES LANGUAGE CUDA)
   set_target_properties(pyroclastmpm PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 else()
@@ -65,9 +61,4 @@ endif()
 vtk_module_autoinit(
 TARGETS pyroclastmpm
 MODULES ${VTK_LIBRARIES}
-)
-
-target_include_directories(pyroclastmpm PUBLIC
-$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/>
-$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )

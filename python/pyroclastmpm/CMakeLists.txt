@@ -2,13 +2,13 @@ set(
   PyroclastPyBind
 
   "_pyroclastmpm.cpp"
-  "particles_bind.cu"
-  "nodes_bind.cu"
-  "boundaryconditions_bind.cu"
-  "materials_bind.cu"
-  "solver_bind.cu"
-  "global_settings_bind.cu"
-  "tools_bind.cu"
+  "particles_bind.cpp"
+  "nodes_bind.cpp"
+  "boundaryconditions_bind.cpp"
+  "materials_bind.cpp"
+  "solver_bind.cpp"
+  "global_settings_bind.cpp"
+  "tools_bind.cpp"
 
   # "spatialpartition_bind.cu" // currently no need to import this in python . . .
 )
@@ -50,9 +50,4 @@ endif()
 vtk_module_autoinit(
   FORCE_STATIC TARGETS pyroclastmpm_pybind
   MODULES ${VTK_LIBRARIES}
-)
-
-target_include_directories(pyroclastmpm_pybind PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )

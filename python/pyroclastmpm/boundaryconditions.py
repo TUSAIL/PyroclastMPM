@@ -2,32 +2,13 @@ from __future__ import annotations
 
 import numpy as np
 
-import typing as t
-
+from .pyroclastmpm_pybind import BodyForce as PyroBodyForce
+from .pyroclastmpm_pybind import BoundaryCondition as PyroBoundaryCondition
+from .pyroclastmpm_pybind import Gravity as PyroGravity
+from .pyroclastmpm_pybind import NodeDomain as PyroNodeDomain
+from .pyroclastmpm_pybind import PlanarDomain as PyroPlanarDomain
+from .pyroclastmpm_pybind import RigidBodyLevelSet as PyroRigidBodyLevelSet
 from .pyroclastmpm_pybind import global_dimension
-
-from .pyroclastmpm_pybind import (
-    BoundaryCondition as PyroBoundaryCondition,
-)
-from .pyroclastmpm_pybind import (
-    Gravity as PyroGravity,
-)
-
-from .pyroclastmpm_pybind import (
-    BodyForce as PyroBodyForce,
-)
-
-from .pyroclastmpm_pybind import (
-    RigidBodyLevelSet as PyroRigidBodyLevelSet,
-)
-
-from .pyroclastmpm_pybind import (
-    PlanarDomain as PyroPlanarDomain,
-)
-
-from .pyroclastmpm_pybind import (
-    NodeDomain as PyroNodeDomain,
-)
 
 
 class BoundaryCondition(PyroBoundaryCondition):
@@ -39,7 +20,6 @@ class BoundaryCondition(PyroBoundaryCondition):
 
 
 class Gravity(PyroGravity):
-
     gravity: np.array
 
     def __init__(
@@ -60,7 +40,6 @@ class Gravity(PyroGravity):
 
 
 class BodyForce(PyroBodyForce):
-
     #: mode of boundary condition applied (0 - additve on forces, 1 - additive on momentum, 2 - fixed on momentum)
     mode_id: int
 
@@ -77,29 +56,30 @@ class RigidBodyLevelSet(PyroRigidBodyLevelSet):
         rotations: np.ndarray = [],
         output_formats=[],
     ):
-        super(RigidBodyLevelSet, self).__init__(COM = COM, frames=frames, locations=locations, rotations=rotations, output_formats=output_formats,
+        super(RigidBodyLevelSet, self).__init__(
+            COM=COM,
+            frames=frames,
+            locations=locations,
+            rotations=rotations,
+            output_formats=output_formats,
         )
 
 
 class PlanarDomain(PyroPlanarDomain):
-
     def __init__(
-            self,
-            axis0_friction: np.array = np.zeros(global_dimension),
-            axis1_friction: np.array = np.zeros(global_dimension)):
+        self,
+        axis0_friction: np.array = np.zeros(global_dimension),
+        axis1_friction: np.array = np.zeros(global_dimension),
+    ):
         super(PlanarDomain, self).__init__(
-            axis0_friction=axis0_friction,
-            axis1_friction=axis1_friction
+            axis0_friction=axis0_friction, axis1_friction=axis1_friction
         )
 
 
 class NodeDomain(PyroNodeDomain):
-
     def __init__(
-            self,
-            axis0_mode: np.array = np.zeros(global_dimension, dtype=int),
-            axis1_mode: np.array = np.zeros(global_dimension, dtype=int)):
-        super(NodeDomain, self).__init__(
-            axis0_mode=axis0_mode,
-            axis1_mode=axis1_mode
-        )
+        self,
+        axis0_mode: np.array = np.zeros(global_dimension, dtype=int),
+        axis1_mode: np.array = np.zeros(global_dimension, dtype=int),
+    ):
+        super(NodeDomain, self).__init__(axis0_mode=axis0_mode, axis1_mode=axis1_mode)

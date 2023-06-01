@@ -1,9 +1,8 @@
-
 from __future__ import annotations
 
-from .pyroclastmpm_pybind import NodesContainer as PyroNodesContainer
 import numpy as np
-from typing import Tuple, List
+
+from .pyroclastmpm_pybind import NodesContainer as PyroNodesContainer
 
 
 class NodesContainer(PyroNodesContainer):
@@ -61,13 +60,16 @@ class NodesContainer(PyroNodesContainer):
         node_start: np.ndarray,
         node_end: np.ndarray,
         node_spacing: float,
-        output_formats=[]
+        output_formats=[],
     ):
         """Initialize nodes container."""
 
         #: init c++ class from pybind11
         super(NodesContainer, self).__init__(
-            node_start=node_start, node_end=node_end, node_spacing=node_spacing,output_formats=output_formats
+            node_start=node_start,
+            node_end=node_end,
+            node_spacing=node_spacing,
+            output_formats=output_formats,
         )
 
     def give_coords(self) -> np.ndarray:

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from .pyroclastmpm_pybind import ParticlesContainer as PyroParticlesContainer
-
 import numpy as np
-from typing import Type, List
+
+from .pyroclastmpm_pybind import ParticlesContainer as PyroParticlesContainer
 
 
 class ParticlesContainer(PyroParticlesContainer):

@@ -1,11 +1,12 @@
 from __future__ import annotations
-from typing import Type, List, Callable
+
+from typing import Callable, List, Type
 
 from .boundaryconditions import BoundaryCondition
 from .nodes import NodesContainer
 from .particles import ParticlesContainer
-
 from .pyroclastmpm_pybind import USL as PyroUSL
+
 # from .pyroclastmpm_pybind import TLMPM as PyroTLMPM
 # from .pyroclastmpm_pybind import MUSL as PyroMUSL
 
@@ -87,7 +88,6 @@ class USL(PyroUSL):
         output_steps: int = 0,
         output_start: int = 0,
     ):
-
         self.total_steps = total_steps
         self.output_steps = output_steps
         self.output_start = output_start
@@ -98,7 +98,7 @@ class USL(PyroUSL):
             nodes=nodes,
             materials=materials,
             boundaryconditions=boundaryconditions,
-            alpha=alpha
+            alpha=alpha,
         )
 
     def solve_nsteps(self, num_steps: int):

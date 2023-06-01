@@ -1,20 +1,16 @@
 from __future__ import annotations
 
-from .pyroclastmpm_pybind import set_globals as pyro_set_globals
-from .pyroclastmpm_pybind import set_global_timestep as pyro_set_global_timestep
-from .pyroclastmpm_pybind import (
-    set_global_shapefunction as pyro_set_global_shapefunction,
-)
+from pyroclastmpm.pyroclastmpm_pybind import set_global_step as pyro_set_global_step
+
+from .pyroclastmpm_pybind import CSV, GTFL, OBJ, VTK
 from .pyroclastmpm_pybind import (
     set_global_output_directory as pyro_set_global_output_directory,
 )
-
-from pyroclastmpm.pyroclastmpm_pybind import (
- set_global_step as pyro_set_global_step   
+from .pyroclastmpm_pybind import (
+    set_global_shapefunction as pyro_set_global_shapefunction,
 )
-from .pyroclastmpm_pybind import VTK, CSV, OBJ,GTFL
-
-import typing as t
+from .pyroclastmpm_pybind import set_global_timestep as pyro_set_global_timestep
+from .pyroclastmpm_pybind import set_globals as pyro_set_globals
 
 
 def set_global_timestep(dt: float):
@@ -27,10 +23,7 @@ def set_global_timestep(dt: float):
     pyro_set_global_timestep(dt)
 
 
-def set_global_shapefunction(
-    dimension: int,
-    shape_function
-):
+def set_global_shapefunction(dimension: int, shape_function):
     """Set the simulation shape function in global memory.
 
     It must be set before any Pyroclast objects are called.
@@ -41,8 +34,7 @@ def set_global_shapefunction(
     pyro_set_global_shapefunction(dimension, shape_function)
 
 
-def set_global_output_directory(
-        output_directory: str):
+def set_global_output_directory(output_directory: str):
     """Sets the output folder
 
     :param output_directory: input simulation shape function
@@ -50,17 +42,15 @@ def set_global_output_directory(
 
     pyro_set_global_output_directory(output_directory)
 
+
 def set_global_step(step: int):
-    """Sets the global step counter
-    """
+    """Sets the global step counter"""
 
     pyro_set_global_step(step)
 
+
 def set_globals(
-    dt: float,
-    particles_per_cell: int,
-    shape_function,
-    output_directory: str
+    dt: float, particles_per_cell: int, shape_function, output_directory: str
 ):
     """Sets the output folder
 

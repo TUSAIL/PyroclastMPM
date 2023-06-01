@@ -1,28 +1,24 @@
-# perform cmake -DCMAKE_BUILD_TYPE=Release ../pyroclastmpm/
 cmake_minimum_required(VERSION 3.22 FATAL_ERROR)
 
 project(pyroclastmpm VERSION 0.1.0 LANGUAGES C CXX)
 
-# Define the minimum C++ standard that is required
+# Compiler options
 set(CMAKE_POLICY_DEFAULT_CMP0025 NEW)
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-# Compilation options
-# set(DIM 3)
-# set(<variable> <value>... CACHE <type> <docstring>
+set(CMAKE_BUILD_TYPE Release)
 set(DIM 3)
-option(BUILD_CUDA "Enable CUDA Acceleration" ON)
+
 # option(BUILD_OPENMP "Enable CUDA Acceleration" OFF) # later
+option(BUILD_CUDA "Enable CUDA Acceleration" ON)
 option(BUILD_PYTHON "Enable building of Python bindings" ON)
 option(BUILD_DOCS "Enable building of documentation" OFF)
 option(BUILD_TESTING "Enable testing" ON)
-option(CMAKE_BUILD_TYPE "Make release build" Release)
 option (DOUBLE_PRECISION "Use double precision" OFF)
-
+option(CMAKE_EXPORT_COMPILE_COMMANDS "Generate compile_commands.json"  ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_definitions(-DDIM=${DIM}) 
 
 
@@ -34,7 +30,6 @@ if(BUILD_CUDA)
     add_definitions(-DCUDA_ENABLED) 
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX CUDA)
     find_package(CUDAToolkit REQUIRED)
-
 else()
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX)
     # Thrust
@@ -64,6 +59,12 @@ find_package(VTK REQUIRED
     IOHDF
 )
 
+include_directories(
+$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/>
+$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+PUBLIC
+)
+
 # main ompile the library
 add_subdirectory(src)
 
@@ -81,9 +82,9 @@ if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
 
-# if(BUILD_DOCS)
-#     add_subdirectory(doc)
-# endif()
+if(BUILD_DOCS)
+    add_subdirectory(doc)
+endif()
 
 if(BUILD_PYTHON)
     add_subdirectory(ext/pybind11)

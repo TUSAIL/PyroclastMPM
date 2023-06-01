@@ -1,12 +1,11 @@
 from __future__ import annotations
-from typing import List
 
-
-from .pyroclastmpm_pybind import Material as PyroMaterial
 from .pyroclastmpm_pybind import LinearElastic as PyroLinearElastic
-from .pyroclastmpm_pybind import VonMises as PyroVonMises
-from .pyroclastmpm_pybind import NewtonFluid as PyroNewtonFluid
 from .pyroclastmpm_pybind import LocalGranularRheology as PyroLocalGranularRheology
+from .pyroclastmpm_pybind import Material as PyroMaterial
+from .pyroclastmpm_pybind import NewtonFluid as PyroNewtonFluid
+from .pyroclastmpm_pybind import VonMises as PyroVonMises
+
 
 class Material(PyroMaterial):
     """Base class of the material. Inherits from the C++ class through pybind11."""
@@ -68,7 +67,14 @@ class VonMises(PyroVonMises):
     #: pybind11 binding for lame modulus
     lame_modulus: float
 
-    def __init__(self, density: float, E: float, pois: float = 0, yield_stress:float =0, H:float  =1 ):  # NOSONAR
+    def __init__(
+        self,
+        density: float,
+        E: float,
+        pois: float = 0,
+        yield_stress: float = 0,
+        H: float = 1,
+    ):  # NOSONAR
         """_summary_
 
         :param density: Material density
@@ -76,15 +82,11 @@ class VonMises(PyroVonMises):
         :param pois: Poisson's ratio, defaults to 0
         """
         super(VonMises, self).__init__(
-            density=density,
-            E=E,
-            pois=pois,
-            yield_stress=yield_stress,
-            H=H
-            )
+            density=density, E=E, pois=pois, yield_stress=yield_stress, H=H
+        )
+
 
 class NewtonFluid(PyroNewtonFluid):
-
     #: pybind11 binding for material name
     name: str
 
@@ -110,6 +112,7 @@ class NewtonFluid(PyroNewtonFluid):
         super(NewtonFluid, self).__init__(
             density=density, viscosity=viscosity, bulk_modulus=bulk_modulus, gamma=gamma
         )
+
 
 class LocalGranularRheology(PyroLocalGranularRheology):
     """Local Granular Rheology inheritrs from the C++ class through pybind11."""
