@@ -26,6 +26,7 @@ void particles_module(py::module &m) {
           py::arg("output_formats") = std::vector<OutputType>())
       .def("output_vtk", &ParticlesContainer::output_vtk)
       .def("partition", &ParticlesContainer::partition)
+      .def("set_spawner", &ParticlesContainer::set_spawner)
       .def_readonly("num_particles",
                     &ParticlesContainer::num_particles) // NUM PARTICLES
       .def_property(

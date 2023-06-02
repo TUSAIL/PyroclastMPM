@@ -67,7 +67,17 @@ public:
   void set_spatialpartition(const Vectorr start, const Vectorr end,
                             const Real spacing);
 
-  /*! @brief particles' stresses, we allways store 3x3 matrix for stresses */
+  void spawn_particles();
+
+  void set_spawner(int spawnRate, int spawnVolume);
+  int spawnRate;
+
+  int spawnIncrement;
+
+  int spawnVolume;
+
+  /*! @brief particles' stresses, we always store 3x3 matrix for stresses
+   */
   gpu_array<Matrix3r> stresses_gpu;
 
   /*! @brief particles' velocity gradients */
@@ -111,6 +121,9 @@ public:
 
   /*! @brief particles' colors (or material type) */
   gpu_array<bool> is_rigid_gpu;
+
+  /*! @brief particles' active (or material type) */
+  gpu_array<bool> is_active_gpu;
 
   /*! @brief spatial partitioning class */
   SpatialPartition spatial;

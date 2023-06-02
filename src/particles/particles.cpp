@@ -5,6 +5,7 @@ namespace pyroclastmpm {
 // number of nodes surrounding each element
 extern int num_surround_nodes_cpu;
 extern int particles_per_cell_cpu;
+extern int global_step_cpu;
 
 /*!
  * @brief Constructs Particle container class
@@ -20,7 +21,8 @@ ParticlesContainer::ParticlesContainer(
     const cpu_array<uint8_t> _colors, const cpu_array<bool> _is_rigid,
     const cpu_array<Matrix3r> _stresses, const cpu_array<Real> _masses,
     const cpu_array<Real> _volumes, const cpu_array<OutputType> _output_formats)
-    : output_formats(_output_formats) {
+    : output_formats(_output_formats), spawnIncrement(0), spawnRate(-1),
+      spawnVolume(0) {
   num_particles = _positions.size();
 
   set_default_device<Matrix3r>(num_particles, _stresses, stresses_gpu,
@@ -31,6 +33,9 @@ ParticlesContainer::ParticlesContainer(
                               Vectorr::Zero());
   set_default_device<uint8_t>(num_particles, _colors, colors_gpu, 0);
   set_default_device<bool>(num_particles, _is_rigid, is_rigid_gpu, false);
+
+  set_default_device<bool>(num_particles, {}, is_active_gpu, true);
+
   set_default_device<Real>(num_particles, _masses, masses_gpu, -1.0);
   set_default_device<Real>(num_particles, _volumes, volumes_gpu, -1.0);
 
@@ -45,11 +50,6 @@ ParticlesContainer::ParticlesContainer(
 
   set_default_device<Vectorr>(num_particles, {}, forces_external_gpu,
                               Vectorr::Zero());
-  // Visuals
-  // TODO we need to find a way to store these optionally . . hopefully this
-  // becomes more clear later
-  // set_default_device<Real>(num_particles, {}, densities_gpu, 0.0);
-  // set_default_device<Real>(num_particles, {}, pressures_gpu, 0.0);
 
   spatial = SpatialPartition(); // create a temporary partitioning object, since
                                 // we are getting domain size
@@ -72,11 +72,6 @@ void ParticlesContainer::reset(bool reset_psi) {
   }
   thrust::fill(exec, velocity_gradient_gpu.begin(), velocity_gradient_gpu.end(),
                Matrixr::Zero());
-
-  // thrust::fill(exec, pressures_gpu.begin(), pressures_gpu.end(), 0.);
-
-  // thrust::fill(exec, forces_external_gpu.begin(), forces_external_gpu.end(),
-  // Vectorr::Zero());
 }
 
 void ParticlesContainer::reorder() {
@@ -97,9 +92,37 @@ void ParticlesContainer::reorder() {
   reorder_device_array<Real>(masses_gpu, spatial.sorted_index_gpu);
   reorder_device_array<Real>(psi_gpu, spatial.sorted_index_gpu);
   reorder_device_array<Vectorr>(forces_external_gpu, spatial.sorted_index_gpu);
+}
 
-  // reorder_device_array<Real>(densities_gpu, spatial.sorted_index_gpu);
-  // reorder_device_array<Real>(pressures_gpu, spatial.sorted_index_gpu);
+void ParticlesContainer::set_spawner(int _spawnRate, int _spawnVolume) {
+
+  spawnRate = _spawnRate;
+  spawnVolume = _spawnVolume;
+  spawnIncrement = 0;
+  execution_policy exec;
+  thrust::fill(exec, is_active_gpu.begin(), is_active_gpu.end(), false);
+}
+
+void ParticlesContainer::spawn_particles() {
+  if (spawnRate <= 0) {
+    return;
+  }
+  if (global_step_cpu % spawnRate != 0) {
+    return;
+  }
+  if (spawnIncrement >= num_particles) {
+    return;
+  }
+
+  cpu_array<bool> is_active_cpu = is_active_gpu;
+
+  for (int si = 0; si < spawnVolume; si++) {
+
+    is_active_cpu[spawnIncrement + si] = true;
+  }
+  spawnIncrement += spawnVolume;
+
+  is_active_gpu = is_active_cpu;
 }
 
 void ParticlesContainer::output_vtk() {
@@ -114,18 +137,13 @@ void ParticlesContainer::output_vtk() {
   cpu_array<Real> masses_cpu = masses_gpu;
   cpu_array<Real> volumes_cpu = volumes_gpu;
   cpu_array<Real> volumes_original_cpu = volumes_original_gpu;
-  // cpu_array<Real> densities_cpu = densities_gpu;
+
   cpu_array<int> colors_cpu = colors_gpu;
 
   cpu_array<int> is_rigid_cpu = is_rigid_gpu;
 
-  // get pressure
-  // cpu_array<Real> pressures_cpu;
-  // pressures_cpu.resize(num_particles);
-
   for (int pi = 0; pi < num_particles; pi++) {
-    // pressures_cpu[pi] = -(stresses_cpu[pi].block(0, 0, DIM, DIM).trace() /
-    // DIM);
+
     is_rigid_cpu[pi] =
         !is_rigid_cpu[pi]; // flip to make sure we don't output rigid particles
   }
@@ -154,9 +172,6 @@ void ParticlesContainer::output_vtk() {
                           is_rigid_cpu, exclude_rigid_from_output);
   set_vtk_pointdata<uint8_t>(colors_cpu, polydata, "Color", is_rigid_cpu,
                              exclude_rigid_from_output);
-  // set_vtk_pointdata<Real>(densities_cpu, polydata, "Density",is_rigid_cpu,
-  // exclude_rigid_from_output); set_vtk_pointdata<Real>(pressures_cpu,
-  // polydata, "Pressure",is_rigid_cpu, exclude_rigid_from_output);
 
   // loop over output_formats
   for (auto format : output_formats) {

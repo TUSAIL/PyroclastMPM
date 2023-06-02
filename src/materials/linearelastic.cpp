@@ -45,17 +45,18 @@ void LinearElastic::stress_update(ParticlesContainer &particles_ref,
       thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.masses_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.is_active_gpu.data()),
       particles_ref.num_particles, shear_modulus, lame_modulus, mat_id);
 
   gpuErrchk(cudaDeviceSynchronize());
 #else
   for (int pid = 0; pid < particles_ref.num_particles; pid++) {
-    update_linearelastic(particles_ref.stresses_gpu.data(),
-                         particles_ref.velocity_gradient_gpu.data(),
-                         particles_ref.volumes_gpu.data(),
-                         particles_ref.masses_gpu.data(),
-                         particles_ref.colors_gpu.data(), shear_modulus,
-                         lame_modulus, mat_id, pid);
+    update_linearelastic(
+        particles_ref.stresses_gpu.data(),
+        particles_ref.velocity_gradient_gpu.data(),
+        particles_ref.volumes_gpu.data(), particles_ref.masses_gpu.data(),
+        particles_ref.colors_gpu.data(), particles_ref.is_active_gpu.data(),
+        shear_modulus, lame_modulus, mat_id, pid);
   }
 #endif
 }

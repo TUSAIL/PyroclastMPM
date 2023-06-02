@@ -15,7 +15,7 @@ extern int backward_window_cpu[64][3];
 #endif
 
 // include private header with kernels here to inline them
-#include "usl_inline.cuh"
+#include "usl_inline.h"
 
 USL::USL(ParticlesContainer _particles, NodesContainer _nodes,
          cpu_array<MaterialType> _materials,
@@ -40,6 +40,8 @@ void USL::reset() {
  */
 void USL::solve() {
   reset();
+
+  particles.spawn_particles();
 
   particles.partition();
 
@@ -96,7 +98,8 @@ void USL::P2G() {
       thrust::raw_pointer_cast(particles.spatial.cell_start_gpu.data()),
       thrust::raw_pointer_cast(particles.spatial.cell_end_gpu.data()),
       thrust::raw_pointer_cast(particles.spatial.sorted_index_gpu.data()),
-      thrust::raw_pointer_cast(particles.is_rigid_gpu.data()), nodes.num_nodes,
+      thrust::raw_pointer_cast(particles.is_rigid_gpu.data()),
+      thrust::raw_pointer_cast(particles.is_active_gpu.data()), nodes.num_nodes,
       nodes.inv_node_spacing, nodes.num_nodes_total);
   gpuErrchk(cudaDeviceSynchronize());
 #else
@@ -111,8 +114,8 @@ void USL::P2G() {
         particles.volumes_gpu.data(), particles.spatial.cell_start_gpu.data(),
         particles.spatial.cell_end_gpu.data(),
         particles.spatial.sorted_index_gpu.data(),
-        particles.is_rigid_gpu.data(), nodes.num_nodes, nodes.inv_node_spacing,
-        nodes.num_nodes_total, ti);
+        particles.is_rigid_gpu.data(), particles.is_active_gpu.data(),
+        nodes.num_nodes, nodes.inv_node_spacing, nodes.num_nodes_total, ti);
   }
 #endif
 }
@@ -135,6 +138,7 @@ void USL::G2P() {
       thrust::raw_pointer_cast(particles.psi_gpu.data()),
       thrust::raw_pointer_cast(particles.masses_gpu.data()),
       thrust::raw_pointer_cast(particles.is_rigid_gpu.data()),
+      thrust::raw_pointer_cast(particles.is_active_gpu.data()),
       thrust::raw_pointer_cast(nodes.moments_gpu.data()),
       thrust::raw_pointer_cast(nodes.moments_nt_gpu.data()),
       thrust::raw_pointer_cast(nodes.masses_gpu.data()),
@@ -148,7 +152,8 @@ void USL::G2P() {
                    particles.dpsi_gpu.data(), particles.spatial.bins_gpu.data(),
                    particles.volumes_original_gpu.data(),
                    particles.psi_gpu.data(), particles.masses_gpu.data(),
-                   particles.is_rigid_gpu.data(), nodes.moments_gpu.data(),
+                   particles.is_rigid_gpu.data(),
+                   particles.is_active_gpu.data(), nodes.moments_gpu.data(),
                    nodes.moments_nt_gpu.data(), nodes.masses_gpu.data(),
                    particles.spatial.num_cells, alpha, ti);
   }
