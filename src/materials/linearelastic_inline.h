@@ -1,11 +1,14 @@
-
 __device__ __host__ inline void update_linearelastic(
     Matrix3r *particles_stresses_gpu, Matrixr *particles_velocity_gradient_gpu,
     const Real *particles_volumes_gpu, const Real *particles_masses_gpu,
-    const uint8_t *particles_colors_gpu, const Real shear_modulus,
-    const Real lame_modulus, const int mat_id, const int tid) {
+    const uint8_t *particles_colors_gpu, bool *particles_is_active_gpu,
+    const Real shear_modulus, const Real lame_modulus, const int mat_id,
+    const int tid) {
 
   const int particle_color = particles_colors_gpu[tid];
+  if (!particles_is_active_gpu[tid]) {
+    return;
+  }
 
   if (particle_color != mat_id) {
     return;
@@ -45,8 +48,9 @@ __device__ __host__ inline void update_linearelastic(
 __global__ void KERNEL_STRESS_UPDATE_LINEARELASTIC(
     Matrix3r *particles_stresses_gpu, Matrixr *particles_velocity_gradient_gpu,
     const Real *particles_volumes_gpu, const Real *particles_masses_gpu,
-    const uint8_t *particles_colors_gpu, const int num_particles,
-    const Real shear_modulus, const Real lame_modulus, const int mat_id) {
+    const uint8_t *particles_colors_gpu, bool *particles_is_active_gpu,
+    const int num_particles, const Real shear_modulus, const Real lame_modulus,
+    const int mat_id) {
   const int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
   if (tid >= num_particles) {
@@ -55,8 +59,8 @@ __global__ void KERNEL_STRESS_UPDATE_LINEARELASTIC(
 
   update_linearelastic(particles_stresses_gpu, particles_velocity_gradient_gpu,
                        particles_volumes_gpu, particles_masses_gpu,
-                       particles_colors_gpu, shear_modulus, lame_modulus,
-                       mat_id, tid);
+                       particles_colors_gpu, particles_is_active_gpu,
+                       shear_modulus, lame_modulus, mat_id, tid);
 }
 
 #endif

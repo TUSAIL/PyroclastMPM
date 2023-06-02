@@ -42,6 +42,7 @@ if(BUILD_CUDA)
     >
   )
   set_target_properties(pyroclastmpm_pybind PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  set_source_files_properties(${PyroclastPyBind} PROPERTIES LANGUAGE CUDA)
 else()
   # let g++ compile cuda files
   set_source_files_properties(${PyroclastPyBind} PROPERTIES LANGUAGE CXX)
