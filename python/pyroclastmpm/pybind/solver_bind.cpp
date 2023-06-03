@@ -9,9 +9,6 @@
 // SOLVERS
 #include "pyroclastmpm/solver/solver.h"
 #include "pyroclastmpm/solver/usl/usl.h"
-// #include "pyroclastmpm/solver/tlmpm/tlmpm.h"
-// #include "pyroclastmpm/solver/musl/musl.h"
-// #include "pyroclastmpm/solver/apic/apic.h"
 
 namespace py = pybind11;
 
@@ -49,7 +46,7 @@ void solver_module(py::module &m) {
           [](Solver &self, const std::vector<BoundaryConditionType> &value) {
             self.boundaryconditions = value;
           } // setter
-      );    // BOUNDARY CONDTIONS
+      );
 
   // USL SOLVER
   py::class_<USL, Solver>(m, "USL").def(

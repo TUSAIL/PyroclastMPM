@@ -4,8 +4,8 @@ import tomllib
 import numpy as np
 from pyroclastmpm import (
     CSV,
+    MohrCoulomb,
     ParticlesContainer,
-    VonMises,
     global_dimension,
     set_global_output_directory,
     set_global_timestep,
@@ -32,11 +32,12 @@ def create_new_test():
         positions=np.array([[0.0, 0.0, 0.0]]), output_formats=[CSV]
     )
     # initialize material
-    material = VonMises(
+    material = MohrCoulomb(
         config["material"]["density"],
         config["material"]["E"],
         config["material"]["pois"],
-        config["material"]["yield_stress"],
+        config["material"]["friction_angle"],
+        config["material"]["dilatancy_angle"],
         config["material"]["H"],
     )
     particles, _ = material.initialize(particles, 0)
@@ -79,7 +80,6 @@ np.save(config["uniaxial"]["output_directory"] + "stress.npy", stress_list)
 np.save(config["uniaxial"]["output_directory"] + "F.npy", F_list)
 
 
-exit(0)
 print("Running simple stress test")
 """
 2. Simple shear loading conditions, shear strain rate = deps_xy

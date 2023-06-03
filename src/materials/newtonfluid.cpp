@@ -45,8 +45,8 @@ void NewtonFluid::stress_update(ParticlesContainer &particles_ref, int mat_id) {
         thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
         thrust::raw_pointer_cast(particles_ref.volumes_original_gpu.data()),
         thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
-        // thrust::raw_pointer_cast(particles_ref.is_active_gpu.data()),
-        viscosity, bulk_modulus, gamma, mat_id, pid);
+        thrust::raw_pointer_cast(particles_ref.is_active_gpu.data()), viscosity,
+        bulk_modulus, gamma, mat_id, pid);
   }
 
 #endif

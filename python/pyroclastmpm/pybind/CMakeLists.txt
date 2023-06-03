@@ -23,9 +23,9 @@ pybind11_add_module(pyroclastmpm_pybind SHARED ${PyroclastPyBind})
 
 set_target_properties(pyroclastmpm_pybind
   PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../"
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../"
 )
 
 target_link_libraries(pyroclastmpm_pybind PRIVATE pyroclastmpm)

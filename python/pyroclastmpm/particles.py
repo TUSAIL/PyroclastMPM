@@ -1,73 +1,65 @@
 from __future__ import annotations
 
+import typing as t
+
 import numpy as np
 
-from .pyroclastmpm_pybind import ParticlesContainer as PyroParticlesContainer
+from . import pyroclastmpm_pybind as MPM
 
 
-class ParticlesContainer(PyroParticlesContainer):
-    """ParticleContainer wrapper for C++ class."""
-
-    #: pybind11 binding for number of particles
-    num_particles: int
-
-    #: pybind11 binding for particle positions
-    positions: np.ndarray
-
-    #: pybind11 binding for particle velocities
-    velocities: np.ndarray
-
-    #: pybind11 binding for particle stresses
-    stresses: np.ndarray
-
-    #: pybind11 binding for particle strains
-    strains: np.ndarray
-
-    #: pybind11 binding for particle strain rates
-    strain_rates: np.ndarray
-
-    #: pybind11 binding for particle deformation matricies
-    F: np.ndarray
-
-    #: pybind11 binding for particle velocity gradients
-    velocity_gradient: np.ndarray
-
-    #: pybind11 binding for particle pressures
-    pressures: np.ndarray
-
-    #: pybind11 binding for particle masses
-    masses: np.ndarray
-
-    #: pybind11 binding for particle volumes
-    volumes: np.ndarray
-
-    #: pybind11 binding for particle original volumes
-    volumes_original: np.ndarray
-
-    #: pybind11 binding for particle colors (or material types)
-    colors: np.ndarray
+class ParticlesContainer(MPM.ParticlesContainer):
+    """Particles container class"""
 
     def __init__(
         self,
         positions: np.ndarray,
-        velocities: np.ndarray = [],
-        colors: List[int] = [],
-        is_rigid: List[bool] = [],
-        stresses: np.ndarray = [],
-        masses: np.ndarray = [],
-        volumes: np.ndarray = [],
-        output_formats=[],
+        velocities: np.ndarray = None,
+        colors: t.List[int] = None,
+        is_rigid: t.List[bool] = None,
+        stresses: np.ndarray = None,
+        masses: np.ndarray = None,
+        volumes: np.ndarray = None,
+        output_formats: t.List[t.Type[MPM.OutputFormat]] = None,
     ):
-        """Initialize particles container class
+        """Initialize Particles Container
 
-        :param positions: particle positions
-        :param masses: particle masses
-        :params colors: list of particle colors (or material types), depending on materials, defaults to []
-        :param stresses: particle stresses
-        :param masses: particle masses
-        :param volumes: particle volumes
+        Args:
+            positions (np.ndarray): Coordinates of the particles of
+                                    shape (N, D) where N is the number
+                                    of particles and D is the dimension
+                                    of the problem
+            velocities (np.ndarray, optional): Velocities of the particles
+                                    of the same shape as positions.
+                                    Defaults to None.
+            colors (t.List[int], optional): Colors or material type of the
+                                    particle of shape (N). Defaults to None.
+            is_rigid (t.List[bool], optional): Mask if particles are rigid
+                                    or not. Defaults to None.
+            stresses (np.ndarray, optional): Initial stress of particles of
+                                    shape (N,D,D). Defaults to None.
+            masses (np.ndarray, optional): Initial mass of particles of
+                                    shape (N). Defaults to None.
+            volumes (np.ndarray, optional): Initial volume of particles
+                                    of shape (N). Defaults to None.
+            output_formats (t.List[t.Type[MPM.OutputFormat]], optional):
+                                    Output type (e.g VTK, CSV, OBJ).
+                                    Defaults to None.
         """
-        #: init c++ class from pybind11
+        if output_formats is None:
+            output_formats = []
+        if colors is None:
+            colors = []
+        if is_rigid is None:
+            is_rigid = []
+        if velocities is None:
+            velocities = []
+        if stresses is None:
+            stresses = []
+        if masses is None:
+            masses = []
+        if volumes is None:
+            volumes = []
+
         super(ParticlesContainer, self).__init__(
             positions=positions,
             velocities=velocities,

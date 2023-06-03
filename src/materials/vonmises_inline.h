@@ -107,17 +107,6 @@ update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
   particles_stresses_gpu[tid] = sigma_curr;
   particles_eps_e_gpu[tid] = eps_e_curr;
   particles_acc_eps_p_gpu[tid] = acc_eps;
-
-  printf("sigma_curr: %f %f %f %f %f %f %f %f %f\n", sigma_curr(0, 0),
-         sigma_curr(0, 1), sigma_curr(0, 2), sigma_curr(1, 0), sigma_curr(1, 1),
-         sigma_curr(1, 2), sigma_curr(2, 0), sigma_curr(2, 1),
-         sigma_curr(2, 2));
-  // test
-  // Eigen::SelfAdjointEigenSolver<Matrixr> es;
-  // es.computeDirect(sigma_curr);
-  // Vectorr eivals = es.eigenvalues();
-
-  // printf("eivals: %f %f %f\n", eivals(0), eivals(1), eivals(2));
 }
 
 #ifdef CUDA_ENABLED
