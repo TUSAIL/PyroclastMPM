@@ -1,93 +1,113 @@
+![header](https://capsule-render.vercel.app/api?type=waving&color=0:12c2e9,50:c471ed,100:f64f59&height=280&section=header&text=PyroclastMPM&fontSize=90&fontColor=FFFFFF)
 
 <p align="center" style="margin-bottom: 0px !important;  padding-left: 100px">
   <img width="400" src="./doc/scoop_no_boundary.gif" alt="PyroclastMPM logo" align="center">
 </p>
 
-<h1 align="center" style="margin-top: 0px;">PyroclastMPM</h1>
-
+<!--
+<h1 align="center" style="margin-top: 0px;">PyroclastMPM</h1> -->
 
 <p align="center"  > A modular GPU based Material Point Method (MPM) solver. </p>
 
-<!-- 
-<p align="center">
-<img src="./doc/disc_impact.gif" width="50%" height="50%"/>
-</p> -->
+# Welcome
 
-<!-- ![til](./doc/scoop.gif) -->
+PyroclastMPM is an explicit GPU-based Material Point Method (MPM) solver developed by Retief Lubbe. The solver is written in CUDA and C++ with Python bindings and is designed to be fast, modular, and highly extensible.
 
-<!-- [![PyPI Release](https://img.shields.io/pypi/v/pyroclastmpm.svg)](https://pypi.org/project/pyroclastmpm) -->
-<!-- [![Documentation Status](https://readthedocs.org/projects/None/badge/)](https://None.readthedocs.io/) -->
+# Motivation
 
-# Welcome 🎉
+The main goal of PyroclastMPM is to accurately model granular impact problems involving the state transition from solid to fluid and back ⏳️. The solver is specifically designed to be applicable in industrial settings, striking a balance between computational performance and code readability.
 
-PyroclastMPM is an explicit GPU-based Material Point Method (MPM) solver written in CUDA and C++ with Python bindings. PyroclastMPM is designed to be fast, modular, and highly extensible.
-
-# Motivation 🎯🏖️
-
-The main goal of PyroclastMPM is to accurately model granular impact problems encountered in industry, showcasing the rate dependence change attributed to the fluid-solid transition of granular material. The solver is specifically designed to be applicable in industrial settings, striking a balance between computational performance and code readability.
-
-# Overview of Features 🚀
+# Overview of Features
 
 Coming soon!
 
-# Showcase examples 📚💻
+# Showcase examples
 
 Coming soon!
 
-# Requirements 📋✅
-Checking requirements
+# Requirements
+
+Checking requirements 📋
+
 - GCC version `gcc --version` and `g++ --version` should be less than `>8 or <12`
 - CMAKE version `cmake --version` should be `>=3.11`
 - CUDA `nvcc --version`
 - Poetry `poetry --version`
-- vtk9 and libvtk9-dev 
+- vtk9 and libvtk9-dev
 
-# Installation ⚙️️🔧
+# Installation
 
-## Method A: Building source
-1. Check if all the  [requirements](#requirements) 
+## Method A: Building source 🔧
+
+1. Check if all the [requirements](#requirements)
 2. Clone repository and submodules (with ssh)
+
 ```
 git clone --recurse-submodules -j8 git@github.com:TUSAIL/PyroclastMPM.git
 cd PyroclastMPM
 ```
+
 3. Install Python depedencies `poetry install`
 4. Build project
+
 ```
 mkdir build
 cmake -B ./build/ -S .
 make -j4 -C ./build
 ```
+
 5. Optional - run tests `./build/tests/tests` (compiled executable), `pytest ./tests/` (Python)
 6. Run example ` make -C examples/Scoop`
 
 ## Method B: Python wheel
-(Coming soon!
-Will look something like this) `pip install <wheel>`
 
+(Coming soon 👀
+Will look something like this) `pip install <wheel>`
 
 ## Method C: Docker-compose
 
 [![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/TUSAIL/PyroclastMPM/tree/cpu)
 
-# Documentation 📖🔍
-Coming soon!
+# Documentation
+
 ## Usage
+
 ## Detailed list of features
+
+## Programming frameworks used
+
+<a >
+  <img height="50" src="./doc/docker.png" />
+</a>
+<a >
+  <img height="50" src="./doc/python.png" />
+</a>
+<a >
+  <img height="50" src="./doc/cpp.png" />
+</a>
+<a >
+  <img height="50" src="./doc/nvidia.png" />
+</a>
+
 ## Known issues
 
 <!-- # Recommended citation -->
 
-# Contributing list
-Coming soon!
+# Contribute
 
-# Contributor list
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/TUSAIL/PyroclastMPM/issues)
+
+## Contributing
+
+Coming soon 👀
+
+## Contributor list
 
 ## Want to contribute?
 
+# See also
 
-# See also 👀🔗
-Coming soon!
+Coming soon 👀
 
 ## Credits
 
@@ -95,7 +115,7 @@ Coming soon!
 
 ## Alternatives
 
-<!-- 
+<!--
 ## Implementation
 * 1D, 2D, 3D
 * C++ / CUDA with
@@ -118,7 +138,7 @@ Coming soon!
 * DEM-based contacts (TODO)
 
 # Constitutive models
-* Linear Elasticity 
+* Linear Elasticity
 * Newtonian Fluid
 * Local granular rheology  (in progress)
 * Non Local granular rheology  (in progress)
@@ -133,7 +153,7 @@ Building PyroclastMPM requires the following software installed:
 * VTK 9 (required)
 * CUDA 10> (required)
 * Doxygen (optional, documentation building is skipped if missing)* Python `>= 3.8` for building Python bindings
- 
+
 # Installation
 
 The following sequence of commands install PyroclastMPM.
