@@ -1,7 +1,6 @@
 {
   "name": "PyroclastMPM dev CPU",
   "build": { "dockerfile": "Dockerfile" },
-
   "customizations": {
     "vscode": {
       "extensions": [
@@ -10,7 +9,9 @@
 		"ms-vscode.cmake-tools",
 		"ms-vscode.cpptools",
 		"ms-vscode.cpptools-extension-pack",
-		"njpwerner.autodocstring"
+		"njpwerner.autodocstring",
+		"ms-python.python",
+		"cschlosser.doxdocgen"
 	]
     },
     "terminal.integrated.shell.linux": "bash",
@@ -21,7 +22,6 @@
       }
     }
   },
-  
-  "postCreateCommand":"git submodule update --init --recursive &&  poetry -n install", // install no prompt
-  // "forwardPorts": [3000]
+
+  "postCreateCommand": "git submodule update --init --recursive &&  poetry -n install" // install no prompt
 }

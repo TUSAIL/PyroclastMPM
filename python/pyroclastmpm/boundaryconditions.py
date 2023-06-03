@@ -4,16 +4,10 @@ import typing as t
 
 import numpy as np
 
-from .pyroclastmpm_pybind import BodyForce as PyroBodyForce
-from .pyroclastmpm_pybind import BoundaryCondition as PyroBoundaryCondition
-from .pyroclastmpm_pybind import Gravity as PyroGravity
-from .pyroclastmpm_pybind import NodeDomain as PyroNodeDomain
-from .pyroclastmpm_pybind import PlanarDomain as PyroPlanarDomain
-from .pyroclastmpm_pybind import RigidBodyLevelSet as PyroRigidBodyLevelSet
-from .pyroclastmpm_pybind import global_dimension
+from . import pyroclastmpm_pybind as MPM
 
 
-class BoundaryCondition(PyroBoundaryCondition):
+class BoundaryCondition(MPM.BoundaryCondition):
     """
     Base class of the boundary condition.
     Inherits from the C++ class through pybind11.
@@ -24,7 +18,7 @@ class BoundaryCondition(PyroBoundaryCondition):
         super(BoundaryCondition, self).__init__(*args, **kwargs)
 
 
-class Gravity(PyroGravity):
+class Gravity(MPM.Gravity):
     """
     Adds a gravitational force on the background nodes.
     The gravity is either ramped or constant.
@@ -52,7 +46,7 @@ class Gravity(PyroGravity):
                                 Same shape as 'gravity' arg. Defaults to None.
         """
         if gravity_end is None:
-            gravity_end = np.zeros(global_dimension)
+            gravity_end = np.zeros(MPM.global_dimension)
         else:
             gravity_end = np.array(gravity_end, ndmin=1)
 
@@ -64,7 +58,7 @@ class Gravity(PyroGravity):
         )
 
 
-class BodyForce(PyroBodyForce):
+class BodyForce(MPM.BodyForce):
     """
     Applies a body force boundary condition to background nodes
     """
@@ -85,7 +79,7 @@ class BodyForce(PyroBodyForce):
         super(BodyForce, self).__init__(mode=mode, values=values, mask=mask)
 
 
-class RigidBodyLevelSet(PyroRigidBodyLevelSet):
+class RigidBodyLevelSet(MPM.RigidBodyLevelSet):
     """
     Defines material and rigid body contact through a levelset
     """
@@ -142,7 +136,7 @@ class RigidBodyLevelSet(PyroRigidBodyLevelSet):
         )
 
 
-class PlanarDomain(PyroPlanarDomain):
+class PlanarDomain(MPM.PlanarDomain):
     """
     Domain of the MPM simulation with a boundary enforced
     by planar contact with friction
@@ -162,17 +156,17 @@ class PlanarDomain(PyroPlanarDomain):
                     Has shape (1,D) where D is the dimension. Defaults to None.
         """
         if axis0_friction is None:
-            axis0_friction = np.array = np.zeros(global_dimension)
+            axis0_friction = np.array = np.zeros(MPM.global_dimension)
 
         if axis1_friction is None:
-            axis1_friction = np.zeros(global_dimension)
+            axis1_friction = np.zeros(MPM.global_dimension)
 
         super(PlanarDomain, self).__init__(
             axis0_friction=axis0_friction, axis1_friction=axis1_friction
         )
 
 
-class NodeDomain(PyroNodeDomain):
+class NodeDomain(MPM.NodeDomain):
     """
     Domain of the MPM simulation with a boundary enforced
     through constrained on the node
@@ -194,8 +188,8 @@ class NodeDomain(PyroNodeDomain):
                     0 - stick, 1-slip condition. Defaults to None
         """
         if axis0_mode is None:
-            axis0_mode = np.zeros(global_dimension, dtype=int)
+            axis0_mode = np.zeros(MPM.global_dimension, dtype=int)
 
         if axis1_mode is None:
-            axis1_mode = (np.zeros(global_dimension, dtype=int),)
+            axis1_mode = (np.zeros(MPM.global_dimension, dtype=int),)
         super(NodeDomain, self).__init__(axis0_mode, axis1_mode)

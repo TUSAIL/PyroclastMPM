@@ -26,7 +26,7 @@ __device__ __host__ inline void stress_update_newtonfluid(
   // printf("runs after check");
   const Matrixr vel_grad = particles_velocity_gradients_gpu[tid];
   const Matrixr vel_grad_T = vel_grad.transpose();
-  const Matrixr strain_rate = 0.5 * (vel_grad + vel_grad_T) * dt_gpu;
+  const Matrixr strain_rate = 0.5 * (vel_grad + vel_grad_T) * dt;
 
   Matrixr deviatoric_part =
       strain_rate - (1. / 3) * strain_rate.trace() * Matrixr::Identity();

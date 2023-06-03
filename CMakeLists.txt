@@ -88,7 +88,7 @@ endif()
 
 if(BUILD_PYTHON)
     add_subdirectory(ext/pybind11)
-    add_subdirectory(python/pyroclastmpm)
+    add_subdirectory(python/pyroclastmpm/pybind)
 endif()
 
 # Add an alias target for use if this project is included as a subproject in another project

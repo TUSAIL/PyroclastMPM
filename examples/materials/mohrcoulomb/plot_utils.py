@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+# trunk-ignore-all(flake8/E501)
 def plot_stress_strain_components(stresses, strain, i, j, file, title):
     """Plot the stress components vs strain components
 
@@ -17,8 +18,9 @@ def plot_stress_strain_components(stresses, strain, i, j, file, title):
     plt.scatter(strain[:, i, j], stresses[:, i, j], color="red")
     nx = i + 1  # x component of stress/strain component
     ny = j + 1  # y component of stress/strain component
-    plt.xlabel(f"$\epsilon_{{{nx}{ny}}}$ ")
-    plt.ylabel(f"$\sigma_{{{nx}{ny}}}$ ")
+    # trunk-ignore-all(flake8/W605)
+    plt.xlabel(f"$\epsilon_{{{nx}{ny}}}$")
+    plt.ylabel(f"$\sigma_{{{nx}{ny}}}$")
     plt.title(title)
     plt.grid()
     plt.savefig(
@@ -42,6 +44,7 @@ def q_p_plot(stresses, file, title):
     )  # deviatoric stress
 
     # effective stress q
+
     q_values = list(map(lambda s: np.sqrt(3 * np.trace(s @ s.T)), dev_stress_values))
 
     plt.scatter(p_values, q_values, color="blue", marker="s")

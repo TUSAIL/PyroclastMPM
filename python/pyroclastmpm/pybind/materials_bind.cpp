@@ -5,6 +5,7 @@
 #include "pyroclastmpm/common/types_common.h"
 #include "pyroclastmpm/materials/linearelastic.h"
 #include "pyroclastmpm/materials/localrheo.h"
+#include "pyroclastmpm/materials/mohrcoulomb.h"
 #include "pyroclastmpm/materials/newtonfluid.h"
 #include "pyroclastmpm/materials/vonmises.h"
 #include "pyroclastmpm/nodes/nodes.h"
@@ -12,27 +13,14 @@
 namespace py = pybind11;
 
 namespace pyroclastmpm {
-// py::class_<ParticlesContainer>(m, "ParticlesContainer")
-//     .def(py::init<std::vector<Vectorr>, std::vector<Vectorr>,
-//                   std::vector<int>, std::vector<bool>, std::vector<Matrix3r>,
-//                   std::vector<Real>, std::vector<Real>,
-//                   std::vector<OutputType>>(),
-//          py::arg("positions"),
-//          py::arg("velocities") = std::vector<Vectorr>(),
-//          py::arg("colors") = std::vector<int>(),
-//          py::arg("is_rigid") = std::vector<bool>(),
-//          py::arg("stresses") = std::vector<Matrix3r>(),
-//          py::arg("masses") = std::vector<Real>(),
-//          py::arg("volumes") = std::vector<Real>(),
-//          py::arg("output_formats") = std::vector<OutputType>())
-//     .def("partition", &ParticlesContainer::partition)
 
 /**
- * @brief Create a pybind11 module for the materials module.
+ * @brief Bindings for materials
  *
- * @param m The pybind11 module to add the materials module to.
+ * @param m pybind11 module
  */
 void materials_module(py::module &m) {
+
   py::class_<Material>(m, "Material")
       .def(py::init<>())
       .def_readwrite("density", &Material::density)
@@ -73,8 +61,6 @@ void materials_module(py::module &m) {
             mat.name = t[3].cast<std::string>();
             mat.shear_modulus = t[4].cast<Real>();
             mat.lame_modulus = t[5].cast<Real>();
-            // [ ] LinearElastic::calculate_timestep (TODO confirm correct
-            // formula and consistent with othe code)
             mat.bulk_modulus = t[6].cast<Real>();
             return mat;
           }));
@@ -91,7 +77,7 @@ void materials_module(py::module &m) {
            [](VonMises &self, ParticlesContainer particles_ref, int mat_id) {
              self.initialize(particles_ref, mat_id);
              return std::make_tuple(particles_ref, mat_id);
-           })
+           }) // required for allocating memory to internal variables
       .def_property(
           "eps_e",
           [](VonMises &self) {
@@ -110,6 +96,40 @@ void materials_module(py::module &m) {
       .def_readwrite("bulk_modulus", &VonMises::bulk_modulus)
       .def_readwrite("density", &VonMises::density)
       .def_readwrite("name", &VonMises::name);
+
+  py::class_<MohrCoulomb>(m, "MohrCoulomb")
+      .def(py::init<Real, Real, Real, Real, Real, Real, Real>(),
+           py::arg("density"), py::arg("E"), py::arg("pois"),
+           py::arg("cohesion"), py::arg("friction_angle"),
+           py::arg("dilatancy_angle"), py::arg("H"))
+      .def("stress_update",
+           [](MohrCoulomb &self, ParticlesContainer particles_ref, int mat_id) {
+             self.stress_update(particles_ref, mat_id);
+             return std::make_tuple(particles_ref, mat_id);
+           })
+      .def("initialize",
+           [](MohrCoulomb &self, ParticlesContainer particles_ref, int mat_id) {
+             self.initialize(particles_ref, mat_id);
+             return std::make_tuple(particles_ref, mat_id);
+           }) // required for allocating memory to internal variables
+      .def_property(
+          "eps_e",
+          [](MohrCoulomb &self) {
+            return std::vector<Matrixr>(self.eps_e_gpu.begin(),
+                                        self.eps_e_gpu.end());
+          }, // getter
+          [](MohrCoulomb &self, const std::vector<Matrixr> &value) {
+            cpu_array<Matrixr> host_val = value;
+            self.eps_e_gpu = host_val;
+          } // setter
+          ) // elastic strain (infinitesimal)
+      .def_readwrite("E", &MohrCoulomb::E)
+      .def_readwrite("pois", &MohrCoulomb::pois)
+      .def_readwrite("shear_modulus", &MohrCoulomb::shear_modulus)
+      .def_readwrite("lame_modulus", &MohrCoulomb::lame_modulus)
+      .def_readwrite("bulk_modulus", &MohrCoulomb::bulk_modulus)
+      .def_readwrite("density", &MohrCoulomb::density)
+      .def_readwrite("name", &MohrCoulomb::name);
 
   py::class_<NewtonFluid>(m, "NewtonFluid")
       .def(py::init<Real, Real, Real, Real>(), py::arg("density"),
@@ -178,19 +198,6 @@ void materials_module(py::module &m) {
             mat.EPS = t[13].cast<Real>();
             return mat;
           }));
-  // .def(
-  //     "mp_benchmark",
-  //     [](LocalGranularRheology &self,
-  //     std::vector<Matrix3r> _stress_cpu,
-  //     std::vector<uint8_t> _phases_cpu,
-  //     std::vector<Matrixr> _velocity_gradient_cpu,
-  //     std::vector<Real> _volume_cpu,
-  //     std::vector<Real> _mass_cpu)
-  //     {
-  //       self.mp_benchmark( _stress_cpu, _phases_cpu, _velocity_gradient_cpu,
-  //       _volume_cpu, _mass_cpu); return std::make_tuple(_stress_cpu,
-  //       _phases_cpu);
-  //     });
 };
 
 } // namespace pyroclastmpm

@@ -1,3 +1,5 @@
+# trunk-ignore-all(flake8/F401)
+# trunk-ignore-all(ruff/F401)
 from .boundaryconditions import (
     BodyForce,
     BoundaryCondition,
@@ -17,14 +19,14 @@ from .materials import (
     LinearElastic,
     LocalGranularRheology,
     Material,
+    MohrCoulomb,
     NewtonFluid,
     VonMises,
 )
 from .nodes import NodesContainer
 from .particles import ParticlesContainer
-from .pyroclastmpm_pybind import (  # QuadraticShapeFunction, // TODO: implement
+from .pyroclastmpm_pybind import (
     CSV,
-    GTFL,
     OBJ,
     VTK,
     CubicShapeFunction,

@@ -11,8 +11,9 @@ set(
   "materials/newtonfluid.cpp"
   "materials/localrheo.cpp"
   "materials/vonmises.cpp"
-  "solver/solver.cpp"
+  "materials/mohrcoulomb.cpp"
 
+  "solver/solver.cpp"
   "shapefunction/shapefunction.cpp"
   "solver/usl/usl.cpp"
   "particles/particles.cpp"

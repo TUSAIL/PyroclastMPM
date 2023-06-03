@@ -20,7 +20,6 @@ lint:
     - oxipng@8.0.0
     - prettier@2.8.8
     - ruff@0.0.265
-    - taplo@0.7.0
     - yamllint@1.32.0
     - clang-format@14.0.0
     - clang-tidy@15.0.6
