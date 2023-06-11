@@ -1,4 +1,3 @@
-
 __device__ __host__ inline void update_rigid_velocity(
     Vectorr *particles_velocities_gpu, const Vectorr *particles_positions_gpu,
     const bool *particle_is_rigid_gpu, const Vectorr body_velocity,
@@ -136,7 +135,7 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
 
     for (int j = cstart; j < cend; j++) {
       const int particle_id = particles_sorted_indices_gpu[j];
-      // if rigid particle find the nearest one
+      // if rigid particle find the nearest (real) particle
       // otherwise calculate the grid normal of non rigid particles
       // two functions within same kernel
       if (particle_is_rigid_gpu[particle_id]) {

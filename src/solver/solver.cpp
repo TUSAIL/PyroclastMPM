@@ -58,7 +58,7 @@ Solver::Solver(ParticlesContainer _particles, NodesContainer _nodes,
  *
  */
 void Solver::stress_update() {
-  // todo make it so material can have different stress meassure
+  // todo make it so material can have different stress measure
 
   for (int mat_id = 0; mat_id < materials.size(); mat_id++) {
     std::visit([&](auto &arg) { arg.stress_update(particles, mat_id); },

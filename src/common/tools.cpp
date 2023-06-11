@@ -1,5 +1,3 @@
-
-
 #include "pyroclastmpm/common/tools.h"
 
 namespace pyroclastmpm {
@@ -141,8 +139,6 @@ std::vector<Vector3r> grid_points_in_volume(const std::string stl_filename,
     positions_cpu[id][2] = p[2];
   }
   return positions_cpu;
-  // write_vtk_polydata(extract->GetOutput(), "distribute");
-  // write_vtk_polydata(pointsPolyData, "distribute");
 }
 
 std::tuple<std::vector<Vector3r>, std::vector<Vector3r>>
@@ -166,11 +162,6 @@ grid_points_on_surface(const std::string stl_filename, const Real cell_size,
   sampler->SetDistance(gap);
   sampler->Update();
 
-  // geometry = vtkSmartPointer<vtkPolyData>::New();
-
-  // geometry = sampler->GetOutput();
-
-  // write_vtk_polydata(sampler->GetOutput(), "distribute_surface");
   int num_points = sampler->GetOutput()->GetNumberOfPoints();
   std::vector<Vector3r> positions_cpu;
   positions_cpu.resize(num_points);
