@@ -44,8 +44,9 @@ jobs:
       
       
       - name: Build
-        working-directory: ./build
         run: |
+          mkdir build
+          cd build
           cmake ../ -DBUILD_CUDA=off
           make -j4
           
@@ -53,6 +54,5 @@ jobs:
         uses: trunk-io/trunk-action@v1
       
       - name: Test
-        working-directory: ./build
         run: |
-          tests/tests
+          ./build/tests/tests
