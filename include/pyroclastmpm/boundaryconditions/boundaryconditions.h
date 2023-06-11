@@ -26,7 +26,7 @@ struct BoundaryCondition {
 
   /*!
    * @brief Apply on node forces
-   * @param nodes_ref refernce to node container
+   * @param nodes_ref reference to node container
    */
   virtual void apply_on_nodes_loads(NodesContainer &nodes_ref){};
 

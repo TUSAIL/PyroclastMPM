@@ -1,4 +1,3 @@
-# trunk-ignore-all(flake8/F401)
 # trunk-ignore-all(ruff/F401)
 from .boundaryconditions import (
     BodyForce,

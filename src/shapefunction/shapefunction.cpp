@@ -52,7 +52,7 @@ shape_function_kernel(Vectorr *particles_dpsi_gpu, Real *particles_psi_gpu,
       continue;
     }
 
-    Vectorr node_coords = Vectorr::Zero();
+    Vectorr node_coords;
     const Vectorr relative_coordinates =
         (particle_coords - origin) * inv_cell_size - selected_bin.cast<Real>();
 

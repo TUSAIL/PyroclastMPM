@@ -6,7 +6,7 @@
 // [x] LinearElastic::LinearElastic (Tested implicitly via stress_update)
 // [x] LinearElastic::stress_update
 // [ ] LinearElastic::calculate_timestep (TODO confirm correct formula and
-// consistent with othe code)
+// consistent with other code)
 
 TEST(LinearElastic, StressUpdateLinearElastic) {
 

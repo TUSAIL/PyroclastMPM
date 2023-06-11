@@ -1,14 +1,8 @@
-# %%
-
 import tomllib
 
 import matplotlib.pyplot as plt
 import numpy as np
 import plot_utils
-
-
-from matplotlib import patheffects
-
 
 plt.rcParams["text.usetex"] = True
 
@@ -23,7 +17,9 @@ with open("./config.toml", "rb") as f:
 """
 
 stresses = np.load(config["uniaxial"]["output_directory"] + "stress.npy")
-deformation_matrices = np.load(config["uniaxial"]["output_directory"] + "F.npy")
+deformation_matrices = np.load(
+    config["uniaxial"]["output_directory"] + "F.npy"
+)
 
 cohesion = 1e4
 friction_angle = 15
@@ -108,7 +104,7 @@ x, y = np.meshgrid(xrange, yrange)
 
 eq0 = mohr_coulomb0(x, y, -3000)
 
-plt.imshow(eq1, cmap="hot")
+plt.imshow(eq0, cmap="hot")
 plt.legend()
 # # ax.contour(x, y, eq0, [0])
 # # eq1 = mohr_coulomb1(x, y, -3000)
@@ -189,7 +185,9 @@ plot_utils.plot_stress_subplot(
 """
 
 stresses = np.load(config["simpleshear"]["output_directory"] + "stress.npy")
-deformation_matrices = np.load(config["simpleshear"]["output_directory"] + "F.npy")
+deformation_matrices = np.load(
+    config["simpleshear"]["output_directory"] + "F.npy"
+)
 
 
 strain_list = []
@@ -207,7 +205,9 @@ plot_utils.plot_stress_strain_components(
     "Simple shear strain-stress curve (component 12)",
 )
 
-plot_utils.q_p_plot(stresses, "./plots/simpleshear/q-p.png", "Uniaxial q-p plot")
+plot_utils.q_p_plot(
+    stresses, "./plots/simpleshear/q-p.png", "Uniaxial q-p plot"
+)
 
 
 plot_utils.plot_principal(

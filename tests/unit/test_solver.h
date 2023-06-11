@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "pyroclastmpm/materials/linearelastic.h"
@@ -13,7 +12,7 @@
 // [x] Solver::Solver
 // [x] Solver::stress_update (implicitly tested by material)
 // [x] Solver::solve_nsteps (implicitly tested)
-// [x] Solver::calculate_shape_function (implcitly tested by shapefunctions)
+// [x] Solver::calculate_shape_function (implicitly tested by shapefunctions)
 
 using namespace pyroclastmpm;
 

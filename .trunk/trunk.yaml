@@ -9,15 +9,12 @@ plugins:
 lint:
   enabled:
     - black@23.3.0
-    - flake8@6.0.0:
-        packages:
-          - flake8-bugbear@23.5.9
     - git-diff-check
     - gitleaks@8.16.3
     - hadolint@2.12.0
     - isort@5.12.0
     - markdownlint@0.34.0
-    - oxipng@8.0.0
+    # - oxipng@8.0.0
     - prettier@2.8.8
     - ruff@0.0.265
     - yamllint@1.32.0
@@ -35,6 +32,6 @@ actions:
   disabled:
     - trunk-announce
     - trunk-check-pre-push
-    - trunk-fmt-pre-commit
   enabled:
+    - trunk-fmt-pre-commit
     - trunk-upgrade-available

@@ -23,7 +23,7 @@ extern int global_step_cpu;
  * (1) initialize the particles spatial partitioning
  * (2) calculate the initial volumes of the particles
  * (3) calculate the initial masses of the particles
- * (4) reorder the particles (TOOD: broken)
+ * (4) reorder the particles (TODO: broken)
  *
  * @param _particles particles container
  * @param _nodes nodes container

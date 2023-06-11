@@ -9,7 +9,7 @@ using namespace pyroclastmpm;
 // [ ] set_globals
 // [ ] set_global_step
 
-// Not I get wierd linking errors with external globla memory when trying to
+// Not I get weird linking errors with external global memory when trying to
 // compile these tests. A solution is to use getter functions . . . need to see
 // how this can be done
 

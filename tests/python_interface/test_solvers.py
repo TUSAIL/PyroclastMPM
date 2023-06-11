@@ -1,18 +1,15 @@
-
-import pytest
-
-from pyroclastmpm import (
-    ParticlesContainer,
-    NodesContainer,
-    USL,
-    TLMPM,
-    MUSL,
-    Material,
-    BoundaryCondition,
-    global_dimension
-)
-
 import numpy as np
+import pytest
+from pyroclastmpm import (
+    MUSL,
+    TLMPM,
+    USL,
+    BoundaryCondition,
+    Material,
+    NodesContainer,
+    ParticlesContainer,
+    global_dimension,
+)
 
 # Functions to test
 # [x] USL create ( with and without boundary conditions and materials )
@@ -60,6 +57,11 @@ def test_create_solver(solver_type):
     dummy_boundarycondition = BoundaryCondition()
 
     # Create a solver
-    solver = solverclass(particles, nodes, materials=[
-        dummy_material], boundaryconditions=[dummy_boundarycondition], alpha=0.5)
+    solver = solverclass(
+        particles,
+        nodes,
+        materials=[dummy_material],
+        boundaryconditions=[dummy_boundarycondition],
+        alpha=0.5,
+    )
     assert isinstance(solver, solverclass)

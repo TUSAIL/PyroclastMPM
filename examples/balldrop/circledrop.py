@@ -1,27 +1,21 @@
 # %%
+import numpy as np
 from pyroclastmpm import (
-    NoSlipWall,
-    LinearElastic,
-    NewtonFluid,
-    ParticlesContainer,
-    NodesContainer,
     USL,
-    MUSL,
-    APIC,
-    SlipWall,
-    LinearShapeFunction,
+    VTK,
     CubicShapeFunction,
-    set_globals,
     Gravity,
-    VTK
+    LinearElastic,
+    NodesContainer,
+    ParticlesContainer,
+    SlipWall,
+    set_globals,
 )
 
-import numpy as np
-import matplotlib.pyplot as plt
 
-
-# %%
-def create_circle(center: np.array, radius: float, cell_size: float, ppc: int = 1):
+def create_circle(
+    center: np.array, radius: float, cell_size: float, ppc: int = 1
+):
     """Create a 2D circle
 
     :param center: center of circle
@@ -38,9 +32,9 @@ def create_circle(center: np.array, radius: float, cell_size: float, ppc: int = 
     y = np.arange(start[1], end[1] + spacing, spacing)
     z = np.zeros(len(x))
     xv, yv, zv = np.meshgrid(x, y, z)
-    grid_coords = np.array(list(zip(xv.flatten(), yv.flatten(), zv.flatten()))).astype(
-        np.float64
-    )
+    grid_coords = np.array(
+        list(zip(xv.flatten(), yv.flatten(), zv.flatten()))
+    ).astype(np.float64)
 
     circle_mask = (grid_coords[:, 0] - center[0]) ** 2 + (
         grid_coords[:, 1] - center[1]
@@ -63,7 +57,7 @@ set_globals(
     dt=0.001,
     shape_function=CubicShapeFunction,
     output_directory="./output",
-    out_type=VTK
+    out_type=VTK,
 )
 
 
@@ -88,7 +82,7 @@ particles = ParticlesContainer(
     positions=positions,
 )
 
-material = LinearElastic(density=rho0,E=1000, pois=0.3)
+material = LinearElastic(density=rho0, E=1000, pois=0.3)
 
 wallx0 = SlipWall(wallplane="x0")
 wallx1 = SlipWall(wallplane="x1")
@@ -102,9 +96,9 @@ MPM = USL(
     particles=particles,
     nodes=nodes,
     materials=[material],
-    boundaryconditions=[gravity,wallx0,wallx1,wally0,wally1],
+    boundaryconditions=[gravity, wallx0, wallx1, wally0, wally1],
     total_steps=8000,
     output_steps=400,
-    output_start=0
+    output_start=0,
 )
 MPM.run()

@@ -1,31 +1,35 @@
 import os
-import pytest
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import pytest
 from pyroclastmpm import (
+    CSV,
+    MUSL,
+    USL,
+    VTK,
     LinearElastic,
-    ParticlesContainer,
-    NodesContainer,
-    USL,MUSL,
     LinearShapeFunction,
-    set_globals,
+    NodesContainer,
+    ParticlesContainer,
     global_dimension,
-    VTK, CSV
+    set_globals,
 )
 
 
-def create_circle(center: np.array, radius: float, cell_size: float, ppc_1d: int = 1):
-
-    start, end = center-radius, center+radius
-    spacing = cell_size/ppc_1d
+def create_circle(
+    center: np.array, radius: float, cell_size: float, ppc_1d: int = 1
+):
+    start, end = center - radius, center + radius
+    spacing = cell_size / ppc_1d
     tol = +0.00005  # prevents points
-    x = np.arange(start[0], end[0] + spacing, spacing) + 0.5*spacing
-    y = np.arange(start[1], end[1] + spacing, spacing) + 0.5*spacing
+    x = np.arange(start[0], end[0] + spacing, spacing) + 0.5 * spacing
+    y = np.arange(start[1], end[1] + spacing, spacing) + 0.5 * spacing
     xv, yv = np.meshgrid(x, y)
-    grid_coords = np.array(
-        list(zip(xv.flatten(), yv.flatten()))).astype(np.float64)
+    grid_coords = np.array(list(zip(xv.flatten(), yv.flatten()))).astype(
+        np.float64
+    )
     circle_mask = (grid_coords[:, 0] - center[0]) ** 2 + (
         grid_coords[:, 1] - center[1]
     ) ** 2 < radius**2 + tol
@@ -34,7 +38,8 @@ def create_circle(center: np.array, radius: float, cell_size: float, ppc_1d: int
 
 @pytest.mark.parametrize("solver_type", [("usl"), ("musl")])
 def test_two_disk_impact(solver_type):
-    if global_dimension != 2: return
+    if global_dimension != 2:
+        return
     if solver_type == "usl":
         solverclass = USL
         output_directory = os.path.dirname(__file__) + "/output_usl/"
@@ -50,21 +55,23 @@ def test_two_disk_impact(solver_type):
         dt=0.001,
         particles_per_cell=4,
         shape_function=LinearShapeFunction,
-        output_directory=output_directory
+        output_directory=output_directory,
     )
 
-    nodes = NodesContainer(node_start=[0., 0.], node_end=[
-                           1., 1.], node_spacing=1./20)
+    nodes = NodesContainer(
+        node_start=[0.0, 0.0], node_end=[1.0, 1.0], node_spacing=1.0 / 20
+    )
 
     circle_centers = np.array([[0.2, 0.2], [0.8, 0.8]])
 
-    circles = np.array([
-        create_circle(
-            center=center,
-            radius=0.2,
-            cell_size=1/20,
-            ppc_1d=2) for center in circle_centers
-    ])
+    circles = np.array(
+        [
+            create_circle(
+                center=center, radius=0.2, cell_size=1 / 20, ppc_1d=2
+            )
+            for center in circle_centers
+        ]
+    )
 
     positions = np.vstack(circles)
 
@@ -80,8 +87,8 @@ def test_two_disk_impact(solver_type):
         positions=positions,
         velocities=velocities,
         colors=colors,
-        output_formats=[VTK, CSV]
-        )
+        output_formats=[VTK, CSV],
+    )
 
     material = LinearElastic(density=1000, E=1000, pois=0.3)
 
@@ -89,7 +96,7 @@ def test_two_disk_impact(solver_type):
         particles=particles,
         nodes=nodes,
         materials=[material, material],
-        alpha = 0.99,
+        alpha=0.99,
         total_steps=3600,  # 3 seconds
         output_steps=100,
         output_start=0,
@@ -101,24 +108,25 @@ def test_two_disk_impact(solver_type):
 
     time = []
     for step in range(0, 3600, 100):
-        time.append(step*0.001)
+        time.append(step * 0.001)
         df = pd.read_csv(
-            output_directory + f'/particles{step}.csv', delimiter=',')
+            output_directory + f"/particles{step}.csv", delimiter=","
+        )
 
-        df["KE"] = 0.5*df["Mass"]*(df["Velocity:0"]**2+df["Velocity:1"]**2)
+        df["KE"] = (
+            0.5 * df["Mass"] * (df["Velocity:0"] ** 2 + df["Velocity:1"] ** 2)
+        )
 
         KE.append(np.sum(df["KE"].sum()))
-    
-    
-    np.testing.assert_approx_equal(KE[0],2.51,0.1)
-    
-    error = abs((KE[-1]-KE[0])/KE[0])
-    
+
+    np.testing.assert_approx_equal(KE[0], 2.51, 0.1)
+
+    error = abs((KE[-1] - KE[0]) / KE[0])
 
     plt.plot(time, KE)
     plt.xlabel("Time (s)")
     plt.ylabel("Kinetic Energy (J)")
-    
+
     plt.savefig(plot_directory + "/KE.png")
-    
-    assert  error<0.2, "KE should be conserved"
+
+    assert error < 0.2, "KE should be conserved"

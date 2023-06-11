@@ -20,7 +20,7 @@ public:
    *
    * @param _node_start origin of where nodes will be generated
    * @param _node_end  end where nodes will be generated
-   * @param _node_spacing cell size of the backgrund grid
+   * @param _node_spacing cell size of the background grid
    */
   NodesContainer(const Vectorr _node_start, const Vectorr _node_end,
                  const Real _node_spacing,

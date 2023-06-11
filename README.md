@@ -1,4 +1,7 @@
-![header](https://capsule-render.vercel.app/api?type=waving&color=0:12c2e9,50:c471ed,100:f64f59&height=280&section=header&text=PyroclastMPM&fontSize=90&fontColor=FFFFFF)
+<!-- trunk-ignore-all(markdownlint/MD029) -->
+<!-- trunk-ignore-all(markdownlint/MD041) -->
+
+![header](https://capsule-render.vercel.app/api?type=waving&color=0:EA5455,50:F07B3F,100:FFD460&height=350&section=header&text=PyroclastMPM&fontSize=90&fontColor=2D4059)
 
 <p align="center" style="margin-bottom: 0px !important;  padding-left: 100px">
   <img width="400" src="./doc/scoop_no_boundary.gif" alt="PyroclastMPM logo" align="center">
@@ -7,7 +10,7 @@
 <!--
 <h1 align="center" style="margin-top: 0px;">PyroclastMPM</h1> -->
 
-<p align="center"  > A modular GPU based Material Point Method (MPM) solver. </p>
+<p align="center" style="color:#2d4059; font-size:24px" > A modular GPU based Material Point Method (MPM) solver. </p>
 
 # Welcome
 
@@ -42,18 +45,20 @@ Checking requirements 📋
 1. Check if all the [requirements](#requirements)
 2. Clone repository and submodules (with ssh)
 
-```
+```bash
 git clone --recurse-submodules -j8 git@github.com:TUSAIL/PyroclastMPM.git
 cd PyroclastMPM
 ```
 
-3. Install Python depedencies `poetry install`
+3. Install Python dependencies `poetry install`
 4. Build project
 
-```
+```bash
+
 mkdir build
 cmake -B ./build/ -S .
 make -j4 -C ./build
+
 ```
 
 5. Optional - run tests `./build/tests/tests` (compiled executable), `pytest ./tests/` (Python)
@@ -76,6 +81,7 @@ Will look something like this) `pip install <wheel>`
 
 ## Programming frameworks used
 
+<div style="display:inline">
 <a >
   <img height="50" src="./doc/docker.png" />
 </a>
@@ -88,6 +94,7 @@ Will look something like this) `pip install <wheel>`
 <a >
   <img height="50" src="./doc/nvidia.png" />
 </a>
+</div>
 
 ## Known issues
 
@@ -167,10 +174,12 @@ It assumes that your current working directory is the top-level directory
 of the freshly cloned repository:
 
 ```
+
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
+
 ```
 
 The build process can be customized with the following CMake variables,
@@ -186,7 +195,9 @@ having access to C++ build artifacts like libraries and executables, you
 can do so using `pip` from the root directory:
 
 ```
+
 python -m pip install .
+
 ```
 
 # Testing PyroclastMPM
@@ -196,16 +207,20 @@ the C++ test suite of `PyroclastMPM` can be run using
 `ctest` from the build directory:
 
 ```
+
 cd build
 ctest
+
 ```
 
 The Python test suite can be run by first `pip`-installing the Python package
 and then running `pytest` from the top-level directory:
 
 ```
+
 python -m pip install .
 pytest
+
 ```
 
 # Documentation
@@ -215,13 +230,17 @@ be browsed [online at readthedocs.org](https://pyroclastmpm.readthedocs.io).
 To build it locally, first ensure the requirements are installed by running this command from the top-level source directory:
 
 ```
+
 pip install -r doc/requirements.txt
+
 ```
 
 Then build the sphinx documentation from the top-level build directory:
 
 ```
+
 cmake --build . --target sphinx-doc
+
 ```
 
 The web documentation can then be browsed by opening `doc/sphinx/index.html` in your browser. -->

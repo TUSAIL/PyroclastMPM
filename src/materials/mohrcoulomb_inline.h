@@ -9,7 +9,7 @@ Currently two problems
  if compression is applied we switch.. maybe check direction of
  volumetric strain to determine which edge to use
 
- (2) at low diltancy angles we have wierd effects
+ (2) at low diltancy angles we have weird effects
  maybe sfa and sda is switched?
 also return mapping on edge
 

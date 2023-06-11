@@ -2,7 +2,7 @@
 
 #include "pyroclastmpm/particles/particles.h"
 
-// Fuctions tested
+// functions tested
 // [x] ParticlesContainer::ParticlesContainer
 // [x] ParticlesContainer::set_spatialpartition (implicitly calculate volume)
 // [x] ParticlesContainer::partition (implicitly calculate volume)

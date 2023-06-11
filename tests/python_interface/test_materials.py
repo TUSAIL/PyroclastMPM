@@ -1,5 +1,12 @@
 import pickle
-from pyroclastmpm import ( Material, LinearElastic, NewtonFluid, LocalGranularRheology,DruckerPrager)
+
+from pyroclastmpm import (
+    DruckerPrager,
+    LinearElastic,
+    LocalGranularRheology,
+    Material,
+    NewtonFluid,
+)
 
 # Features to test
 # [x] material initialize
@@ -12,6 +19,7 @@ from pyroclastmpm import ( Material, LinearElastic, NewtonFluid, LocalGranularRh
 # [x] localrheo pickle
 # [x] druckerprager initialize
 # [x] druckerprager pickle
+
 
 def test_pickle_material():
     """Test that a material can be pickled."""
@@ -79,7 +87,9 @@ def test_pickle_linearelastic():
 
 
 def test_pickle_newtonfluid():
-    material = NewtonFluid(density=1.0, viscosity=1.0, bulk_modulus=1.0, gamma=1.0)
+    material = NewtonFluid(
+        density=1.0, viscosity=1.0, bulk_modulus=1.0, gamma=1.0
+    )
 
     # check pybind11 set default values
     assert material.name == "NewtonFluid"
@@ -179,8 +189,8 @@ def test_pickle_localrheology():
 
 
 def test_pickle_druckerprager():
-    material = DruckerPrager(1,0.2,1,3,4,5)
-    
+    material = DruckerPrager(1, 0.2, 1, 3, 4, 5)
+
     # check if we can set values
     material.name = "Foo"
     material.density = 2.0
@@ -188,7 +198,7 @@ def test_pickle_druckerprager():
     material.pois = 1.0
     material.friction_angle = 2.0
     material.vcs = 1.0
-    material.cohesion = 2.
+    material.cohesion = 2.0
     # check dump and load material using pickle
     filename = "druckerprager.pkl"
     with open(filename, "wb") as f:
@@ -204,4 +214,4 @@ def test_pickle_druckerprager():
     assert material.pois == 1.0
     assert material.friction_angle == 2.0
     assert material.vcs == 1.0
-    assert material.cohesion == 2.
+    assert material.cohesion == 2.0

@@ -87,7 +87,9 @@ pl.write_frame()  # write initial data
 
 
 # Update scalars on each frame
-for i in range(0, config["global"]["total_steps"], config["global"]["output_steps"]):
+for i in range(
+    0, config["global"]["total_steps"], config["global"]["output_steps"]
+):
     upd = pv.read(f"./output/particles{i}.vtp")
     upd["values"] = upd.point_data["Volume"]
     particles.copy_from(upd)

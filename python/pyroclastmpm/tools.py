@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from . import pyroclastmpm_pybind as MPM
-
 import typing as t
+
+from . import pyroclastmpm_pybind as MPM
 
 
 def uniform_random_points_in_volume(

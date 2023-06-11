@@ -7,7 +7,6 @@ from pyroclastmpm import (
     ParticlesContainer,
     VonMises,
     global_dimension,
-    set_global_output_directory,
     set_global_timestep,
 )
 
@@ -18,7 +17,9 @@ with open("./config.toml", "rb") as f:
 # check if code is compiled for correct dimension
 if global_dimension != 3:
     raise ValueError(
-        f"This example only works in {config['global']['dimension']}D. The code is compiled for {global_dimension}D."
+        f"""
+        This example only works in {config['global']['dimension']}D.
+        The code is compiled for {global_dimension}D."""
     )
 
 # Time step for increment of deformation gradient
@@ -45,7 +46,7 @@ def create_new_test():
 
 print("Running uniaxial stress test")
 """
-1. Uniaxial loading conditions, update psuedo shear strain rate = deps_xx*dt
+1. Uniaxial loading conditions, update pseudo shear strain rate = deps_xx*dt
 [ deps*dt, 0, 0]
 [ 0   , 0, 0]
 [ 0   , 0, 0]

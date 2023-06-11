@@ -18,7 +18,9 @@ scoop = pv.read(config["project"]["scoop_file"])
 domain_start, domain_end = get_bounds(config["project"]["domain_file"])
 
 # calculate cell size
-cell_size = abs(np.min(domain_end - domain_start) / config["global"]["cell_size_ratio"])
+cell_size = abs(
+    np.min(domain_end - domain_start) / config["global"]["cell_size_ratio"]
+)
 
 # cell_size /= 2
 
@@ -50,7 +52,9 @@ vol_opac = [0, 0, 0.2, 0.2, 0.5, 0.5]
 
 # Add initial mesh
 pl.add_mesh(grid.outline(), line_width=5)
-pl.add_mesh(scoop, line_width=5, specular=1, lighting=True, color="white", opacity=0.5)
+pl.add_mesh(
+    scoop, line_width=5, specular=1, lighting=True, color="white", opacity=0.5
+)
 
 pl.add_volume(interp, cmap="coolwarm", opacity=vol_opac)
 
@@ -74,7 +78,9 @@ pl.write_frame()  # write initial data
 # %%
 
 # Update scalars on each frame
-for i in range(0, config["global"]["total_steps"], config["global"]["output_steps"]):
+for i in range(
+    0, config["global"]["total_steps"], config["global"]["output_steps"]
+):
     print(i)
     upd = pv.read(f"./output/particles{i}.vtp")
     particles.copy_from(upd)

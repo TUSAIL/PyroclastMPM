@@ -1,23 +1,23 @@
-#%%
+import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from pyroclastmpm import (
-    LinearElastic,
-    ParticlesContainer,
-    NodesContainer,
-    USL,
-    LinearShapeFunction,
-    BodyForce,
-    set_globals,
     CSV,
+    USL,
+    BodyForce,
+    LinearElastic,
+    LinearShapeFunction,
+    NodesContainer,
+    ParticlesContainer,
+    set_globals,
 )
 
-import os 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-L = 25.  # length of the bar
+L = 25.0  # length of the bar
 cell_size = 25 / 14.0  # 14 cells
 ppc = 1  # particles per cell
 rho = 1  # density of the bar
@@ -41,7 +41,7 @@ set_globals(
     dimension=1,
     dt=delta_t,
     shape_function=LinearShapeFunction,
-    output_directory=dir_path+"/output",
+    output_directory=dir_path + "/output",
     out_type=CSV,
 )
 
@@ -66,8 +66,10 @@ particles = ParticlesContainer(positions=mp_coords, velocities=mp_vels)
 
 # bar is fixed in one end and free in another
 mask_body_force = np.zeros(node_coords.shape[0], dtype=bool)
-mask_body_force[0]= 1
-bodyForce = BodyForce(mode="fixed", values=np.zeros(node_coords.shape), mask=mask_body_force)
+mask_body_force[0] = 1
+bodyForce = BodyForce(
+    mode="fixed", values=np.zeros(node_coords.shape), mask=mask_body_force
+)
 
 MPM = USL(
     particles=particles,
@@ -81,27 +83,25 @@ MPM = USL(
 
 MPM.run()
 
-import pandas as pd
-import matplotlib.pyplot as plt
 
-vcom_num = [] # center of mass velocities (numerical)
-t_num =[] # time intervals (numerical)
-for i in range(MPM.output_start,MPM.total_steps,MPM.output_steps):
-    df = pd.read_csv(dir_path+ '/output/particles_0_{}.csv'.format(i))
-    v_com = (df["Velocity:0"]*df["Mass"]).sum()/df["Mass"].sum()
+vcom_num = []  # center of mass velocities (numerical)
+t_num = []  # time intervals (numerical)
+for i in range(MPM.output_start, MPM.total_steps, MPM.output_steps):
+    df = pd.read_csv(dir_path + "/output/particles_0_{}.csv".format(i))
+    v_com = (df["Velocity:0"] * df["Mass"]).sum() / df["Mass"].sum()
     vcom_num.append(v_com)
-    t_num.append(delta_t*i)
+    t_num.append(delta_t * i)
 
 t_exact = np.arange(0, total_time, 0.1)
-omegan = beta0*np.sqrt(E/rho)
-vcom_exact = np.cos(omegan*t_exact)*v0/(beta0*L)
+omegan = beta0 * np.sqrt(E / rho)
+vcom_exact = np.cos(omegan * t_exact) * v0 / (beta0 * L)
 
 
-plt.plot(t_num,vcom_num)
-plt.plot(t_exact,vcom_exact)
+plt.plot(t_num, vcom_num)
+plt.plot(t_exact, vcom_exact)
 plt.xlabel("Time (s)")
 plt.ylabel("Center of mass velocity (m/s)")
-ply.legend(["Numerical","Exact"])
+plt.legend(["Numerical", "Exact"])
 
 plt.show()
 

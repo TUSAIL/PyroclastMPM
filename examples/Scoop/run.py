@@ -26,14 +26,18 @@ with open("./config.toml", "rb") as f:
 # check if code is compiled for correct dimension
 if global_dimension != config["global"]["dimension"]:
     raise ValueError(
-        f"This example only works in {config['global']['dimension']}D. The code is compiled for {global_dimension}D."
+        f"""
+        This example only works in {config['global']['dimension']}D.
+          The code is compiled for {global_dimension}D."""
     )
 
 # load stls
 domain_start, domain_end = get_bounds(config["project"]["domain_file"])
 
 # calculate cell size
-cell_size = abs(np.min(domain_end - domain_start) / config["global"]["cell_size_ratio"])
+cell_size = abs(
+    np.min(domain_end - domain_start) / config["global"]["cell_size_ratio"]
+)
 
 particle_positions = np.array(
     grid_points_in_volume(
@@ -62,7 +66,9 @@ nodes = NodesContainer(
 particle_velocites = np.zeros(particle_positions.shape)
 
 particles = ParticlesContainer(
-    positions=particle_positions, velocities=particle_velocites, output_formats=[VTK]
+    positions=particle_positions,
+    velocities=particle_velocites,
+    output_formats=[VTK],
 )
 
 print(f"num_p {particles.num_particles}, num_c {nodes.num_nodes_total} \n")
@@ -72,7 +78,9 @@ rigid_coords, normals = grid_points_on_surface(
 )
 
 
-frames, lx, ly, lz, rx, ry, rz = np.loadtxt(config["project"]["scoop_motion_file"]).T
+frames, lx, ly, lz, rx, ry, rz = np.loadtxt(
+    config["project"]["scoop_motion_file"]
+).T
 locations = np.vstack([lx, ly, lz]).T
 rotations = np.vstack([rx, ry, rz]).T
 

@@ -4,15 +4,16 @@
   "customizations": {
     "vscode": {
       "extensions": [
-		"dbaeumer.vscode-eslint",
-		"twxs.cmake",
-		"ms-vscode.cmake-tools",
-		"ms-vscode.cpptools",
-		"ms-vscode.cpptools-extension-pack",
-		"njpwerner.autodocstring",
-		"ms-python.python",
-		"cschlosser.doxdocgen"
-	]
+        "dbaeumer.vscode-eslint",
+        "twxs.cmake",
+        "ms-vscode.cmake-tools",
+        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "njpwerner.autodocstring",
+        "ms-python.python",
+        "cschlosser.doxdocgen",
+        "github.vscode-github-actions"
+      ]
     },
     "terminal.integrated.shell.linux": "bash",
     "terminal.integrated.profiles.linux": {

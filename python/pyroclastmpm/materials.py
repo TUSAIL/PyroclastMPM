@@ -193,7 +193,6 @@ class NewtonFluid(MPM.NewtonFluid):
                                      Defaults to 7.0.
         """
         super(NewtonFluid, self).__init__(
-            # trunk-ignore(flake8/E501)
             density=density,
             viscosity=viscosity,
             bulk_modulus=bulk_modulus,

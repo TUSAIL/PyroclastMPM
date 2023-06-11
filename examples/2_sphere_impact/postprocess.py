@@ -1,7 +1,6 @@
-import numpy as np
-import pyvista as pv
 import tomllib
 
+import pyvista as pv
 from pyvista import examples
 
 cubemap = examples.download_sky_box_cube_map()
@@ -25,16 +24,22 @@ particles["KE"] = (
 
 plane = pv.Plane(
     center=(
-        (config["nodes"]["node_start"][0] + config["nodes"]["node_end"][0]) / 2,
-        (config["nodes"]["node_start"][1] + config["nodes"]["node_end"][1]) / 2,
+        (config["nodes"]["node_start"][0] + config["nodes"]["node_end"][0])
+        / 2,
+        (config["nodes"]["node_start"][1] + config["nodes"]["node_end"][1])
+        / 2,
         0,
     ),
     direction=(0.0, 0.0, 1.0),
     i_size=config["nodes"]["node_end"][0],
     j_size=config["nodes"]["node_end"][1],
-    i_resolution=int(config["nodes"]["node_end"][0] / config["nodes"]["node_spacing"])
+    i_resolution=int(
+        config["nodes"]["node_end"][0] / config["nodes"]["node_spacing"]
+    )
     + 1,
-    j_resolution=int(config["nodes"]["node_end"][1] / config["nodes"]["node_spacing"])
+    j_resolution=int(
+        config["nodes"]["node_end"][1] / config["nodes"]["node_spacing"]
+    )
     + 1,
 )
 

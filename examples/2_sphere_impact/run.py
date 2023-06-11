@@ -1,21 +1,21 @@
 # %%
-import numpy as np
 import tomllib
 
-from pyroclastmpm import (
-    LinearElastic,
-    ParticlesContainer,
-    NodesContainer,
-    USL,
-    LinearShapeFunction,
-    set_globals,
-    global_dimension,
-    VTK,
-    CSV,
-)
+import numpy as np
 
 # project specific
 from circles import create_circle
+from pyroclastmpm import (
+    CSV,
+    USL,
+    VTK,
+    LinearElastic,
+    LinearShapeFunction,
+    NodesContainer,
+    ParticlesContainer,
+    global_dimension,
+    set_globals,
+)
 
 # load config file
 with open("./config.toml", "rb") as f:
@@ -23,7 +23,9 @@ with open("./config.toml", "rb") as f:
 
 # check if code is compiled for correct dimension
 if global_dimension != config["global"]["dimension"]:
-    raise ValueError("This example only works in 2D, please recompile the code.")
+    raise ValueError(
+        "This example only works in 2D, please recompile the code."
+    )
 
 # set global variables
 
@@ -55,7 +57,8 @@ circles = np.array(
             center=center,
             radius=config["particles"]["circle_radius"],
             cell_size=config["nodes"]["node_spacing"],
-            ppc_1d=config["global"]["particles_per_cell"] / 2,  # special case for 2D
+            ppc_1d=config["global"]["particles_per_cell"]
+            / 2,  # special case for 2D
         )
         for center in circle_centers
     ]
@@ -72,7 +75,10 @@ color2 = np.ones(len(circles[1]))
 colors = np.concatenate([color1, color2]).astype(int)
 
 particles = ParticlesContainer(
-    positions=positions, velocities=velocities, colors=colors, output_formats=[VTK, CSV]
+    positions=positions,
+    velocities=velocities,
+    colors=colors,
+    output_formats=[VTK, CSV],
 )
 
 

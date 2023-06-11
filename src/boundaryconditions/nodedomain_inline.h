@@ -1,4 +1,3 @@
-
 __device__ __host__ inline void
 apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
                  Real *nodes_masses_gpu, const Vectori *nodes_bins_gpu,
@@ -8,7 +7,7 @@ apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
                  const int node_mem_index) {
 
 #ifndef CUDA_ENABLED
-  // to call std::max on CPU and avoid error occuring without max:
+  // to call std::max on CPU and avoid error occurring without max:
   // `there are no arguments to 'max' that depend on a template parameter...`
   using namespace std;
 #endif

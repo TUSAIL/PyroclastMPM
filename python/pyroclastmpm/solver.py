@@ -8,9 +8,6 @@ from .materials import Material
 from .nodes import NodesContainer
 from .particles import ParticlesContainer
 
-# trunk-ignore-all(flake8/E501)
-# trunk-ignore-all(ruff/E501)
-
 
 class USL(MPM.USL):
     """
@@ -58,7 +55,8 @@ class USL(MPM.USL):
                                     Particles container object
             nodes (t.Type[&quot;NodesContainer&quot;]):
                                     Nodes container object
-            boundaryconditions (t.List[t.Type[&quot;BoundaryCondition&quot;]], optional):
+            boundaryconditions
+              (t.List[t.Type[&quot;BoundaryCondition&quot;]], optional):
                                     List of boundary conditions.
                                     Defaults to None.
             materials (_type_, optional): List of materials. Defaults to None.
@@ -66,7 +64,8 @@ class USL(MPM.USL):
             total_steps (int, optional): Total number of steps to solve.
                                          Defaults to 0.
             output_steps (int, optional): Save files for every i'th step. Defaults to 0.
-            output_start (int, optional): The step at which the output starts. Defaults to 0.
+            output_start (int, optional): The step at which the output starts.
+                                         Defaults to 0.
         """
         if boundaryconditions is None:
             boundaryconditions = []
@@ -97,8 +96,8 @@ class USL(MPM.USL):
     def run(self, callback: t.Callable = None):
         """Run the simulation for the specified number of steps
         Args:
-            callback (t.Callable, optional): Callback function called after every i'th (output) step.
-                         Defaults to None.
+            callback (t.Callable, optional): Callback function called after every i'th
+                                            output step.Defaults to None.
         """
         self.solve_nsteps(self.output_start)
 

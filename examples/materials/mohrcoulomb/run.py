@@ -1,6 +1,7 @@
 # Loading a config file and running a uniaxial stress test
-import numpy as np
 import tomllib
+
+import numpy as np
 from pyroclastmpm import (
     CSV,
     MohrCoulomb,
