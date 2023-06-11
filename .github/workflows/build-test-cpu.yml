@@ -13,9 +13,6 @@ jobs:
           os: [ubuntu-22.04]
           python-version: ["3.8","3.9","3.11"]
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: project
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -47,7 +44,7 @@ jobs:
       
       
       - name: Build
-        working-directory: ./project/build
+        working-directory: ./build
         run: |
           cmake ../ -DBUILD_CUDA=off
           make -j4
@@ -56,6 +53,6 @@ jobs:
         uses: trunk-io/trunk-action@v1
       
       - name: Test
-        working-directory: ./project/build
+        working-directory: ./build
         run: |
           tests/tests
