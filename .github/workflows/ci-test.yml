@@ -21,7 +21,7 @@ jobs:
         submodules: recursive
         
     - name: CI-reusable workflow
-      uses: TUSAIL/PyroclastMPM/blob/main/.github/workflows/build-staging-ci.yml@main
+      uses: TUSAIL/PyroclastMPM/blob/main/.github/workflows/ci-build-staging.yml@main
       
     - name: Trunk Check
       uses: trunk-io/trunk-action@v1
