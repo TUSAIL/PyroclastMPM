@@ -12,7 +12,6 @@ jobs:
       matrix:
           os: [ubuntu-22.04]
           python-version: ["3.8","3.9","3.11"]
-          poetry-version: ["1.0", "1.1.15"]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -37,8 +36,6 @@ jobs:
           
       - name: Run image
         uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ matrix.poetry-version }}
           
       - name: Install Python package dependencies
         working-directory: ./project
