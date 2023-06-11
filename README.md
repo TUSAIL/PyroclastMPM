@@ -7,10 +7,10 @@
   <img width="400" src="./doc/scoop_no_boundary.gif" alt="PyroclastMPM logo" align="center">
 </p>
 
-<!--
-<h1 align="center" style="margin-top: 0px;">PyroclastMPM</h1> -->
 
 <p align="center" style="color:#2d4059; font-size:24px" > A modular GPU based Material Point Method (MPM) solver. </p>
+
+[![Build](https://github.com/TUSAIL/PyroclastMPM/actions/workflows/ci-build-test.yml/badge.svg)](https://github.com/TUSAIL/PyroclastMPM/actions/workflows/ci-build-test.yml)
 
 # Welcome
 
