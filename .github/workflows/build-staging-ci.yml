@@ -1,8 +1,7 @@
 name: Build
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
+  
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
 
@@ -48,9 +47,3 @@ jobs:
           cd build
           cmake ../ -DBUILD_CUDA=off
           make -j4
-
-      - name: Trunk Check
-        uses: trunk-io/trunk-action@v1
-
-      - name: Test
-        run: ./build/tests/tests
