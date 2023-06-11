@@ -15,7 +15,7 @@ jobs:
           python-version: ["3.11"]
     runs-on: ${{ matrix.os }}
     steps:
-    - name: CI-reusable workflow
+    - name: CI composite build
       uses: TUSAIL/PyroclastMPM/.github/workflows/ci-build-staging.yml@main
       with:
         os:  ${{ matrix.os }}
