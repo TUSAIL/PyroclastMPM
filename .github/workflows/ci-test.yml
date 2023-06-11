@@ -1,0 +1,23 @@
+name: Build Test CPU
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+
+jobs:
+  build:
+    strategy:
+      matrix:
+          os: [ubuntu-22.04]
+          python-version: ["3.11"]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: ci-integration
+      uses: TUSAIL/PyroclastMPM/blob/main/.github/workflows/build-staging-ci.yml@main
+    - name: Trunk Check
+      uses: trunk-io/trunk-action@v1
+    - name: Test
+      run: ./build/tests/tests
