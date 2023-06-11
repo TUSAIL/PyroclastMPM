@@ -13,12 +13,14 @@ jobs:
           os: [ubuntu-22.04]
           python-version: ["3.8","3.9","3.11"]
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: project
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: "true"
-          path: "project"
       
       - name: Install dependencies
         run: |
@@ -29,7 +31,6 @@ jobs:
           sudo apt-get autoremove -y
           sudo apt-get clean -y
         
-
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
@@ -38,22 +39,21 @@ jobs:
         uses: abatilo/actions-poetry@v2
           
       - name: Install Python package dependencies
-        working-directory: ./project
         run: |
           poetry --version
           rm -f poetry.lock
           poetry lock --no-update
           poetry install --without plot
       
-      - name: Trunk Check
-        working-directory: ./project
-        uses: trunk-io/trunk-action@v1
       
       - name: Build
         working-directory: ./project/build
         run: |
           cmake ../ -DBUILD_CUDA=off
           make -j4
+          
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@v1
       
       - name: Test
         working-directory: ./project/build
