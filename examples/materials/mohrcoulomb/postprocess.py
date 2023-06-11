@@ -21,7 +21,6 @@ with open("./config.toml", "rb") as f:
 stresses = np.load(config["uniaxial"]["output_directory"] + "stress.npy")
 deformation_matrices = np.load(config["uniaxial"]["output_directory"] + "F.npy")
 
-
 strain_list = []
 for F in deformation_matrices:
     strain_list.append(0.5 * (F.T + F) - np.identity(3))
@@ -38,6 +37,7 @@ plot_utils.plot_stress_strain_components(
     "Uniaxial strain-stress curve (component 11)",
 )
 
+
 plot_utils.q_p_plot(stresses, "./plots/uniaxial/q-p.png", "Uniaxial q-p plot")
 
 
@@ -45,6 +45,14 @@ plot_utils.plot_principal(
     stresses,
     "./plots/uniaxial/principal.png",
     "Uniaxial compression - principle stresses plot",
+    res=25,
+)
+
+plot_utils.plot_stress_subplot(
+    stresses,
+    range(stresses.shape[0]),
+    "./plots/uniaxial/strain_stress",
+    "Uniaxial strain-stress curves",
 )
 
 
@@ -78,7 +86,7 @@ plot_utils.plot_principal(
     stresses,
     "./plots/simpleshear/principal.png",
     "Simple shear - principle stresses plot",
-    res=50,
+    res=25,
 )
 
 plot_utils.plot_stress_subplot(
@@ -87,3 +95,5 @@ plot_utils.plot_stress_subplot(
     "./plots/simpleshear/strain_stress",
     "Simple shear strain-stress curves",
 )
+
+# %%

@@ -75,18 +75,18 @@ def give_implicit3D(fn, bbox=(-2.5, 2.5), res=100):
     for z in B:  # plot contours in the XY plane
         X, Y = A1, A2
         Z = fn(X, Y, z)
-        # cset = ax.contour(X, Y, Z + z, [z], zdir="z")
+        cset = ax.contour(X, Y, Z + z, [z], zdir="z")
         # [z] defines the only level to plot for this contour for this value of z
 
     for y in B:  # plot contours in the XZ plane
         X, Z = A1, A2
         Y = fn(X, y, Z)
-        # cset = ax.contour(X, Y + y, Z, [y], zdir="y")
+        cset = ax.contour(X, Y + y, Z, [y], zdir="y")
 
     for x in B:  # plot contours in the YZ plane
         Y, Z = A1, A2
         X = fn(x, Y, Z)
-        # cset = ax.contour(X + x, Y, Z, [x], zdir="x")
+        cset = ax.contour(X + x, Y, Z, [x], zdir="x")
 
     # must set plot limits because the contour will likely extend
     # way beyond the displayed level.  Otherwise matplotlib extends the plot limits
@@ -133,6 +133,7 @@ def plot_principal(stresses, file, title, res=25):
         transparent=False,
         bbox_inches="tight",
     )
+    plt.show()
     plt.clf()
 
 

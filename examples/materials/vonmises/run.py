@@ -81,8 +81,8 @@ np.save(config["uniaxial"]["output_directory"] + "F.npy", F_list)
 print("Running simple stress test")
 """
 2. Simple shear loading conditions, shear strain rate = deps_xy
-[ 0, deps, 0]
-[ 0, 0   , 0]
+[ 0, deps*dt, 0]
+[ deps*dt, 0   , 0]
 [ 0, 0   , 0]
 """
 

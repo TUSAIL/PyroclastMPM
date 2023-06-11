@@ -61,13 +61,12 @@ def q_p_plot(stresses, file, title):
     plt.clf()
 
 
-def give_implicit3D(fn, bbox=(-2.5, 2.5), res=100):
+def give_implicit3D(fig, ax, fn, bbox=(-2.5, 2.5), res=100, alpha=0.9):
     """create a plot of an implicit function
     fn  ...implicit function (plot where fn==0)
     bbox ..the x,y,and z limits of plotted interval"""
     xmin, xmax, ymin, ymax, zmin, zmax = bbox * 3
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection="3d")
+
     A = np.linspace(xmin, xmax, res)  # resolution of the contour
     B = np.linspace(xmin, xmax, res)  # number of slices
     A1, A2 = np.meshgrid(A, A)  # grid on which the contour is plotted
@@ -75,18 +74,18 @@ def give_implicit3D(fn, bbox=(-2.5, 2.5), res=100):
     for z in B:  # plot contours in the XY plane
         X, Y = A1, A2
         Z = fn(X, Y, z)
-        # cset = ax.contour(X, Y, Z + z, [z], zdir="z")
+        cset = ax.contour(X, Y, Z + z, [z], zdir="z", alpha=alpha)
         # [z] defines the only level to plot for this contour for this value of z
 
     for y in B:  # plot contours in the XZ plane
         X, Z = A1, A2
         Y = fn(X, y, Z)
-        # cset = ax.contour(X, Y + y, Z, [y], zdir="y")
+        cset = ax.contour(X, Y + y, Z, [y], zdir="y", alpha=alpha)
 
     for x in B:  # plot contours in the YZ plane
         Y, Z = A1, A2
         X = fn(x, Y, Z)
-        # cset = ax.contour(X + x, Y, Z, [x], zdir="x")
+        cset = ax.contour(X + x, Y, Z, [x], zdir="x", alpha=alpha)
 
     # must set plot limits because the contour will likely extend
     # way beyond the displayed level.  Otherwise matplotlib extends the plot limits
@@ -97,29 +96,110 @@ def give_implicit3D(fn, bbox=(-2.5, 2.5), res=100):
     return fig, ax
 
 
-sigma_y = 1000
+cohesion = 1e4
+friction_angle = 15
 
 
-def von_mises(x, y, z):
-    global sigma_y
-    J2 = (1 / 6.0) * ((x - y) ** 2 + (y - z) ** 2 + (z - x) ** 2)
+def mohr_coulomb0(x, y, z):
+    global friction_angle, cohesion
+    phi = (
+        x
+        - z
+        + (x + z) * np.sin(np.deg2rad(friction_angle))
+        - 2 * cohesion * np.cos(np.deg2rad(friction_angle))
+    )
+    return phi
 
-    q = np.sqrt(3 * J2)
-    return q - sigma_y
+
+def mohr_coulomb1(x, y, z):
+    global friction_angle, cohesion
+    phi = (
+        y
+        - z
+        + (y + z) * np.sin(np.deg2rad(friction_angle))
+        - 2 * cohesion * np.cos(np.deg2rad(friction_angle))
+    )
+    return phi
 
 
-def plot_principal(stresses, file, title, res=25):
+def mohr_coulomb2(x, y, z):
+    global friction_angle, cohesion
+    phi = (
+        y
+        - x
+        + (y + x) * np.sin(np.deg2rad(friction_angle))
+        - 2 * cohesion * np.cos(np.deg2rad(friction_angle))
+    )
+    return phi
+
+
+def mohr_coulomb3(x, y, z):
+    global friction_angle, cohesion
+    phi = (
+        z
+        - x
+        + (z + x) * np.sin(np.deg2rad(friction_angle))
+        - 2 * cohesion * np.cos(np.deg2rad(friction_angle))
+    )
+    return phi
+
+
+def mohr_coulomb4(x, y, z):
+    global friction_angle, cohesion
+    phi = (
+        z
+        - y
+        + (z + y) * np.sin(np.deg2rad(friction_angle))
+        - 2 * cohesion * np.cos(np.deg2rad(friction_angle))
+    )
+    return phi
+
+
+def mohr_coulomb5(x, y, z):
+    global friction_angle, cohesion
+    phi = (
+        x
+        - y
+        + (x + y) * np.sin(np.deg2rad(friction_angle))
+        - 2 * cohesion * np.cos(np.deg2rad(friction_angle))
+    )
+    return phi
+
+
+# def von_mises(x, y, z):
+#     global sigma_y
+#     J2 = (1 / 6.0) * ((x - y) ** 2 + (y - z) ** 2 + (z - x) ** 2)
+
+#     q = np.sqrt(3 * J2)
+#     return q - sigma_y
+
+
+def plot_principal(stresses, file, title, res=100):
     w_list, v_list = [], []
     for stress in stresses:
-        w, v = np.linalg.eig(stress)
-        w_list.append(w)
-        v_list.append(v)
+        eigenValues, eigenVectors = np.linalg.eig(stress)
+
+        idx = eigenValues.argsort()[::-1]
+        eigenValues = eigenValues[idx]
+        eigenVectors = eigenVectors[:, idx]
+        w_list.append(eigenValues)
+        v_list.append(eigenVectors)
 
     w_list = np.array(w_list)
     v_list = np.array(v_list)
-
-    fig, ax = give_implicit3D(von_mises, bbox=(-2000, 2000), res=res)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+    fig, ax = give_implicit3D(fig, ax, mohr_coulomb0, bbox=(35000, -22000), res=res)
+    fig, ax = give_implicit3D(fig, ax, mohr_coulomb1, bbox=(35000, -22000), res=res)
+    fig, ax = give_implicit3D(fig, ax, mohr_coulomb2, bbox=(35000, -22000), res=res)
+    fig, ax = give_implicit3D(fig, ax, mohr_coulomb3, bbox=(35000, -22000), res=res)
+    fig, ax = give_implicit3D(fig, ax, mohr_coulomb4, bbox=(35000, -22000), res=res)
+    fig, ax = give_implicit3D(fig, ax, mohr_coulomb5, bbox=(35000, -22000), res=res)
     ax.scatter(w_list[:, 0], w_list[:, 1], w_list[:, 2], color="blue", marker="s")
+
+    ax.set_zlim3d(30000, -30000)
+    ax.set_xlim3d(30000, -30000)
+    ax.set_ylim3d(30000, -30000)
     ax.view_init(31, 35)
 
     plt.title(title)
@@ -133,6 +213,18 @@ def plot_principal(stresses, file, title, res=25):
         transparent=False,
         bbox_inches="tight",
     )
+
+    ax.view_init(31, 45)
+
+    plt.savefig(
+        ".".join(file.split(".")[:2]) + "2.png",
+        # dpi=300,
+        transparent=False,
+        bbox_inches="tight",
+    )
+    ax.view_init(31, 50)
+
+    plt.show()
     plt.clf()
 
 

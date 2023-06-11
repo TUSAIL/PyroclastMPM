@@ -1,13 +1,11 @@
 # Loading a config file and running a uniaxial stress test
-import tomllib
-
 import numpy as np
+import tomllib
 from pyroclastmpm import (
     CSV,
     MohrCoulomb,
     ParticlesContainer,
     global_dimension,
-    set_global_output_directory,
     set_global_timestep,
 )
 
@@ -18,7 +16,8 @@ with open("./config.toml", "rb") as f:
 # check if code is compiled for correct dimension
 if global_dimension != 3:
     raise ValueError(
-        f"This example only works in {config['global']['dimension']}D. The code is compiled for {global_dimension}D."
+        f"This example only works in {config['global']['dimension']}D. \
+            The code is compiled for {global_dimension}D."
     )
 
 # Time step for increment of deformation gradient
@@ -36,6 +35,7 @@ def create_new_test():
         config["material"]["density"],
         config["material"]["E"],
         config["material"]["pois"],
+        config["material"]["cohesion"],
         config["material"]["friction_angle"],
         config["material"]["dilatancy_angle"],
         config["material"]["H"],
@@ -46,8 +46,8 @@ def create_new_test():
 
 print("Running uniaxial stress test")
 """
-1. Uniaxial loading conditions, update psuedo shear strain rate = deps_xx*dt
-[ deps*dt, 0, 0]
+1. Uniaxial loading conditions
+[ deps, 0, 0]
 [ 0   , 0, 0]
 [ 0   , 0, 0]
 
@@ -84,21 +84,15 @@ print("Running simple stress test")
 """
 2. Simple shear loading conditions, shear strain rate = deps_xy
 [ 0, deps, 0]
-[ 0, 0   , 0]
+[ deps, 0   , 0]
 [ 0, 0   , 0]
 """
+particles, material = create_new_test()
 
 deps = np.zeros((3, 3))
 deps[0, 1] = config["simpleshear"]["deps_xy"]
 deps[1, 0] = config["simpleshear"]["deps_xy"]
 
-particles.velocity_gradient = [deps]
-
-particles, material = create_new_test()
-
-deps = np.zeros((3, 3))
-
-deps[0, 1] = config["uniaxial"]["deps_xx"]
 
 particles.velocity_gradient = [deps]
 

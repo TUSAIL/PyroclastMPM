@@ -24,7 +24,7 @@ clean:
 
 run:
 	date >> logs/logfile.txt
-	(time python run.py ) >>  logs/logfile.txt  2>  logs/runtime.txt 
+	python run.py 
 
 postprocess:
 	python postprocess.py >> logs/logfile.txt

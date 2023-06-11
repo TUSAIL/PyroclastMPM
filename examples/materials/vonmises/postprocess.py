@@ -47,6 +47,12 @@ plot_utils.plot_principal(
     "Uniaxial compression - principle stresses plot",
 )
 
+plot_utils.plot_stress_subplot(
+    stresses,
+    range(stresses.shape[0]),
+    "./plots/uniaxial/strain_stress",
+    "Simple shear strain-stress curves",
+)
 
 """
 1. simple shear loading conditions

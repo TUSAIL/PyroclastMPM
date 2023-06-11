@@ -2,16 +2,16 @@
 timestep = 0.001
 
 num_steps = 1000
-output_steps = 25
+output_steps = 50
 
 [material]
-E = 1E5
+E = 1e6
 pois = 0.2
 density = 1000
-cohesion = 0.1
-friction_angle = 0.3
-dilatancy_angle = 0.2
-H = 2e4
+cohesion = 1e4
+friction_angle = 15
+dilatancy_angle = 10
+H = 1e3
 
 [uniaxial]
 deps_xx = 0.1
