@@ -21,12 +21,6 @@ jobs:
           submodules: "true"
           path: "project"
       
-      - name: change working directory
-        run: |
-          ls
-          cd project
-          ls
-      
       - name: Install dependencies
         run: |
           DEBIAN_FRONTEND=noninteractive
@@ -43,10 +37,11 @@ jobs:
           
       - name: Run image
         uses: abatilo/actions-poetry@v2
-#         with:
-#           poetry-version: ${{ matrix.poetry-version }}
+        with:
+          poetry-version: ${{ matrix.poetry-version }}
           
       - name: Install Python package dependencies
+        working-directory: ./project
         run: |
           poetry --version
           rm -f poetry.lock
@@ -57,12 +52,12 @@ jobs:
         uses: trunk-io/trunk-action@v1
       
       - name: Build
+        working-directory: ./project/build
         run: |
-          mkdir build
-          cd build
           cmake ../ -DBUILD_CUDA=off
           make -j4
       
       - name: Test
+        working-directory: ./project/build
         run: |
           tests/tests
