@@ -1,4 +1,4 @@
-name: Check Trunk Push
+name: Build Test CPU
 on:
   push:
     branches:
@@ -6,8 +6,6 @@ on:
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
-
-permissions: read-all
 
 jobs:
   build:
