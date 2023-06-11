@@ -120,13 +120,14 @@ class MohrCoulomb(MPM.MohrCoulomb):
                                     Defaults to 0.
             cohesion (float, optional): Cohesion.
                                         Defaults to 0.
-            friction_angle (float, optional): friction angle (in radians).
+            friction_angle (float, optional): friction angle (in degrees).
                                               Defaults to 0.
-            dilatancy_angle (float, optional): dilatancy angle (in radians).
+            dilatancy_angle (float, optional): dilatancy angle (in degrees).
                                               Defaults to 0.
             H (float, optional): Hardening modulus.
                                 Defaults to 1.
         """
+
         super(MohrCoulomb, self).__init__(
             density=density,
             E=E,
