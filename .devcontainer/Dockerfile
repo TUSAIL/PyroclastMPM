@@ -20,7 +20,8 @@ RUN apt-get -y update --no-install-recommends \
     && apt-get clean -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && curl https://get.trunk.io -fsSL | bash -s -- -y
+    && ls -la
+    # && curl https://get.trunk.io -fsSL | bash -s -- -y \
 
 
 ENV POETRY_HOME="/opt/poetry" \
