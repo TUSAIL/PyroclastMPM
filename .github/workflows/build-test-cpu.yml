@@ -53,5 +53,4 @@ jobs:
         uses: trunk-io/trunk-action@v1
 
       - name: Test
-        run: |
-          ./build/tests/tests
+        run: ./build/tests/tests
