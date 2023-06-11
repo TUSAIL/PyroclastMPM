@@ -1,0 +1,16 @@
+# name: Build
+# on:
+#   push:
+#     branches:
+#       - main
+# concurrency:
+#   group: ${{ github.head_ref || github.run_id }}
+
+
+# jobs:
+#   steps:
+#   - uses: TUSAIL/PyroclastMPM/blob/main/.github/workflows/build-staging-ci.yml
+#   - name: Trunk Check
+#     uses: trunk-io/trunk-action@v1
+#   - name: Test
+#     run: ./build/tests/tests
