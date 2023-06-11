@@ -23,7 +23,9 @@ jobs:
       
       - name: change working directory
         run: |
+          ls
           cd project
+          ls
       
       - name: Install dependencies
         run: |
