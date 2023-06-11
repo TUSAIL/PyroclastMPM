@@ -102,7 +102,7 @@ void set_global_particles_per_cell(const int _particles_per_cell) {
 }
 
 void set_global_output_directory(const std::string _output_dir) {
-  std::strcpy(output_directory_cpu, _output_dir.c_str());
+  std::copy(_output_dir.begin(), _output_dir.end(), output_directory_cpu);
 };
 
 void set_global_dt(const Real _dt) {

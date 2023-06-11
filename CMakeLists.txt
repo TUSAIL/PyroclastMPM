@@ -9,6 +9,7 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "") # works
 set(DIM 3)
 
 # option(BUILD_OPENMP "Enable CUDA Acceleration" OFF) # later
@@ -17,7 +18,6 @@ option(BUILD_PYTHON "Enable building of Python bindings" ON)
 option(BUILD_DOCS "Enable building of documentation" OFF)
 option(BUILD_TESTING "Enable testing" ON)
 option (DOUBLE_PRECISION "Use double precision" OFF)
-option(CMAKE_EXPORT_COMPILE_COMMANDS "Generate compile_commands.json"  ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_definitions(-DDIM=${DIM}) 
 

@@ -57,14 +57,14 @@ uniform_random_points_in_volume(const std::string stl_filename,
 
   std::vector<Vector3r> positions_cpu;
   positions_cpu.resize(num_points);
-
+  double p[3];
   for (int id = 0; id < num_points; id++) {
-    double *p = new double;
-    p = extract->GetOutput()->GetPoint(id);
+    extract->GetOutput()->GetPoint(id, p);
     positions_cpu[id][0] = p[0];
     positions_cpu[id][1] = p[1];
     positions_cpu[id][2] = p[2];
   }
+
   return positions_cpu;
 }
 
@@ -130,10 +130,9 @@ std::vector<Vector3r> grid_points_in_volume(const std::string stl_filename,
   int num_points = extract->GetOutput()->GetNumberOfPoints();
   std::vector<Vector3r> positions_cpu;
   positions_cpu.resize(num_points);
-
+  double p[3];
   for (int id = 0; id < num_points; id++) {
-    double *p = new double;
-    p = extract->GetOutput()->GetPoint(id);
+    extract->GetOutput()->GetPoint(id, p);
     positions_cpu[id][0] = p[0];
     positions_cpu[id][1] = p[1];
     positions_cpu[id][2] = p[2];
@@ -165,10 +164,10 @@ grid_points_on_surface(const std::string stl_filename, const Real cell_size,
   int num_points = sampler->GetOutput()->GetNumberOfPoints();
   std::vector<Vector3r> positions_cpu;
   positions_cpu.resize(num_points);
+  double p[3];
 
   for (int id = 0; id < num_points; id++) {
-    double *p = new double;
-    p = sampler->GetOutput()->GetPoint(id);
+    sampler->GetOutput()->GetPoint(id, p);
     positions_cpu[id][0] = p[0];
     positions_cpu[id][1] = p[1];
     positions_cpu[id][2] = p[2];
