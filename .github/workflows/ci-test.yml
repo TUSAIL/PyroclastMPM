@@ -15,14 +15,12 @@ jobs:
           python-version: ["3.11"]
     runs-on: ${{ matrix.os }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        submodules: recursive
-        
     - name: CI-reusable workflow
-      uses: TUSAIL/PyroclastMPM/blob/main/.github/workflows/ci-build-staging.yml@main
-      
+      uses: TUSAIL/PyroclastMPM/.github/workflows/ci-build-staging.yml@main
+      with:
+        os:  ${{ matrix.os }}
+        python-version:  ${{ matrix.python-version }}
+
     - name: Trunk Check
       uses: trunk-io/trunk-action@v1
       
