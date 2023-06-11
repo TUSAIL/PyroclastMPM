@@ -34,10 +34,6 @@ __device__ __host__ inline void stress_update_newtonfluid(
   // printf("deviatoric_part: %f\n", deviatoric_part);
   const Real density = particles_masses_gpu[tid] / particles_volumes_gpu[tid];
 
-  // printf("masses %f\n", particles_masses_gpu[tid]);
-  // printf("volumes %f\n", particles_volumes_gpu[tid]);
-
-  // printf("density: %f\n", density);
   const Real density_original =
       particles_masses_gpu[tid] / particles_volumes_original_gpu[tid];
   Real mu = density / density_original;

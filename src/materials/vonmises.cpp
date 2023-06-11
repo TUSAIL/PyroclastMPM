@@ -55,7 +55,6 @@ void VonMises::stress_update(ParticlesContainer &particles_ref, int mat_id) {
 #ifdef CUDA_ENABLED
   KERNEL_STRESS_UPDATE_VONMISES<<<particles_ref.launch_config.tpb,
                                   particles_ref.launch_config.bpg>>>(
-      // Matrix3r *particles_stresses_gpu,
       thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
       thrust::raw_pointer_cast(eps_e_gpu.data()),
       thrust::raw_pointer_cast(acc_eps_p_gpu.data()),

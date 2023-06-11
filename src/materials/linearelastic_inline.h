@@ -62,5 +62,4 @@ __global__ void KERNEL_STRESS_UPDATE_LINEARELASTIC(
                        particles_colors_gpu, particles_is_active_gpu,
                        shear_modulus, lame_modulus, mat_id, tid);
 }
-
 #endif

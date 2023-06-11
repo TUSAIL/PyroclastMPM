@@ -20,7 +20,7 @@ struct MohrCoulomb : Material {
    * @param _pois Poisson's ratio
    */
   MohrCoulomb(const Real _density, const Real _E, const Real _pois,
-              const Real _cohesion, const Real friction_angle,
+              const Real _cohesion, const Real _friction_angle,
               const Real dilatancy_angle, const Real _H);
 
   ~MohrCoulomb();

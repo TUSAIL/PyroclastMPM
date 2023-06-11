@@ -62,8 +62,6 @@ __device__ __host__ inline void stress_update_localrheo(
   const Matrix3r stress_trail_0 =
       stress_trail + pressure_trail * Matrix3r::Identity();
 
-  // particles_stresses_gpu[tid] = stress_trail_0;
-
   // compute second invariant of the deviatoric stress
   const Matrix3r stress_trail_0_trans = stress_trail_0.transpose();
 

@@ -3,7 +3,6 @@
 [2] de Souza Neto, Eduardo A., Djordje Peric, and David RJ Owen. Computational
 methods for plasticity: theory and applications. John Wiley & Sons, 2011.
 */
-// #include <Eigen/Eigenvalues>
 
 __device__ __host__ inline void
 update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
@@ -56,10 +55,10 @@ update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
 
   // yield function eq (6.106) and (6.110) [2]
   const Real q_trail = sqrt(3 * 0.5 * (s_trail * s_trail.transpose()).trace());
-  const Real Phi = q_trail - sigma_y_trail;
+  const Real Phi_trail = q_trail - sigma_y_trail;
 
   // if stress is in feasible region elastic step eq (7.84)
-  if (Phi <= 0) {
+  if (Phi_trail <= 0) {
     particles_stresses_gpu[tid] = s_trail + p_trail * Matrixr::Identity();
     particles_eps_e_gpu[tid] = eps_e_n_tr;
     particles_acc_eps_p_gpu[tid] = acc_eps_p_tr;
@@ -71,7 +70,7 @@ update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
   // zero using newton raphson method
   double dgamma = 0.0;
 
-  double psi_approx, acc_eps;
+  double Phi_approx, acc_eps;
 
   const double tol = 1e-7;
 
@@ -84,16 +83,16 @@ update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
 
     // isotropic linear hardening eq (6.170) [2]
     const double sigma_y = yield_stress + H * acc_eps;
-    psi_approx = q_trail - 3.0 * shear_modulus * dgamma - sigma_y;
+    Phi_approx = q_trail - 3.0 * shear_modulus * dgamma - sigma_y;
 
     const double d = -3.0 * shear_modulus - H; // residual of yield function
 
-    dgamma = dgamma - psi_approx / d;
+    dgamma = dgamma - Phi_approx / d;
 
     // printf("dgamma: %f psi_approx %f iter %d H %f \n", dgamma,
     // psi_approx,iter);
     iter += 1;
-  } while (psi_approx > tol);
+  } while (Phi_approx > tol);
 
   const Real p_curr =
       p_trail; // since von mises yield function is an isotropic function

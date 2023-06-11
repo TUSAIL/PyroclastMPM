@@ -18,8 +18,8 @@ extern Real dt_cpu;
  * @param _pois poissons ratio
  */
 MohrCoulomb::MohrCoulomb(const Real _density, const Real _E, const Real _pois,
-                         const Real _cohesion, const Real friction_angle,
-                         const Real dilatancy_angle, const Real _H) {
+                         const Real _cohesion, const Real _friction_angle,
+                         const Real _dilatancy_angle, const Real _H) {
   E = _E;
   pois = _pois;
   bulk_modulus = (1. / 3.) * (E / (1. - 2. * pois));         // K
@@ -29,7 +29,8 @@ MohrCoulomb::MohrCoulomb(const Real _density, const Real _E, const Real _pois,
 
   cohesion = _cohesion;
   H = _H;
-
+  friction_angle = _friction_angle * (PI / 180);
+  dilatancy_angle = _dilatancy_angle * (PI / 180);
   name = "MohrCoulomb";
 
 #if DIM != 3
@@ -53,20 +54,6 @@ void MohrCoulomb::initialize(ParticlesContainer &particles_ref, int mat_id) {
  */
 void MohrCoulomb::stress_update(ParticlesContainer &particles_ref, int mat_id) {
 
-  // #ifdef CUDA_ENABLED
-  //   KERNEL_STRESS_UPDATE_VONMISES<<<particles_ref.launch_config.tpb,
-  //                                   particles_ref.launch_config.bpg>>>(
-  //       // Matrix3r *particles_stresses_gpu,
-  //       thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
-  //       thrust::raw_pointer_cast(eps_e_gpu.data()),
-  //       thrust::raw_pointer_cast(acc_eps_p_gpu.data()),
-  //       thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
-  //       thrust::raw_pointer_cast(particles_ref.F_gpu.data()),
-  //       thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
-  //       bulk_modulus, shear_modulus, yield_stress, H, mat_id,
-  //       particles_ref.num_particles);
-  //   gpuErrchk(cudaDeviceSynchronize());
-  // #else
   for (int pid = 0; pid < particles_ref.num_particles; pid++) {
     update_mohrcoulomb(
         particles_ref.stresses_gpu.data(), eps_e_gpu.data(),
