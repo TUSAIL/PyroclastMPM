@@ -46,6 +46,7 @@ jobs:
           poetry install --without plot
       
       - name: Trunk Check
+        working-directory: ./project
         uses: trunk-io/trunk-action@v1
       
       - name: Build
