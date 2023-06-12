@@ -39,7 +39,7 @@ Currently two problems
 also return mapping on edge
 
 */
-
+#if DIM == 3
 using Matrix2hp = Eigen::Matrix<double, 2, 2>;
 using Vector2hp = Eigen::Matrix<double, 2, 1>;
 using Vector3hp = Eigen::Matrix<double, 3, 1>;
@@ -418,3 +418,4 @@ __device__ __host__ inline void update_mohrcoulomb(
                       particles_acc_eps_p_gpu[tid], Phi_tr, acc_eps_p_tr, p_tr,
                       K, G, sda, sfa, cda, cfa, H, cohesion);
 }
+#endif

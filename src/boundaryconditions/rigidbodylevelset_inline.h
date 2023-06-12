@@ -173,8 +173,8 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
             (particles_positions_gpu[particle_id] - origin) * inv_cell_size -
             selected_bin.cast<Real>();
         const Real distance =
-            relative_pos.dot(relative_pos); // squared distance is monotonic, so
-                                            // no need to compute
+            relative_pos.dot(relative_pos); // squared distance is monotonic,
+                                            // so no need to compute
         if (distance < min_dist) {
           min_dist = distance;
           min_id = particle_id;
