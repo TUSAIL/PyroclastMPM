@@ -57,6 +57,7 @@ update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
   const Real q_trail = sqrt(3 * 0.5 * (s_trail * s_trail.transpose()).trace());
   const Real Phi_trail = q_trail - sigma_y_trail;
 
+#if DIM == 3
   // if stress is in feasible region elastic step eq (7.84)
   if (Phi_trail <= 0) {
     particles_stresses_gpu[tid] = s_trail + p_trail * Matrixr::Identity();
@@ -64,6 +65,10 @@ update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
     particles_acc_eps_p_gpu[tid] = acc_eps_p_tr;
     return;
   }
+#else
+
+  printf("VON MISES not supported for 2D at the moment\n");
+#endif
 
   // otherwise do return mapping - box 7.4 [2]
   // find plastic multiplier dgamma, such that yield function is approximately
@@ -103,9 +108,14 @@ update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
   const Matrixr eps_e_curr = s_curr / (2.0 * shear_modulus) +
                              (1. / 3.) * eps_e_v_trail * Matrixr::Identity();
 
+#if DIM == 3
   particles_stresses_gpu[tid] = sigma_curr;
   particles_eps_e_gpu[tid] = eps_e_curr;
   particles_acc_eps_p_gpu[tid] = acc_eps;
+
+#else
+  printf("VON MISES not supported for 2D at the moment\n");
+#endif
 }
 
 #ifdef CUDA_ENABLED

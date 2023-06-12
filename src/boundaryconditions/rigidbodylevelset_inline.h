@@ -8,6 +8,9 @@ __device__ __host__ inline void update_rigid_velocity(
     return;
   }
 
+  Vectorr omega = Vectorr::Zero();
+#if DIM == 3
+
   const Real theta = euler_angles[0];
   const Real phi = euler_angles[1];
   const Real psi = euler_angles[2];
@@ -15,8 +18,6 @@ __device__ __host__ inline void update_rigid_velocity(
   const Real dtheta = angular_velocities[0];
   const Real dphi = angular_velocities[1];
   const Real dpsi = angular_velocities[2];
-
-  Vectorr omega = Vectorr::Zero();
   omega[0] = dphi * sin(theta) * sin(psi) + dtheta * cos(psi);
   omega[1] = dphi * sin(theta) * cos(psi) - dtheta * sin(psi);
   omega[2] = dphi * cos(theta) + dpsi;
@@ -25,6 +26,9 @@ __device__ __host__ inline void update_rigid_velocity(
       omega.cross(particles_positions_gpu[tid] - COM);
 
   particles_velocities_gpu[tid] = body_velocity + rotational_velocity;
+#else
+  printf("Rotation problems with 1D and 2d not implemented \n");
+#endif
 }
 
 #ifdef CUDA_ENABLED

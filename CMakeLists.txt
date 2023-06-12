@@ -9,8 +9,12 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "") # works
-set(DIM 3)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+set(DIM 3 CACHE INTERNAL "")
+# SET(DIM 3 CACHE INTERNAL "Dimension of the simulation (plane strain)")
+# set(DIMENSION 3 CACHE INTERNAL "")
+
+message(DIM='${DIM}')
 
 # option(BUILD_OPENMP "Enable CUDA Acceleration" OFF) # later
 option(BUILD_CUDA "Enable CUDA Acceleration" ON)
@@ -19,7 +23,8 @@ option(BUILD_DOCS "Enable building of documentation" OFF)
 option(BUILD_TESTING "Enable testing" ON)
 option (DOUBLE_PRECISION "Use double precision" OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-add_definitions(-DDIM=${DIM}) 
+add_definitions(-DDIM=${DIM})
+
 
 
 if (DOUBLE_PRECISION)

@@ -17,7 +17,7 @@ namespace pyroclastmpm {
 struct RigidBodyLevelSet : BoundaryCondition {
   // FUNCTIONS
 
-  RigidBodyLevelSet(const Vectorr _COM = Vectorr(0, 0, 0),
+  RigidBodyLevelSet(const Vectorr _COM = Vectorr::Zero(),
                     const cpu_array<int> _frames = {},
                     const cpu_array<Vectorr> _locations = {},
                     const cpu_array<Vectorr> _rotations = {},
