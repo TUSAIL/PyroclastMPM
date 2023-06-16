@@ -53,7 +53,7 @@ jobs:
       - name: Test
         run: |
           ./build/tests/tests
-          
+
       - name: Run Integration Tests
         run: |
           cd examples/two_disc_impact/
