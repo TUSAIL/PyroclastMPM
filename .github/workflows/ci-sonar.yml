@@ -1,0 +1,63 @@
+name: SonarCloud
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    env:
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          DEBIAN_FRONTEND=noninteractive
+          echo "Installing dependencies . . ."
+          sudo apt-get -y update --no-install-recommends
+          sudo apt-get -y install --no-install-recommends build-essential curl git vtk9 libvtk9-dev libthrust-dev cmake python-is-python3
+          sudo apt-get autoremove -y
+          sudo apt-get clean -y
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: Run image
+        uses: abatilo/actions-poetry@v2
+
+      - name: Install Python package dependencies
+        run: |
+          poetry --version
+          rm -f poetry.lock
+          poetry lock --no-update
+          poetry install --without plot
+
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake ../ -DBUILD_CUDA=off
+          make -j4
+
+      - name: Install sonar-scanner and build-wrapper
+        uses: SonarSource/sonarcloud-github-c-cpp@v1
+      - name: Run build-wrapper
+        run: |
+          mkdir build && cd build
+          cmake ../
+
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make clean all
+      - name: Run sonar-scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
