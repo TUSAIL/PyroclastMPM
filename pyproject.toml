@@ -6,7 +6,7 @@ authors = ["Lubbe, Retief (UT-ET) <r.lubbe@utwente.nl>"]
 readme = "README.md"
 packages = [
     { include = "pyroclastmpm", from = "./python" },
-    { include = "constitutive_analysis", from = "./src" },
+    { include = "constitutive_analysis", from = "./python" },
 
 ]
 include = ["./python/pyroclastmpm/*.so"]
