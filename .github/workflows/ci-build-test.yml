@@ -39,7 +39,6 @@ jobs:
           rm -f poetry.lock
           poetry lock --no-update
           poetry install --without plot
-          poetry shell
 
       - name: Build
         run: |
@@ -58,7 +57,7 @@ jobs:
       - name: Run Integration Tests
         run: |
           cd examples/two_disc_impact/
-          make
+          poetry run make
 
       - uses: actions/upload-artifact@v3
         with:
