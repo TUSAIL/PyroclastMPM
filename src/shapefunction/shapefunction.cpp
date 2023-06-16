@@ -31,11 +31,11 @@ namespace pyroclastmpm {
 #ifdef CUDA_ENABLED
 extern __constant__ SFType shape_function_gpu;
 extern __constant__ int num_surround_nodes_gpu;
-extern __constant__ int forward_window_gpu[64][3];
+extern __constant__ int g2p_window_gpu[64][3];
 #else
 extern SFType shape_function_cpu;
 extern int num_surround_nodes_cpu;
-extern int forward_window_cpu[64][3];
+extern int g2p_window_cpu[64][3];
 #endif
 
 //  should be inlined
@@ -64,11 +64,9 @@ shape_function_kernel(Vectorr *particles_dpsi_gpu, Real *particles_psi_gpu,
   for (int i = 0; i < num_surround_nodes; i++) {
 // macros defined in types_common.cuh
 #ifdef CUDA_ENABLED
-    const Vectori selected_bin =
-        WINDOW_BIN(particle_bin, forward_window_gpu, i);
+    const Vectori selected_bin = WINDOW_BIN(particle_bin, g2p_window_gpu, i);
 #else
-    const Vectori selected_bin =
-        WINDOW_BIN(particle_bin, forward_window_cpu, i);
+    const Vectori selected_bin = WINDOW_BIN(particle_bin, g2p_window_cpu, i);
 #endif
 
     const unsigned int node_mem_index = NODE_MEM_INDEX(selected_bin, num_cells);

@@ -57,15 +57,9 @@ MohrCoulomb::MohrCoulomb(const Real _density, const Real _E, const Real _pois,
   friction_angle = _friction_angle * (PI / 180);
   dilatancy_angle = _dilatancy_angle * (PI / 180);
   name = "MohrCoulomb";
-
-#if DIM != 3
-  printf("MohrCoulomb material only implemented for 3D\n");
-  exit(1);
-#endif
 }
 
 void MohrCoulomb::initialize(ParticlesContainer &particles_ref, int mat_id) {
-  // printf("thus runs inside associativevonmises\n");
   set_default_device<Real>(particles_ref.num_particles, {}, acc_eps_p_gpu, 0.0);
   set_default_device<Matrixr>(particles_ref.num_particles, {}, eps_e_gpu,
                               Matrixr::Zero());
@@ -81,19 +75,14 @@ void MohrCoulomb::stress_update(ParticlesContainer &particles_ref, int mat_id) {
 #ifdef CUDA_ENABLED
   printf("CUDA implementation missing \n");
 #else
-
-#if DIM == 3
   for (int pid = 0; pid < particles_ref.num_particles; pid++) {
     update_mohrcoulomb(
         particles_ref.stresses_gpu.data(), eps_e_gpu.data(),
-        acc_eps_p_gpu.data(), particles_ref.vel ocity_gradient_gpu.data(),
+        acc_eps_p_gpu.data(), particles_ref.velocity_gradient_gpu.data(),
         particles_ref.F_gpu.data(), particles_ref.colors_gpu.data(),
         bulk_modulus, shear_modulus, cohesion, friction_angle, dilatancy_angle,
         H, mat_id, pid);
   }
-#else
-  printf("MohrCoulomb material only implemented for 3D\n");
-#endif
 #endif
 }
 

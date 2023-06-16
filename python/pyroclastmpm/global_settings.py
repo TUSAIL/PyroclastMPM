@@ -40,15 +40,20 @@ def set_global_timestep(dt: float):
     MPM.set_global_timestep(dt)
 
 
-def set_global_shapefunction(shape_function: t.Type[MPM.ShapeFunction]):
-    """
-    Set the simulation shape function in global memory.
-    It must be set before any Pyroclast objects are called.
+def set_global_shapefunction(shape_function):
+    """Sets the global shape function type
+
     Args:
-        dt (ShapeFunction): ShapeFunction object e.g. CubicShapeFunction,
-        LinearShapeFunction
+        shape_function (str): shape function type ("cubic" or "linear")
     """
-    MPM.set_global_shapefunction(shape_function)
+    shp_type = None
+    if shape_function == "cubic":
+        shp_type = MPM.CubicShapeFunction
+    elif shape_function == "linear":
+        shp_type = MPM.LinearShapeFunction
+    else:
+        ValueError("Unknown shape function type: {}".format(shape_function))
+    MPM.set_global_shapefunction(shp_type)
 
 
 def set_global_output_directory(output_directory: str):
@@ -68,14 +73,26 @@ def set_global_step(step: int):
 
 
 def set_globals(
-    dt: float, particles_per_cell: int, shape_function, output_directory: str
+    dt: float,
+    particles_per_cell: int,
+    shape_function: str,
+    output_directory: str,
 ):
     """Sets the output folder
 
     Args:
         dt (float): simulation timestep
         particles_per_cell (int): number of particles per cell (initial state)
-        shape_function (_type_): shape function
+        shape_function (str): shape function type ("cubic" or "linear")
         output_directory (str):  output directory path
     """
-    MPM.set_globals(dt, particles_per_cell, shape_function, output_directory)
+
+    shp_type = None
+    if shape_function == "cubic":
+        shp_type = MPM.CubicShapeFunction
+    elif shape_function == "linear":
+        shp_type = MPM.LinearShapeFunction
+    else:
+        ValueError("Unknown shape function type: {}".format(shape_function))
+
+    MPM.set_globals(dt, particles_per_cell, shp_type, output_directory)

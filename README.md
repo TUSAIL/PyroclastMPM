@@ -10,6 +10,7 @@
 <p align="center"> A modular GPU based Material Point Method (MPM) solver. </p>
 
 [![Build](https://github.com/TUSAIL/PyroclastMPM/actions/workflows/ci-build-test.yml/badge.svg)](https://github.com/TUSAIL/PyroclastMPM/actions/workflows/ci-build-test.yml)
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 # Welcome
 

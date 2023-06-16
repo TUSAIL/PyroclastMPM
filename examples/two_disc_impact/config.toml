@@ -1,0 +1,34 @@
+[global]
+dimension = 2
+dt = 0.001
+particles_per_cell = 4
+shape_function = "linear"
+output_directory = "output"
+total_steps = 3000
+output_steps = 100
+output_start = 0
+
+[nodes]
+node_start = [0.0, 0.0]
+node_end = [1.0,1.0]
+node_spacing = 0.05
+output_formats = ["vtk"]
+
+[particles]
+circle1_center = [0.255, 0.255]
+circle2_center = [0.745, 0.745]
+circle_radius = 0.2
+output_formats = ["vtk"]
+
+[material]
+density = 1000
+E = 1000
+pois =0.3
+
+[solver]
+alpha = 1.0 #pure flip
+
+
+[postprocess]
+movie_file = "plots/disc_impact.gif"
+ke_time_plot = "plots/ke_time.png"

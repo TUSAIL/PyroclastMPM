@@ -30,12 +30,12 @@ namespace pyroclastmpm {
 #ifdef CUDA_ENABLED
 extern __constant__ Real dt_gpu;
 extern __constant__ int num_surround_nodes_gpu;
-extern __constant__ int forward_window_gpu[64][3];
-extern __constant__ int backward_window_gpu[64][3];
+extern __constant__ int g2p_window_gpu[64][3];
+extern __constant__ int p2g_window_gpu[64][3];
 #else
 extern int num_surround_nodes_cpu;
-extern int forward_window_cpu[64][3];
-extern int backward_window_cpu[64][3];
+extern int g2p_window_cpu[64][3];
+extern int p2g_window_cpu[64][3];
 #endif
 
 extern int global_step_cpu;
@@ -45,7 +45,7 @@ extern Real __constant__ dt_gpu;
 #endif
 extern Real dt_cpu;
 
-// include private header with kernels here to inline them
+// include private header with kernels here to inline theu
 #include "rigidbodylevelset_inline.h"
 
 RigidBodyLevelSet::RigidBodyLevelSet(

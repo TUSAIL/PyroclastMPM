@@ -22,20 +22,53 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-
 #pragma once
 
+/**
+ * @file helper.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief This header file contains helper functions for the MPM
+ * code.
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
 #include "pyroclastmpm/common/types_common.h"
 
 namespace pyroclastmpm {
 
+/**
+ * @brief Allocates device memory and copies the input array (or value) to the
+ * array
+ *
+ * @tparam T data type (float,double, int, Matrixr, etc.)
+ * @param input_size size of the input array
+ * @param input input array
+ * @param output output array
+ * @param default_value default value to set the array to
+ */
 template <typename T>
 void set_default_device(const int input_size, const cpu_array<T> input,
                         gpu_array<T> &output, T default_value);
 
+/**
+ * @brief Reorders the input array according to the sorted index
+ *
+ * @tparam T data type (float,double, int, Matrixr, etc.)
+ * @param output array to be sorted
+ * @param sorted_index sorted index
+ */
 template <typename T>
 void reorder_device_array(gpu_array<T> &output, gpu_array<int> sorted_index);
 
+/**
+ * @brief Prints the input array
+ *
+ * @tparam T data type (float,double, int, Matrixr, etc.)
+ * @param input input array to be printed
+ */
 template <typename T> void print_array(const cpu_array<T> input);
 
 } // namespace pyroclastmpm

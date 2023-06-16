@@ -22,18 +22,29 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-
 #pragma once
+/**
+ * @file global_settings.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief This header file contains global variables and functions that set
+ * the global variables.
+ *
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
 
 #include "pyroclastmpm/common/types_common.h"
 #include <string>
 
 namespace pyroclastmpm {
+
 /**
- * @brief Set the global shapefunction object
+ * @brief Set the global shapefunction type
  *
  * @param _dimension simulation dimension
- * @param _shapefunction shape function
  */
 void set_global_shapefunction(SFType _shapefunction);
 
@@ -45,17 +56,30 @@ void set_global_shapefunction(SFType _shapefunction);
 void set_global_dt(const Real _dt);
 
 /**
- * @brief Set the global output directory object
+ * @brief Set the global output directory string
  *
- * @param output_dir
+ * @param output_dir the output directory string
  */
 void set_global_output_directory(const std::string _output_dir);
 
-void set_globals(const Real _dt, const int particles_per_cell,
-                 SFType _shapefunction, const std::string _output_dir);
-
+/**
+ * @brief Set the initial particles per cell
+ *
+ * @param _particles_per_cell initial particles per cell
+ */
 void set_global_particles_per_cell(const int _particles_per_cell);
 
 void set_global_step(const int _step);
+
+/**
+ * @brief A master function to set all the globals variables
+ *
+ * @param _dt timestep
+ * @param particles_per_cell initial particles per cell
+ * @param _shapefunction shapefunction type
+ * @param _output_dir output directory string
+ */
+void set_globals(const Real _dt, const int particles_per_cell,
+                 SFType _shapefunction, const std::string _output_dir);
 
 } // namespace pyroclastmpm

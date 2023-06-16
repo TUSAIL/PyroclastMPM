@@ -23,15 +23,27 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+
 from __future__ import annotations
 
 import typing as t
+
+from tqdm import tqdm
 
 from . import pyroclastmpm_pybind as MPM
 from .boundaryconditions import BoundaryCondition
 from .materials import Material
 from .nodes import NodesContainer
 from .particles import ParticlesContainer
+
+Logo = f" \n \
+ \n \
+🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️ \n \
+🔥️█▀█ █▄█ █▀█ █▀█ █▀▀ █░░ ▄▀█ █▀ ▀█▀ █▀▄▀█ █▀█ █▀▄▀█🔥️ \n \
+🔥️█▀▀ ░█░ █▀▄ █▄█ █▄▄ █▄▄ █▀█ ▄█ ░█░ █░▀░█ █▀▀ █░▀░█🔥️ \n \
+🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️🔥️ \n \
+Running {MPM.global_dimension}D simulation \n \
+"
 
 
 class USL(MPM.USL):
@@ -124,13 +136,17 @@ class USL(MPM.USL):
             callback (t.Callable, optional): Callback function called after every i'th
                                             output step.Defaults to None.
         """
+        print(Logo)
+
         self.solve_nsteps(self.output_start)
 
-        stop = self.current_step
-
-        while stop < self.total_steps:
+        for step in tqdm(
+            range(self.output_start, self.total_steps, self.output_steps),
+            desc="PyroclastMPM ",
+            unit=" step",
+            colour="green",
+            unit_divisor=self.output_steps,
+        ):
             self.solve_nsteps(self.output_steps)
             if callback is not None:
                 callback()
-            stop = self.current_step
-            print(f"output: {stop}")
