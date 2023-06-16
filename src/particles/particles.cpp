@@ -27,30 +27,24 @@
 
 namespace pyroclastmpm {
 
-// number of nodes surrounding each element
-extern int num_surround_nodes_cpu;
-extern int particles_per_cell_cpu;
-extern int global_step_cpu;
+extern const int num_surround_nodes_cpu;
+extern const int particles_per_cell_cpu;
+extern const int global_step_cpu;
 
 /*!
  * @brief Constructs Particle container class
  * @param _positions particle positions
  * @param _velocities particle velocities
  * @param _colors particle types (optional)
- * @param _stresses particle stresses (optional)
- * @param _masses particle masses (optional)
- * @param _volumes particle volumes (optional)
+ * @param _is_rigid particle rigidness (optional)
  */
 ParticlesContainer::ParticlesContainer(
-    const cpu_array<Vectorr> _positions, const cpu_array<Vectorr> _velocities,
-    const cpu_array<uint8_t> _colors, const cpu_array<bool> _is_rigid,
-    const cpu_array<Matrix3r> _stresses, const cpu_array<Real> _masses,
-    const cpu_array<Real> _volumes, const cpu_array<OutputType> _output_formats)
-    : output_formats(_output_formats), spawnIncrement(0), spawnRate(-1),
-      spawnVolume(0) {
-  num_particles = _positions.size();
+    const cpu_array<Vectorr> &_positions, const cpu_array<Vectorr> &_velocities,
+    const cpu_array<uint8_t> &_colors,
+    const cpu_array<bool> &_is_rigid) noexcept
+    : num_particles(static_cast<int>(_positions.size())) {
 
-  set_default_device<Matrix3r>(num_particles, _stresses, stresses_gpu,
+  set_default_device<Matrix3r>(num_particles, {}, stresses_gpu,
                                Matrix3r::Zero());
   set_default_device<Vectorr>(num_particles, _positions, positions_gpu,
                               Vectorr::Zero());
@@ -61,23 +55,20 @@ ParticlesContainer::ParticlesContainer(
 
   set_default_device<bool>(num_particles, {}, is_active_gpu, true);
 
-  set_default_device<Real>(num_particles, _masses, masses_gpu, -1.0);
-  set_default_device<Real>(num_particles, _volumes, volumes_gpu, -1.0);
+  set_default_device<Real>(num_particles, {}, masses_gpu, -1.0);
+  set_default_device<Real>(num_particles, {}, volumes_gpu, -1.0);
 
   set_default_device<Matrixr>(num_particles, {}, velocity_gradient_gpu,
                               Matrixr::Zero());
   set_default_device<Matrixr>(num_particles, {}, F_gpu, Matrixr::Identity());
   set_default_device<Vectorr>(num_surround_nodes_cpu * num_particles, {},
                               dpsi_gpu, Vectorr::Zero());
-  set_default_device<Real>(num_particles, _volumes, volumes_original_gpu, -1.0);
+  set_default_device<Real>(num_particles, {}, volumes_original_gpu, -1.0);
   set_default_device<Real>(num_surround_nodes_cpu * num_particles, {}, psi_gpu,
                            0.0);
 
   set_default_device<Vectorr>(num_particles, {}, forces_external_gpu,
                               Vectorr::Zero());
-
-  spatial = SpatialPartition(); // create a temporary partitioning object, since
-                                // we are getting domain size
 
 #ifdef CUDA_ENABLED
   launch_config.tpb = dim3(int((num_particles) / BLOCKSIZE) + 1, 1, 1);
@@ -88,14 +79,18 @@ ParticlesContainer::ParticlesContainer(
   reset(); // reset needed
 }
 
+void ParticlesContainer::set_output_formats(
+    const cpu_array<OutputType> &_output_formats) {
+  output_formats = _output_formats;
+}
+
 void ParticlesContainer::reset(bool reset_psi) {
 
-  execution_policy exec;
   if (reset_psi) {
-    thrust::fill(exec, psi_gpu.begin(), psi_gpu.end(), 0.);
-    thrust::fill(exec, dpsi_gpu.begin(), dpsi_gpu.end(), Vectorr::Zero());
+    thrust::fill(psi_gpu.begin(), psi_gpu.end(), 0.);
+    thrust::fill(dpsi_gpu.begin(), dpsi_gpu.end(), Vectorr::Zero());
   }
-  thrust::fill(exec, velocity_gradient_gpu.begin(), velocity_gradient_gpu.end(),
+  thrust::fill(velocity_gradient_gpu.begin(), velocity_gradient_gpu.end(),
                Matrixr::Zero());
 }
 
@@ -124,8 +119,7 @@ void ParticlesContainer::set_spawner(int _spawnRate, int _spawnVolume) {
   spawnRate = _spawnRate;
   spawnVolume = _spawnVolume;
   spawnIncrement = 0;
-  execution_policy exec;
-  thrust::fill(exec, is_active_gpu.begin(), is_active_gpu.end(), false);
+  thrust::fill(is_active_gpu.begin(), is_active_gpu.end(), false);
 }
 
 void ParticlesContainer::spawn_particles() {

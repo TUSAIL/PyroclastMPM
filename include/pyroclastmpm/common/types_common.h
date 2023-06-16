@@ -85,34 +85,29 @@ using Vectori = Vector1i;
 using Quaternionr = Eigen::Quaternion<Real>;
 using AngleAxisr = Eigen::AngleAxis<Real>;
 
-#define PI 3.14159265358979323846
+constexpr double PI = 3.14159265358979323846;
 
 #ifdef CUDA_ENABLED
-// using execution_policy = thrust::device;
-struct execution_policy : thrust::device_execution_policy<execution_policy> {};
 template <typename T> using gpu_array = thrust::device_vector<T>;
 #else
-struct execution_policy : thrust::host_execution_policy<execution_policy> {};
 template <typename T> using gpu_array = thrust::host_vector<T>;
 #endif
 
 template <typename T> using cpu_array = thrust::host_vector<T>;
 
-enum OutputType { VTK, OBJ, CSV, HDF5, GTFL };
-
-enum StressMeasure { PK1, PK2, Cauchy, Kirchhoff, None }; // TODO remove
+enum OutputType { VTK, OBJ, CSV, GTFL };
 
 enum SFType {
   LinearShapeFunction = 0,
   QuadraticShapeFunction = 1,
-  CubicShapeFunction = 2
+  CubicShapeFunction = 2 // TODO Fix
 };
 
 // TODO is this needed?
 enum BCType { NodeBoundaryCondition, ParticleBoundaryCondition };
 
-#define BLOCKSIZE 64
-#define WARPSIZE 32
+constexpr size_t BLOCKSIZE = 64;
+constexpr size_t WARPSIZE = 32;
 
 #ifdef CUDA_ENABLED
 // trunk-ignore-all(codespell/misspelled)
@@ -144,10 +139,5 @@ struct GPULaunchConfig {
   dim3 bpg;
 };
 #endif
-
-#define PARALLEL_FOR_EACH_ZIP(exec, N, functor, ...)                           \
-  thrust::for_each_n(                                                          \
-      exec, thrust::make_zip_iterator(thrust::make_tuple(__VA_ARGS__)), N,     \
-      functor)
 
 } // namespace pyroclastmpm

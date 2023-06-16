@@ -67,7 +67,7 @@ namespace pyroclastmpm {
  * @param use_mask if true, use the mask to set the points, otherwise set all
  */
 void set_vtk_points(cpu_array<Vectorr> input,
-                    vtkSmartPointer<vtkPolyData> &polydata,
+                    const vtkSmartPointer<vtkPolyData> &polydata,
                     cpu_array<bool> mask = {}, bool use_mask = false);
 
 /**

@@ -24,15 +24,12 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include "pyroclastmpm/boundaryconditions/nodedomain.h"
+#include "nodedomain_inline.h"
 
 namespace pyroclastmpm {
 
-#include "nodedomain_inline.h"
-
-NodeDomain::NodeDomain(Vectori _axis0_mode, Vectori _axis1_mode) {
-  axis0_mode = _axis0_mode;
-  axis1_mode = _axis1_mode;
-}
+NodeDomain::NodeDomain(Vectori _axis0_mode, Vectori _axis1_mode)
+    : axis0_mode(_axis0_mode), axis1_mode(_axis1_mode) {}
 
 void NodeDomain::apply_on_nodes_moments(NodesContainer &nodes_ref,
                                         ParticlesContainer &particles_ref) {
@@ -44,18 +41,15 @@ void NodeDomain::apply_on_nodes_moments(NodesContainer &nodes_ref,
       thrust::raw_pointer_cast(nodes_ref.moments_gpu.data()),
       thrust::raw_pointer_cast(nodes_ref.masses_gpu.data()),
       thrust::raw_pointer_cast(nodes_ref.node_ids_gpu.data()),
-      nodes_ref.node_start, nodes_ref.node_end, nodes_ref.num_nodes,
-      nodes_ref.inv_node_spacing, axis0_mode, axis1_mode,
-      nodes_ref.num_nodes_total);
+      nodes_ref.num_nodes, axis0_mode, axis1_mode, nodes_ref.num_nodes_total);
   gpuErrchk(cudaDeviceSynchronize());
 #else
   for (int nid = 0; nid < nodes_ref.num_nodes_total; nid++) {
 
     apply_nodedomain(nodes_ref.moments_nt_gpu.data(),
                      nodes_ref.moments_gpu.data(), nodes_ref.masses_gpu.data(),
-                     nodes_ref.node_ids_gpu.data(), nodes_ref.node_start,
-                     nodes_ref.node_end, nodes_ref.num_nodes,
-                     nodes_ref.inv_node_spacing, axis0_mode, axis1_mode, nid);
+                     nodes_ref.node_ids_gpu.data(), nodes_ref.num_nodes,
+                     axis0_mode, axis1_mode, nid);
   }
 #endif
 };

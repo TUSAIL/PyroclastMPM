@@ -43,13 +43,13 @@ namespace pyroclastmpm {
  * @brief Load global variables (defined in global_settings.cpp)
  *
  */
-extern char output_directory_cpu[256];
+extern const char output_directory_cpu[256];
 
-extern OutputType output_type_cpu;
+extern const OutputType output_type_cpu;
 
-extern int global_step_cpu;
+extern const int global_step_cpu;
 
-extern Real dt_cpu;
+extern const Real dt_cpu;
 
 /**
  * @brief Set the vtk points object from the input array
@@ -61,17 +61,15 @@ extern Real dt_cpu;
  * to false
  */
 void set_vtk_points(cpu_array<Vectorr> input,
-                    vtkSmartPointer<vtkPolyData> &polydata,
+                    const vtkSmartPointer<vtkPolyData> &polydata,
                     cpu_array<bool> mask, bool use_mask)
 
 {
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
   for (int id = 0; id < input.size(); id++) {
-    if (use_mask) {
-      if (!mask[id]) {
-        continue;
-      }
+    if (use_mask && !mask[id]) {
+      continue;
     }
 #if DIM == 3
     points->InsertNextPoint(input[id][0], input[id][1], input[id][2]);
@@ -149,10 +147,8 @@ void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
   current_time->SetName("Time");
 
   current_time->SetNumberOfComponents(1);
-  current_time->InsertNextValue(global_step_cpu * dt_cpu);
+  current_time->InsertNextValue(static_cast<Real>(global_step_cpu) * dt_cpu);
   polydata->GetFieldData()->AddArray(current_time);
-  // vtkNew<vtkDoubleArray> current_step;
-  // vtkNew<vtkDoubleArray> dt;
 
   std::string output_directory = output_directory_cpu;
   std::string filename =
@@ -198,8 +194,6 @@ void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
     writer->SetFileName(filename.c_str());
     writer->SetInputData(table);
     writer->Write();
-  } else if (output_type == HDF5) {
-    // output to hdf5 file using xdmf
   }
 }
 

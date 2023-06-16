@@ -39,8 +39,6 @@
 // [x] Solver::solve_nsteps (implicitly tested)
 // [x] Solver::calculate_shape_function (implicitly tested by shapefunctions)
 
-using namespace pyroclastmpm;
-
 /**
  * @brief Construct a new TEST object to test if solver constructor works
  * Only tests if the constructor works, not particle and node initialization
@@ -48,14 +46,16 @@ using namespace pyroclastmpm;
  *
  */
 TEST(Solver, Constructor) {
-  set_globals(0.1, 1, LinearShapeFunction, "output");
+  set_globals(0.1, 1, pyroclastmpm::LinearShapeFunction, "output");
   std::vector<Vectorr> pos = {Vectorr::Zero()};
 
-  std::vector<Material> materials = {LinearElastic(1000, 10, 10)};
+  std::vector<pyroclastmpm::Material> materials;
 
-  ParticlesContainer particles = ParticlesContainer(pos);
+  materials.push_back(LinearElastic(1000, 10, 10));
 
-  NodesContainer nodes(Vectorr::Zero(), Vectorr::Ones(), 0.5);
+  auto particles = pyroclastmpm::ParticlesContainer(pos);
 
-  Solver solver = Solver(particles, nodes, materials);
+  pyroclastmpm::NodesContainer nodes(Vectorr::Zero(), Vectorr::Ones(), 0.5);
+
+  auto solver = pyroclastmpm::Solver(particles, nodes, materials);
 };

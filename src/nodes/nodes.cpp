@@ -128,20 +128,16 @@ NodesContainer::NodesContainer(const Vectorr _node_start,
 #endif
 }
 
-NodesContainer::~NodesContainer() {}
-
 void NodesContainer::reset() {
-  execution_policy exec;
-  thrust::fill(exec, moments_gpu.begin(), moments_gpu.end(), Vectorr::Zero());
-  thrust::fill(exec, moments_nt_gpu.begin(), moments_nt_gpu.end(),
+  thrust::fill(moments_gpu.begin(), moments_gpu.end(), Vectorr::Zero());
+  thrust::fill(moments_nt_gpu.begin(), moments_nt_gpu.end(), Vectorr::Zero());
+  thrust::fill(forces_external_gpu.begin(), forces_external_gpu.end(),
                Vectorr::Zero());
-  thrust::fill(exec, forces_external_gpu.begin(), forces_external_gpu.end(),
+  thrust::fill(forces_internal_gpu.begin(), forces_internal_gpu.end(),
                Vectorr::Zero());
-  thrust::fill(exec, forces_internal_gpu.begin(), forces_internal_gpu.end(),
+  thrust::fill(forces_total_gpu.begin(), forces_total_gpu.end(),
                Vectorr::Zero());
-  thrust::fill(exec, forces_total_gpu.begin(), forces_total_gpu.end(),
-               Vectorr::Zero());
-  thrust::fill(exec, masses_gpu.begin(), masses_gpu.end(), 0.);
+  thrust::fill(masses_gpu.begin(), masses_gpu.end(), 0.);
 }
 
 struct IntegrateFunctor {

@@ -51,7 +51,7 @@ public:
                  const Real _node_spacing,
                  const cpu_array<OutputType> _output_formats = {});
 
-  ~NodesContainer();
+  ~NodesContainer() = default;
 
   /** @brief Resets the background grid */
   void reset();

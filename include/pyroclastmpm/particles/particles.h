@@ -31,6 +31,7 @@
 #include "pyroclastmpm/spatialpartition/spatialpartition.h"
 
 namespace pyroclastmpm {
+
 /*!
  * @brief Particles container class
  */
@@ -44,18 +45,12 @@ public:
    * @param _positions particle positions
    * @param _velocities particle velocities
    * @param _colors particle types (optional)
-   * @param _stresses particle stresses (optional)
-   * @param _masses particle masses (optional)
-   * @param _volumes particle volumes (optional)
+   * @param _is_rigid particle rigidness (optional)
    */
-  ParticlesContainer(const cpu_array<Vectorr> _positions,
-                     const cpu_array<Vectorr> _velocities = {},
-                     const cpu_array<uint8_t> _colors = {},
-                     const cpu_array<bool> _is_rigid = {},
-                     const cpu_array<Matrix3r> _stresses = {},
-                     const cpu_array<Real> _masses = {},
-                     const cpu_array<Real> _volumes = {},
-                     const cpu_array<OutputType> _output_formats = {});
+  ParticlesContainer(const cpu_array<Vectorr> &_positions,
+                     const cpu_array<Vectorr> &_velocities = {},
+                     const cpu_array<uint8_t> &_colors = {},
+                     const cpu_array<bool> &_is_rigid = {}) noexcept;
 
   /**
    * @brief Resets the gpu arrays
@@ -95,11 +90,8 @@ public:
   void spawn_particles();
 
   void set_spawner(int spawnRate, int spawnVolume);
-  int spawnRate;
 
-  int spawnIncrement;
-
-  int spawnVolume;
+  void set_output_formats(const cpu_array<OutputType> &_output_formats);
 
   /*! @brief particles' stresses, we always store 3x3 matrix for stresses
    */
@@ -135,12 +127,6 @@ public:
   /*! @brief particles' shape functions */
   gpu_array<Real> psi_gpu;
 
-  /*! @brief particles' densities (updated each step)*/
-  // gpu_array<Real> densities_gpu; /*base*/
-
-  /*! * @brief particles' pressure (updated each step) */
-  // gpu_array<Real> pressures_gpu; /*base*/
-
   /*! @brief particles' colors (or material type) */
   gpu_array<uint8_t> colors_gpu;
 
@@ -151,13 +137,8 @@ public:
   gpu_array<bool> is_active_gpu;
 
   /*! @brief spatial partitioning class */
-  SpatialPartition spatial;
-
-  /*! @brief store strain increment */
-  bool store_strain_increments;
-
-  /*! @brief Total Number of particles */
-  int num_particles;
+  // creating temp object since we need domain size
+  SpatialPartition spatial = SpatialPartition();
 
 #ifdef CUDA_ENABLED
   GPULaunchConfig launch_config;
@@ -165,9 +146,18 @@ public:
 
   cpu_array<OutputType> output_formats;
 
+  /*! @brief Total Number of particles */
+  int num_particles = 0;
+
   bool isRestart = false;
 
   int numColors = 0;
+
+  int spawnRate = -1;
+
+  int spawnIncrement = 0;
+
+  int spawnVolume = 0;
 };
 
 } // namespace pyroclastmpm

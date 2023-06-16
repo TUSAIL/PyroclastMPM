@@ -29,7 +29,6 @@
 #include <pybind11/stl.h>
 
 #include "pyroclastmpm/common/types_common.h"
-// #include "pyroclastmpm/materials/materials.cuh"
 #include "pyroclastmpm/particles/particles.h"
 
 namespace py = pybind11;
@@ -39,21 +38,21 @@ namespace pyroclastmpm {
 py::tuple pickle_save_particles(const ParticlesContainer &particles) {
   return py::make_tuple(
       std::vector<Vectorr>(particles.positions_gpu.begin(),
-                           particles.positions_gpu.end()),
+                           particles.positions_gpu.end()), // 0
       std::vector<Vectorr>(particles.velocities_gpu.begin(),
-                           particles.velocities_gpu.end()),
+                           particles.velocities_gpu.end()), // 1
       std::vector<int>(particles.colors_gpu.begin(),
-                       particles.colors_gpu.end()),
+                       particles.colors_gpu.end()), // 2
       std::vector<int>(particles.is_rigid_gpu.begin(),
-                       particles.is_rigid_gpu.end()),
+                       particles.is_rigid_gpu.end()), // 3
       std::vector<Matrix3r>(particles.stresses_gpu.begin(),
-                            particles.stresses_gpu.end()),
+                            particles.stresses_gpu.end()), // 4
       std::vector<Real>(particles.masses_gpu.begin(),
-                        particles.masses_gpu.end()),
+                        particles.masses_gpu.end()), // 5
       std::vector<Real>(particles.volumes_gpu.begin(),
-                        particles.volumes_gpu.end()),
+                        particles.volumes_gpu.end()), // 6
       std::vector<OutputType>(particles.output_formats.begin(),
-                              particles.output_formats.end()),
+                              particles.output_formats.end()), // 7
       std::vector<Matrixr>(particles.F_gpu.begin(), particles.F_gpu.end()),
       std::vector<Matrixr>(particles.velocity_gradient_gpu.begin(),
                            particles.velocity_gradient_gpu.end()),
@@ -67,9 +66,11 @@ py::tuple pickle_save_particles(const ParticlesContainer &particles) {
 ParticlesContainer pickle_load_particles(py::tuple t) {
   auto particles = ParticlesContainer(
       t[0].cast<std::vector<Vectorr>>(), t[1].cast<std::vector<Vectorr>>(),
-      t[2].cast<std::vector<int>>(), t[3].cast<std::vector<bool>>(),
-      t[4].cast<std::vector<Matrix3r>>(), t[5].cast<std::vector<Real>>(),
-      t[6].cast<std::vector<Real>>(), t[7].cast<std::vector<OutputType>>());
+      t[2].cast<std::vector<int>>(), t[3].cast<std::vector<bool>>());
+  particles.stresses_gpu = t[4].cast<std::vector<Matrix3r>>();
+  particles.masses_gpu = t[5].cast<std::vector<Real>>();
+  particles.volumes_gpu = t[6].cast<std::vector<Real>>();
+  particles.output_formats = t[7].cast<std::vector<OutputType>>();
   particles.F_gpu = t[8].cast<std::vector<Matrixr>>();
   particles.velocity_gradient_gpu = t[9].cast<std::vector<Matrixr>>();
   particles.dpsi_gpu = t[10].cast<std::vector<Vectorr>>();
@@ -80,17 +81,12 @@ ParticlesContainer pickle_load_particles(py::tuple t) {
 
 void particles_module(const py::module &m) {
   py::class_<ParticlesContainer>(m, "ParticlesContainer")
-      .def(
-          py::init<std::vector<Vectorr>, std::vector<Vectorr>, std::vector<int>,
-                   std::vector<bool>, std::vector<Matrix3r>, std::vector<Real>,
-                   std::vector<Real>, std::vector<OutputType>>(),
-          py::arg("positions"), py::arg("velocities") = std::vector<Vectorr>(),
-          py::arg("colors") = std::vector<int>(),
-          py::arg("is_rigid") = std::vector<bool>(),
-          py::arg("stresses") = std::vector<Matrix3r>(),
-          py::arg("masses") = std::vector<Real>(),
-          py::arg("volumes") = std::vector<Real>(),
-          py::arg("output_formats") = std::vector<OutputType>())
+      .def(py::init<std::vector<Vectorr>, std::vector<Vectorr>,
+                    std::vector<int>, std::vector<bool>>(),
+           py::arg("positions"), py::arg("velocities") = std::vector<Vectorr>(),
+           py::arg("colors") = std::vector<int>() = std::vector<int>(),
+           py::arg("is_rigid") = std::vector<bool>() = std::vector<bool>())
+      .def("set_output_formats", &ParticlesContainer::set_output_formats)
       .def("output_vtk", &ParticlesContainer::output_vtk)
       .def("partition", &ParticlesContainer::partition)
       .def("set_spawner", &ParticlesContainer::set_spawner)

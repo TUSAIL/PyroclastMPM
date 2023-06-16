@@ -23,13 +23,15 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "pyroclastmpm/common/types_common.h"
+
+namespace pyroclastmpm {
+
 __device__ __host__ inline void
 apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
-                 Real *nodes_masses_gpu, const Vectori *nodes_bins_gpu,
-                 const Vectorr node_start, const Vectorr node_end,
-                 const Vectori num_nodes, const Real inv_node_spacing,
-                 const Vectori axis0_mode, const Vectori axis1_mode,
-                 const int node_mem_index) {
+                 const Real *nodes_masses_gpu, const Vectori *nodes_bins_gpu,
+                 const Vectori num_nodes, const Vectori axis0_mode,
+                 const Vectori axis1_mode, const int node_mem_index) {
 
 #ifndef CUDA_ENABLED
   // to call std::max on CPU and avoid error occurring without max:
@@ -37,10 +39,13 @@ apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
   using namespace std;
 #endif
 
+  if (const Real node_mass = nodes_masses_gpu[node_mem_index];
+      node_mass <= 0.000000001) {
+    return;
+  }
   const Vectori node_bin = nodes_bins_gpu[node_mem_index];
 
   for (int i = 0; i < DIM; i++) {
-    // axis0axis0_mode
     if (node_bin[i] < 1) {
 
       if (axis0_mode(i) == 0) {
@@ -49,11 +54,11 @@ apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
       } else if (axis0_mode(i) == 1) {
         // stick
         nodes_moments_gpu[node_mem_index][i] =
-            max(0., nodes_moments_gpu[node_mem_index]
-                        .cast<double>()[i]); // cast to double to avoid error
-                                             // with std::max
-        nodes_moments_nt_gpu[node_mem_index][i] =
-            max(0., nodes_moments_nt_gpu[node_mem_index].cast<double>()[i]);
+            (Real)max(0., nodes_moments_gpu[node_mem_index]
+                              .cast<double>()[i]); // cast to double to avoid
+                                                   // error with std::max
+        nodes_moments_nt_gpu[node_mem_index][i] = (Real)max(
+            0., nodes_moments_nt_gpu[node_mem_index].cast<double>()[i]);
       }
     } else if (node_bin[i] >= num_nodes(i) - 1) {
       if (axis1_mode(i) == 0) {
@@ -62,9 +67,9 @@ apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
       } else if (axis1_mode(i) == 1) {
         // slip
         nodes_moments_gpu[node_mem_index][i] =
-            max(0., nodes_moments_gpu[node_mem_index].cast<double>()[i]);
-        nodes_moments_nt_gpu[node_mem_index][i] =
-            max(0., nodes_moments_nt_gpu[node_mem_index].cast<double>()[i]);
+            (Real)max(0., nodes_moments_gpu[node_mem_index].cast<double>()[i]);
+        nodes_moments_nt_gpu[node_mem_index][i] = (Real)max(
+            0., nodes_moments_nt_gpu[node_mem_index].cast<double>()[i]);
       }
     }
   }
@@ -73,10 +78,10 @@ apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
 #ifdef CUDA_ENABLED
 __global__ void
 KERNEL_APPLY_NODEDOMAIN(Vectorr *nodes_moments_nt_gpu,
-                        Vectorr *nodes_moments_gpu, Real *nodes_masses_gpu,
+                        Vectorr *nodes_moments_gpu,
+                        const Real *nodes_masses_gpu,
                         const Vectori *nodes_bins_gpu, const Vectorr node_start,
-                        const Vectorr node_end, const Vectori num_nodes,
-                        const Real inv_node_spacing, const Vectori axis0_mode,
+                        const Vectori num_nodes, , const Vectori axis0_mode,
                         const Vectori axis1_mode, const int num_nodes_total)
 
 {
@@ -87,8 +92,10 @@ KERNEL_APPLY_NODEDOMAIN(Vectorr *nodes_moments_nt_gpu,
   }
 
   apply_nodedomain(nodes_moments_nt_gpu, nodes_moments_gpu, nodes_masses_gpu,
-                   nodes_bins_gpu, node_start, node_end, num_nodes,
-                   inv_node_spacing, axis0_mode, axis1_mode, node_mem_index);
+                   nodes_bins_gpu, node_start, node_end, num_nodes, axis0_mode,
+                   axis1_mode, node_mem_index);
 }
 
 #endif
+
+} // namespace pyroclastmpm

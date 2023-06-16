@@ -55,7 +55,7 @@ namespace pyroclastmpm {
  */
 BodyForce::BodyForce(const std::string_view &_mode,
                      const cpu_array<Vectorr> &_values,
-                     const cpu_array<bool> &_mask) {
+                     const cpu_array<bool> &_mask) noexcept {
   if (_mode == "forces") {
     mode_id = 0;
   } else if (_mode == "moments") {

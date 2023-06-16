@@ -58,7 +58,7 @@ struct BodyForce : BoundaryCondition {
    * @param _mask Mask to apply the body force
    */
   BodyForce(const std::string_view &_mode, const cpu_array<Vectorr> &_values,
-            const cpu_array<bool> &_mask);
+            const cpu_array<bool> &_mask) noexcept;
 
   /**
    * @brief Update node values for eternal forces
