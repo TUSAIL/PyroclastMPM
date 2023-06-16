@@ -66,8 +66,9 @@ class ParticlesContainer(MPM.ParticlesContainer):
                                     shape (N). Defaults to None.
             volumes (np.ndarray, optional): Initial volume of particles
                                     of shape (N). Defaults to None.
-            output_formats (t.List[t.Type[MPM.OutputFormat]], optional):
-                                    Output type (e.g VTK, CSV, OBJ).
+            output_formats (t.List[str], optional):
+                                    List of output formats
+                                    ("vtk", "csv", "obj")
                                     Defaults to None.
         """
         if output_formats is None:
@@ -85,6 +86,17 @@ class ParticlesContainer(MPM.ParticlesContainer):
         if volumes is None:
             volumes = []
 
+        out_fmt = []
+        for fmt in output_formats:
+            if fmt == "vtk":
+                out_fmt.append(MPM.VTK)
+            elif fmt == "csv":
+                out_fmt.append(MPM.CSV)
+            elif fmt == "obj":
+                out_fmt.append(MPM.OBJ)
+            else:
+                raise ValueError("Unknown output format: {}".format(fmt))
+
         super(ParticlesContainer, self).__init__(
             positions=positions,
             velocities=velocities,
@@ -93,5 +105,5 @@ class ParticlesContainer(MPM.ParticlesContainer):
             stresses=stresses,
             masses=masses,
             volumes=volumes,
-            output_formats=output_formats,
+            output_formats=out_fmt,
         )

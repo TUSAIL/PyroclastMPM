@@ -67,7 +67,8 @@ update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
                                     // step)
 
   // hydrostatic stress eq (7.82) and volumetric strain eq (3.90) [2]
-  const Real eps_e_v_trail = eps_e_prev.trace();
+  const Real eps_e_v_trail = eps_e_n_tr.trace();
+
   const Real p_trail = bulk_modulus * eps_e_v_trail;
 
   // deviatoric stress (7.82) and strain eq (3.114) [2]

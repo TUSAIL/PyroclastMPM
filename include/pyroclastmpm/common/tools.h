@@ -25,22 +25,31 @@
 
 #pragma once
 
+/**
+ * @file tools.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief This file contains tools to generate points from a STL file
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+
 #include "pyroclastmpm/common/output.h"
 #include "pyroclastmpm/common/types_common.h"
 
 // VTK
+#include "vtkNew.h"
 #include <vtkDataObjectToTable.h>
 #include <vtkDelimitedTextWriter.h>
 #include <vtkDoubleArray.h>
+#include <vtkExtractEnclosedPoints.h>
 #include <vtkIntArray.h>
 #include <vtkOBJWriter.h>
 #include <vtkPointData.h>
-
-#include <vtkPolyDataPointSampler.h>
-
-#include "vtkNew.h"
-#include <vtkExtractEnclosedPoints.h>
 #include <vtkPolyDataNormals.h>
+#include <vtkPolyDataPointSampler.h>
 #include <vtkSTLReader.h>
 #include <vtkSmartPointer.h>
 

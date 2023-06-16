@@ -35,6 +35,9 @@ __device__ __host__ void inline usl_p2g_kernel(
     const bool *particles_is_rigid_gpu, const bool *particles_is_active_gpu,
     const Vectori num_nodes, const Real inv_cell_size,
     const int num_nodes_total, const int node_mem_index) {
+
+  // loops over grid nodes
+
   const Vectori node_bin = node_ids_gpu[node_mem_index];
   Vectorr total_node_moment = Vectorr::Zero();
   Vectorr total_node_force_internal = Vectorr::Zero();
@@ -50,9 +53,9 @@ __device__ __host__ void inline usl_p2g_kernel(
 #pragma unroll
   for (int sid = 0; sid < num_surround_nodes; sid++) {
 #ifdef CUDA_ENABLED
-    const Vectori selected_bin = WINDOW_BIN(node_bin, backward_window_gpu, sid);
+    const Vectori selected_bin = WINDOW_BIN(node_bin, p2g_window_gpu, sid);
 #else
-    const Vectori selected_bin = WINDOW_BIN(node_bin, backward_window_cpu, sid);
+    const Vectori selected_bin = WINDOW_BIN(node_bin, p2g_window_cpu, sid);
 #endif
 
     const unsigned int node_hash = NODE_MEM_INDEX(selected_bin, num_nodes);
@@ -77,23 +80,27 @@ __device__ __host__ void inline usl_p2g_kernel(
       }
       const Real psi_particle =
           particles_psi_gpu[particle_id * num_surround_nodes + sid];
-      const Vectorr dpsi_particle =
+
+      Vector3r dpsi_particle = Vector3r::Zero();
+      dpsi_particle.block(0, 0, DIM, DIM) =
           particles_dpsi_gpu[particle_id * num_surround_nodes + sid];
+
       const Real scaled_mass = psi_particle * particles_masses_gpu[particle_id];
       total_node_mass += scaled_mass;
       total_node_moment += scaled_mass * particles_velocities_gpu[particle_id];
       total_node_force_external +=
           psi_particle * particles_forces_external_gpu[particle_id];
-#if DIM == 3
-      total_node_force_internal += -1. * particles_volumes_gpu[particle_id] *
-                                   particles_stresses_gpu[particle_id] *
-                                   dpsi_particle;
-#else
-      Matrix3r cauchy_stress_3d = particles_stresses_gpu[particle_id];
-      Matrixr cauchy_stress = cauchy_stress_3d.block(0, 0, DIM, DIM);
-      total_node_force_internal += -1. * particles_volumes_gpu[particle_id] *
-                                   cauchy_stress * dpsi_particle;
-#endif
+      // #if DIM == 3
+      total_node_force_internal.block(0, 0, DIM, DIM) +=
+          -1. * particles_volumes_gpu[particle_id] *
+          particles_stresses_gpu[particle_id] * dpsi_particle;
+      // #else
+      //       Matrix3r cauchy_stress_3d = particles_stresses_gpu[particle_id];
+      //       Matrixr cauchy_stress = cauchy_stress_3d.block(0, 0, DIM, DIM);
+      //       total_node_force_internal += -1. *
+      //       particles_volumes_gpu[particle_id] *
+      //                                    cauchy_stress * dpsi_particle;
+      // #endif
     }
   }
 
@@ -166,11 +173,9 @@ __device__ __host__ inline void usl_g2p_kernel(
   for (int i = 0; i < num_surround_nodes; i++) {
 
 #ifdef CUDA_ENABLED
-    const Vectori selected_bin =
-        WINDOW_BIN(particle_bin, forward_window_gpu, i);
+    const Vectori selected_bin = WINDOW_BIN(particle_bin, g2p_window_gpu, i);
 #else
-    const Vectori selected_bin =
-        WINDOW_BIN(particle_bin, forward_window_cpu, i);
+    const Vectori selected_bin = WINDOW_BIN(particle_bin, g2p_window_cpu, i);
 #endif
     bool invalidCell = false;
     const unsigned int nhash = NODE_MEM_INDEX(selected_bin, num_cells);

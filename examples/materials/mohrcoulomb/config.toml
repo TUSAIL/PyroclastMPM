@@ -1,7 +1,6 @@
 [global]
 timestep = 0.001
-
-num_steps = 1000
+total_steps = 1000
 output_steps = 50
 
 [material]

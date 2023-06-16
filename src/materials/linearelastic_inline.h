@@ -23,11 +23,15 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * [1] https://en.wikipedia.org/wiki/Infinitesimal_strain_theory
+ */
+
 __device__ __host__ inline void update_linearelastic(
     Matrix3r *particles_stresses_gpu, Matrixr *particles_velocity_gradient_gpu,
-    const Real *particles_volumes_gpu, const Real *particles_masses_gpu,
+    const Matrixr *particles_F_gpu, const Real *particles_masses_gpu,
     const uint8_t *particles_colors_gpu, bool *particles_is_active_gpu,
-    const Real shear_modulus, const Real lame_modulus, const int mat_id,
+    const Real shear_modulus, const Real bulk_modulus, const int mat_id,
     const int tid) {
 
   const int particle_color = particles_colors_gpu[tid];
@@ -46,35 +50,39 @@ __device__ __host__ inline void update_linearelastic(
 #endif
 
   const Matrixr vel_grad = particles_velocity_gradient_gpu[tid];
-  const Matrixr velgrad_T = vel_grad.transpose();
-  const Matrixr deformation_matrix =
-      0.5 * (vel_grad + velgrad_T); // infinitesimal strain
-  const Matrixr strain_increments =
-      deformation_matrix * dt; // pseudeo strain rate
+  Matrixr F = particles_F_gpu[tid]; // deformation gradient
 
-#if DIM == 3
-  Matrixr cauchy_stress = particles_stresses_gpu[tid];
-#else
-  Matrix3r cauchy_stress_3d = particles_stresses_gpu[tid];
-  Matrixr cauchy_stress = cauchy_stress_3d.block(0, 0, DIM, DIM);
-#endif
+  // (total strain current step) infinitesimal strain assumptions [1]
+  const Matrixr deps_curr =
+      0.5 * (vel_grad + vel_grad.transpose()) * dt; // pseudo strain rate
 
-  cauchy_stress += lame_modulus * strain_increments * Matrixr::Identity() +
-                   2. * shear_modulus * strain_increments;
-#if DIM == 3
-  particles_stresses_gpu[tid] = cauchy_stress;
-#else
-  cauchy_stress_3d.block(0, 0, DIM, DIM) = cauchy_stress;
-  particles_stresses_gpu[tid] = cauchy_stress_3d;
-#endif
+  const Matrixr eps_curr = 0.5 * (F.transpose() + F) - Matrixr::Identity();
+
+  // hydrostatic stress and volumetric strain
+  const Real eps_v_trail = eps_curr.trace();
+
+  const Real p = bulk_modulus * eps_v_trail;
+
+  // deviatoric stress (7.82) and strain eq (3.114) [2]
+  const Matrixr eps_dev_trail =
+      eps_curr - (1 / 3.) * eps_v_trail * Matrixr::Identity();
+
+  const Matrixr dev_s = 2. * shear_modulus * eps_dev_trail;
+
+  Matrix3r sigma = Matrix3r::Zero();
+  sigma.block(0, 0, DIM, DIM) += dev_s;
+
+  sigma += p * Matrix3r::Identity();
+
+  particles_stresses_gpu[tid] = sigma;
 }
 
 #ifdef CUDA_ENABLED
 __global__ void KERNEL_STRESS_UPDATE_LINEARELASTIC(
     Matrix3r *particles_stresses_gpu, Matrixr *particles_velocity_gradient_gpu,
-    const Real *particles_volumes_gpu, const Real *particles_masses_gpu,
+    const Matrixr *particles_F_gpu, const Real *particles_masses_gpu,
     const uint8_t *particles_colors_gpu, bool *particles_is_active_gpu,
-    const int num_particles, const Real shear_modulus, const Real lame_modulus,
+    const int num_particles, const Real bulk_modulus, const Real lame_modulus,
     const int mat_id) {
   const int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -83,8 +91,8 @@ __global__ void KERNEL_STRESS_UPDATE_LINEARELASTIC(
   } // block access threads
 
   update_linearelastic(particles_stresses_gpu, particles_velocity_gradient_gpu,
-                       particles_volumes_gpu, particles_masses_gpu,
+                       particles_F_gpu, particles_masses_gpu,
                        particles_colors_gpu, particles_is_active_gpu,
-                       shear_modulus, lame_modulus, mat_id, tid);
+                       shear_modulus, bulk_modulus, mat_id, tid);
 }
 #endif

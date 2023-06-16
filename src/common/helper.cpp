@@ -23,15 +23,36 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file helper.cpp
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief This file contains helper functions used to allocate,sort and print
+ * arrays
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+
 #include "pyroclastmpm/common/helper.h"
 #include <thrust/gather.h>
 
 namespace pyroclastmpm {
 
+/**
+ * @brief Set the default device array to an input array or value
+ *
+ * @tparam T data type (float,double, int, Matrixr, etc.)
+ * @param input_size input array size
+ * @param input input array (to be copied to output), if empty, set to {}
+ * @param output output array
+ * @param default_value default value to set the array to
+ */
 template <typename T>
 void set_default_device(const int input_size, const cpu_array<T> input,
                         gpu_array<T> &output, T default_value) {
-
+  // If input is empty, do not copy and set output to default value instead
   if (input.empty()) {
     cpu_array<T> output_host;
 
@@ -45,6 +66,13 @@ void set_default_device(const int input_size, const cpu_array<T> input,
   }
 }
 
+/**
+ * @brief Reorders the input array according to the sorted index
+ *
+ * @tparam T data type (float,double, int, Matrixr, etc.)
+ * @param output array to be sorted
+ * @param sorted_index sorted index
+ */
 template <typename T>
 void reorder_device_array(gpu_array<T> &output, gpu_array<int> sorted_index) {
   gpu_array<T> device_temp = output;
@@ -52,6 +80,12 @@ void reorder_device_array(gpu_array<T> &output, gpu_array<int> sorted_index) {
                  output.begin());
 }
 
+/**
+ * @brief Prints the input array
+ *
+ * @tparam T data type (float,double, int, Matrixr, etc.)
+ * @param input input array to be printed
+ */
 template <typename T> void print_array(const cpu_array<T> input) {
   std::cout << std::endl;
   for (auto &out : input) {
@@ -68,6 +102,7 @@ template <typename T> void print_array(const cpu_array<T> input) {
   std::cout << std::endl;
 }
 
+// Explicitly initiate the template functions for the following types
 template void print_array<bool>(const cpu_array<bool> input);
 
 template void set_default_device<bool>(const int input_size,
@@ -138,8 +173,7 @@ template void set_default_device<Vectori>(const int input_size,
 template void reorder_device_array<Vectori>(gpu_array<Vectori> &output,
                                             gpu_array<int> sorted_index);
 
-// Since Matri3r is a typedef of Matrixr is same as Vector (explicitly initiated
-// )
+// Note Matri3r is a typedef of Matrixr is same as Vector
 #if DIM != 1
 template void set_default_device<Vectorr>(const int input_size,
                                           const cpu_array<Vectorr> input,
@@ -151,8 +185,6 @@ template void reorder_device_array<Vectorr>(gpu_array<Vectorr> &output,
 
 template void print_array<Vectorr>(const cpu_array<Vectorr> input);
 #endif
-
-// Since Matri3r is the same as Matrixr (explicitly initiated )
 #if DIM != 3
 template void set_default_device<Matrix3r>(const int input_size,
                                            const cpu_array<Matrix3r> input,

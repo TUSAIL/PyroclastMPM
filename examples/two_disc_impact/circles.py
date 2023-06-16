@@ -2,11 +2,22 @@ import numpy as np
 
 
 def create_circle(
-    center: np.array, radius: float, cell_size: float, ppc_1d: int = 1
+    center: np.array, radius: float, cell_size: float, ppc: int = 2
 ):
+    """Generate a circle of particles.
+
+    Args:
+        center (np.array): center of the circle
+        radius (float): radius of the circle
+        cell_size (float): size of the background grid cells
+        ppc (int, optional): particles per cell. Defaults to 2.
+
+    Returns:
+        _type_: coordinates of the particles
+    """
     start, end = center - radius, center + radius
-    spacing = cell_size / ppc_1d
-    tol = +0.00005  # prevents points
+    spacing = cell_size / (ppc / 2)
+    tol = +0.00005  # Add a tolerance to avoid numerical issues
     x = np.arange(start[0], end[0] + spacing, spacing) + 0.5 * spacing
     y = np.arange(start[1], end[1] + spacing, spacing) + 0.5 * spacing
     xv, yv = np.meshgrid(x, y)

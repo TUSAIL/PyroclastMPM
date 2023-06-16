@@ -144,9 +144,9 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
   for (int sid = 0; sid < num_surround_nodes; sid++) {
 
 #ifdef CUDA_ENABLED
-    const Vectori selected_bin = WINDOW_BIN(node_bin, backward_window_gpu, sid);
+    const Vectori selected_bin = WINDOW_BIN(node_bin, p2g_window_gpu, sid);
 #else
-    const Vectori selected_bin = WINDOW_BIN(node_bin, backward_window_cpu, sid);
+    const Vectori selected_bin = WINDOW_BIN(node_bin, p2g_window_cpu, sid);
 #endif
 
     const unsigned int node_hash = NODE_MEM_INDEX(selected_bin, num_nodes);
@@ -269,7 +269,7 @@ __device__ __host__ inline void get_overlapping_rigid_body_grid(
   const Vectorr particle_coords = particles_positions_gpu[tid];
 
   // We only search in a cube of 3x3x3 nodes around the particle
-  const int linear_backward_window_3d[64][3] = {
+  const int linear_p2g_window_3d[64][3] = {
       {0, 0, 0},   {1, 0, 0},   {-1, 0, 0},  {0, 1, 0},   {1, 1, 0},
       {-1, 1, 0},  {0, -1, 0},  {1, -1, 0},  {-1, -1, 0}, {0, 0, 1},
       {1, 0, 1},   {-1, 0, 1},  {0, 1, 1},   {1, 1, 1},   {-1, 1, 1},
@@ -282,10 +282,10 @@ __device__ __host__ inline void get_overlapping_rigid_body_grid(
 
 #ifdef CUDA_ENABLED
     const Vectori selected_bin =
-        WINDOW_BIN(particle_bin, linear_backward_window_3d, sid);
+        WINDOW_BIN(particle_bin, linear_p2g_window_3d, sid);
 #else
     const Vectori selected_bin =
-        WINDOW_BIN(particle_bin, linear_backward_window_3d, sid);
+        WINDOW_BIN(particle_bin, linear_p2g_window_3d, sid);
 #endif
     const unsigned int node_hash = NODE_MEM_INDEX(selected_bin, num_nodes);
     const Vectorr relative_coordinates =

@@ -39,7 +39,7 @@ Currently two problems
 also return mapping on edge
 
 */
-#if DIM == 3
+
 using Matrix2hp = Eigen::Matrix<double, 2, 2>;
 using Vector2hp = Eigen::Matrix<double, 2, 1>;
 using Vector3hp = Eigen::Matrix<double, 3, 1>;
@@ -61,7 +61,7 @@ return_mapping_mainplane(Matrix3r &stresses, Matrixr &eps_e, Real &acc_eps_p,
   // printf("before return map main \n");
   do {
 
-    // residual of yield function on main plane
+    // residual derivative of yield function on main plane
     const double d = -a - 4 * H * cfa * cfa;
 
     dgamma = dgamma - Phi_plane / d;
@@ -102,8 +102,8 @@ return_mapping_mainplane(Matrix3r &stresses, Matrixr &eps_e, Real &acc_eps_p,
     Matrix3r s_next = stresses - p_next * Matrix3r::Identity();
 
     // updated elastic strain
-    eps_e =
-        s_next * 1. / (2. * G) + p_next * 1. / (3. * K) * Matrix3r::Identity();
+    eps_e = s_next.block(0, 0, DIM, DIM) * 1. / (2. * G) +
+            p_next * 1. / (3. * K) * Matrixr::Identity();
 
     // hardening parameters
     acc_eps_p = acc_eps_p_next;
@@ -183,7 +183,7 @@ return_mapping_edge(Matrix3r &stresses, Matrixr &eps_e, Real &acc_eps_p,
     Phi_edge(1) =
         sigma_2 - 2. * cohesion_approx * cfa - a * dgamma(1) - b * dgamma(0);
 
-  } while (abs(Phi_edge(0)) + abs(Phi_edge(1)) > 1.e-3);
+  } while (abs(Phi_edge(0)) + abs(Phi_edge(1)) > 1.e-7);
 
   Vector3r pstress_curr = Vector3r::Zero();
 
@@ -235,16 +235,17 @@ return_mapping_edge(Matrix3r &stresses, Matrixr &eps_e, Real &acc_eps_p,
     Matrix3r s_next = stresses - p_next * Matrix3r::Identity();
 
     // updated elastic strain
-    eps_e =
-        s_next * 1. / (2. * G) + p_next * 1. / (3. * K) * Matrix3r::Identity();
+    eps_e = s_next.block(0, 0, DIM, DIM) * 1. / (2. * G) +
+            p_next * 1. / (3. * K) * Matrixr::Identity();
 
     // hardening parameters
     acc_eps_p = acc_eps_p_next;
 
     return true;
   }
-  printf("do not pass validity check pstress_curr %f %f %f is_right_edge %d \n",
-         pstress_curr(0), pstress_curr(1), pstress_curr(2), is_right_edge);
+  printf(
+      "do not pass validity check pstress_curr %f %f %f is_right_edge %d \n ",
+      pstress_curr(0), pstress_curr(1), pstress_curr(2), is_right_edge);
   // exit(1);
   return false;
 }
@@ -291,7 +292,7 @@ return_mapping_apex(Matrix3r &stresses, Matrixr &eps_e, Real &acc_eps_p,
 
   stresses = p_next * Matrix3r::Identity();
   // updated elastic strain
-  eps_e = p_next * 1. / (3. * K) * Matrix3r::Identity();
+  eps_e = p_next * 1. / (3. * K) * Matrixr::Identity();
 
   // hardening parameters
   acc_eps_p = acc_eps_p_next;
@@ -319,13 +320,12 @@ __device__ __host__ inline void update_mohrcoulomb(
 
   const Matrixr vel_grad = particles_velocity_gradient_gpu[tid];
 
-  Matrixr F = particles_F_gpu[tid]; // deformation gradient
+  // Matrixr F = particles_F_gpu[tid]; // deformation gradient
+  // const Matrixr eps_curr = 0.5 * (F.transpose() + F) - Matrixr::Identity();
 
   // (total strain current step) infinitesimal strain assumptions [1]
   const Matrixr deps_curr =
       0.5 * (vel_grad + vel_grad.transpose()) * dt; // pseudo strain rate
-
-  const Matrixr eps_curr = 0.5 * (F.transpose() + F) - Matrixr::Identity();
 
   // elastic strain (previous step)
   const Matrixr eps_e_prev = particles_eps_e_gpu[tid];
@@ -338,29 +338,35 @@ __device__ __host__ inline void update_mohrcoulomb(
                                     // step)
 
   // volumetric strain eq (3.90) and hydrostatic stress eq (7.82) [2]
-  const Real eps_e_vol_tr = eps_e_prev.trace();
+  const Real eps_e_vol_tr = eps_e_tr.trace();
+
   const Real p_tr = K * eps_e_vol_tr;
 
   // deviatoric strain eq (3.114) and stress (7.82) [2]
   const Matrixr eps_e_dev_tr =
       eps_e_tr - (1 / 3.) * eps_e_vol_tr * Matrixr::Identity();
+
   const Matrixr s_tr = 2. * G * eps_e_dev_tr;
 
   // isotropic linear hardening eq (6.170) [2]
+  // TODO call it initial cohesion
   const Real cohesion_tr = cohesion + H * acc_eps_p_tr;
 
-  const Matrixr sigma_tr = s_tr + p_tr * Matrixr::Identity();
+  Matrix3r sigma_tr = Matrix3r::Zero();
+  sigma_tr.block(0, 0, DIM, DIM) = s_tr;
+  sigma_tr += p_tr * Matrix3r::Identity();
 
   // Get eigen values using spectral decomposition
-  Eigen::SelfAdjointEigenSolver<Matrixr> spectral_decomp;
+  Eigen::SelfAdjointEigenSolver<Matrix3r> spectral_decomp;
   spectral_decomp.computeDirect(sigma_tr);
 
   // trail principal stresses
-  Vectorr pstress_tr = spectral_decomp.eigenvalues();
+  Vector3r pstress_tr = spectral_decomp.eigenvalues();
 
-  pstress_tr = pstress_tr.reverse().eval(); // SelfAdjoint sorts from smallest
-                                            // to largest, were interested in
-                                            // the opposite
+  // SelfAdjoint sorts from smallest
+  // to largest, we want largest to
+  // smallest
+  pstress_tr = pstress_tr.reverse().eval();
 
   const Real sfa = sin(fric_angle);
   const Real cfa = cos(fric_angle);
@@ -399,23 +405,30 @@ __device__ __host__ inline void update_mohrcoulomb(
   }
   // 2. Check if stress lies on either left or right edge & update
 
-  // check if stress lies on right edge
-  const Real right_extent = (1. - sda) * pstress_tr(0) +
-                            (1. + sda) * pstress_tr(1) - 2. * pstress_tr(2);
+  // // check if stress lies on right edge
+  // const Real right_extent = (1. - sda) * pstress_tr(0) +
+  //                           (1. + sda) * pstress_tr(1) - 2. * pstress_tr(2);
 
-  bool is_right_edge = right_extent > 0;
+  // bool is_right_edge = right_extent > 0;
 
-  const bool is_edge = return_mapping_edge(
+  const bool is_right_edge = return_mapping_edge(
       particles_stresses_gpu[tid], particles_eps_e_gpu[tid],
       particles_acc_eps_p_gpu[tid], principal_dir, cohesion_tr, acc_eps_p_tr,
-      pstress_tr, K, G, sda, sfa, cda, cfa, a, H, cohesion, is_right_edge);
+      pstress_tr, K, G, sda, sfa, cda, cfa, a, H, cohesion, true);
 
-  if (is_edge) {
+  if (is_right_edge) {
     return;
   }
-  printf("apex \n");
+
+  const bool is_left_edge = return_mapping_edge(
+      particles_stresses_gpu[tid], particles_eps_e_gpu[tid],
+      particles_acc_eps_p_gpu[tid], principal_dir, cohesion_tr, acc_eps_p_tr,
+      pstress_tr, K, G, sda, sfa, cda, cfa, a, H, cohesion, false);
+
+  if (is_left_edge) {
+    return;
+  }
   return_mapping_apex(particles_stresses_gpu[tid], particles_eps_e_gpu[tid],
                       particles_acc_eps_p_gpu[tid], Phi_tr, acc_eps_p_tr, p_tr,
                       K, G, sda, sfa, cda, cfa, H, cohesion);
 }
-#endif
