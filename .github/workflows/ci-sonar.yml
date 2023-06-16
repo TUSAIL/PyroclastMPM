@@ -40,13 +40,6 @@ jobs:
           poetry lock --no-update
           poetry install --without plot
 
-      - name: Build
-        run: |
-          mkdir build
-          cd build
-          cmake ../ -DBUILD_CUDA=off
-          make -j4
-
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Run build-wrapper
