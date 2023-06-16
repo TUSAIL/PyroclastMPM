@@ -84,7 +84,7 @@ void set_vtk_points(cpu_array<Vectorr> input,
 template <typename T>
 void set_vtk_pointdata(cpu_array<T> input,
                        vtkSmartPointer<vtkPolyData> &polydata,
-                       const std::string pointdata_name,
+                       const std::string &pointdata_name,
                        cpu_array<bool> mask = {}, bool use_mask = false);
 
 /**
@@ -95,7 +95,7 @@ void set_vtk_pointdata(cpu_array<T> input,
  * @param output_type output type (VTK, OBJ, GLTF,etc.)
  */
 void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
-                        const std::string filename,
-                        OutputType output_type = VTK);
+                        const std::string &filename,
+                        const std::string &output_type = "vtk");
 
 } // namespace pyroclastmpm

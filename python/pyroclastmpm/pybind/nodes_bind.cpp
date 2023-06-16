@@ -36,9 +36,9 @@ namespace pyroclastmpm {
 
 void nodes_module(const py::module &m) {
   py::class_<NodesContainer>(m, "NodesContainer")
-      .def(py::init<Vectorr, Vectorr, Real, std::vector<OutputType>>(),
-           py::arg("node_start"), py::arg("node_end"), py::arg("node_spacing"),
-           py::arg("output_formats") = std::vector<OutputType>())
+      .def(py::init<Vectorr, Vectorr, Real>(), py::arg("node_start"),
+           py::arg("node_end"), py::arg("node_spacing"))
+      .def("set_output_formats", &NodesContainer::set_output_formats)
       .def("give_coords", &NodesContainer::give_node_coords_stl)
       .def_readonly("node_start", &NodesContainer::node_start)
       .def_readonly("node_end", &NodesContainer::node_end)

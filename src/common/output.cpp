@@ -45,8 +45,6 @@ namespace pyroclastmpm {
  */
 extern const char output_directory_cpu[256];
 
-extern const OutputType output_type_cpu;
-
 extern const int global_step_cpu;
 
 extern const Real dt_cpu;
@@ -96,7 +94,7 @@ void set_vtk_points(cpu_array<Vectorr> input,
 template <typename T>
 void set_vtk_pointdata(cpu_array<T> input,
                        vtkSmartPointer<vtkPolyData> &polydata,
-                       const std::string pointdata_name, cpu_array<bool> mask,
+                       const std::string &pointdata_name, cpu_array<bool> mask,
                        bool use_mask) {
 
   vtkSmartPointer<vtkDoubleArray> pointdata =
@@ -104,7 +102,7 @@ void set_vtk_pointdata(cpu_array<T> input,
 
   if constexpr (std::is_same_v<T, Matrixr> || std::is_same_v<T, Vectorr> ||
                 std::is_same_v<T, Matrix3r>) {
-    pointdata->SetNumberOfComponents(input[0].size());
+    pointdata->SetNumberOfComponents(static_cast<int>(input[0].size()));
   } else {
 
     pointdata->SetNumberOfComponents(1);
@@ -113,10 +111,8 @@ void set_vtk_pointdata(cpu_array<T> input,
   pointdata->SetName(pointdata_name.c_str());
 
   for (int id = 0; id < input.size(); id++) {
-    if (use_mask) {
-      if (!mask[id]) {
-        continue;
-      }
+    if (use_mask && !mask[id]) {
+      continue;
     }
     if constexpr (std::is_same_v<T, Matrixr> || std::is_same_v<T, Vectorr> ||
                   std::is_same_v<T, Matrix3r>) {
@@ -138,7 +134,8 @@ void set_vtk_pointdata(cpu_array<T> input,
  * @param output_type output type (VTK, GTFL, OBJ, CSV, HDF5)
  */
 void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
-                        const std::string filestem, OutputType output_type)
+                        const std::string &filestem,
+                        const std::string &output_type)
 
 {
 
@@ -154,7 +151,7 @@ void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
   std::string filename =
       output_directory + "/" + filestem + std::to_string(global_step_cpu);
 
-  if (output_type == VTK) {
+  if (output_type == "vtk") {
     filename += ".vtp";
 
     vtkSmartPointer<vtkXMLPolyDataWriter> writer =
@@ -162,7 +159,7 @@ void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
     writer->SetFileName(filename.c_str());
     writer->SetInputData(polydata);
     writer->Write();
-  } else if (output_type == GTFL) {
+  } else if (output_type == "gtfl") {
     filename += ".gtfl";
     vtkSmartPointer<vtkMultiBlockDataSet> multiblock =
         vtkSmartPointer<vtkMultiBlockDataSet>::New();
@@ -173,13 +170,13 @@ void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
     writer->SetFileName(filename.c_str());
     writer->SetInputData(multiblock);
     writer->Write();
-  } else if (output_type == OBJ) {
+  } else if (output_type == "obj") {
     filename += ".obj";
     vtkOBJWriter *writer = vtkOBJWriter::New();
     writer->SetFileName(filename.c_str());
     writer->SetInputData(polydata);
     writer->Write();
-  } else if (output_type == CSV) {
+  } else if (output_type == "csv") {
     vtkSmartPointer<vtkDataObjectToTable> toTable =
         vtkSmartPointer<vtkDataObjectToTable>::New();
     toTable->SetInputData(polydata);
@@ -200,32 +197,32 @@ void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
 // Explicit template instantiation
 template void set_vtk_pointdata<bool>(cpu_array<bool> input,
                                       vtkSmartPointer<vtkPolyData> &polydata,
-                                      const std::string pointdata_name,
+                                      const std::string &pointdata_name,
                                       cpu_array<bool> mask, bool use_mask);
 
 template void set_vtk_pointdata<uint8_t>(cpu_array<uint8_t> input,
                                          vtkSmartPointer<vtkPolyData> &polydata,
-                                         const std::string pointdata_name,
+                                         const std::string &pointdata_name,
                                          cpu_array<bool> mask, bool use_mask);
 
 template void set_vtk_pointdata<int>(cpu_array<int> input,
                                      vtkSmartPointer<vtkPolyData> &polydata,
-                                     const std::string pointdata_name,
+                                     const std::string &pointdata_name,
                                      cpu_array<bool> mask, bool use_mask);
 
 template void set_vtk_pointdata<Real>(cpu_array<Real> input,
                                       vtkSmartPointer<vtkPolyData> &polydata,
-                                      const std::string pointdata_name,
+                                      const std::string &pointdata_name,
                                       cpu_array<bool> mask, bool use_mask);
 
 template void set_vtk_pointdata<Vectorr>(cpu_array<Vectorr> input,
                                          vtkSmartPointer<vtkPolyData> &polydata,
-                                         const std::string pointdata_name,
+                                         const std::string &pointdata_name,
                                          cpu_array<bool> mask, bool use_mask);
 #if DIM != 1
 template void set_vtk_pointdata<Matrixr>(cpu_array<Matrixr> input,
                                          vtkSmartPointer<vtkPolyData> &polydata,
-                                         const std::string pointdata_name,
+                                         const std::string &pointdata_name,
                                          cpu_array<bool> mask, bool use_mask);
 
 #endif
@@ -233,7 +230,7 @@ template void set_vtk_pointdata<Matrixr>(cpu_array<Matrixr> input,
 #if DIM != 3
 template void set_vtk_pointdata<Matrix3r>(
     cpu_array<Matrix3r> input, vtkSmartPointer<vtkPolyData> &polydata,
-    const std::string pointdata_name, cpu_array<bool> mask, bool use_mask);
+    const std::string &pointdata_name, cpu_array<bool> mask, bool use_mask);
 #endif
 
 } // namespace pyroclastmpm

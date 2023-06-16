@@ -54,12 +54,12 @@ void boundaryconditions_module(const py::module &m) {
 
   py::class_<RigidBodyLevelSet>(m, "RigidBodyLevelSet")
       .def(py::init<Vectorr, std::vector<int>, std::vector<Vectorr>,
-                    std::vector<Vectorr>, std::vector<OutputType>>(),
+                    std::vector<Vectorr>>(),
            py::arg("COM") = Vectorr::Zero(),
            py::arg("frames") = std::vector<int>(),
            py::arg("locations") = std::vector<Vectorr>(),
-           py::arg("rotations") = std::vector<Vectorr>(),
-           py::arg("output_formats") = std::vector<OutputType>());
+           py::arg("rotations") = std::vector<Vectorr>())
+      .def("set_output_formats", &RigidBodyLevelSet::set_output_formats);
 
   py::class_<PlanarDomain>(m, "PlanarDomain")
       .def(py::init<Vectorr, Vectorr>(),

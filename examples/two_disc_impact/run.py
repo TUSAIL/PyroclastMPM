@@ -53,8 +53,9 @@ nodes = NodesContainer(
     node_start=config["nodes"]["node_start"],
     node_end=config["nodes"]["node_end"],
     node_spacing=config["nodes"]["node_spacing"],
-    output_formats=config["nodes"]["output_formats"],
 )
+
+nodes.set_output_formats(config["nodes"]["output_formats"])
 
 # 3. Create particles using the circles module (in same folder)
 circle_centers = np.array(
@@ -94,11 +95,9 @@ color2 = np.ones(len(circles[1]))
 colors = np.concatenate([color1, color2]).astype(int)
 
 particles = ParticlesContainer(
-    positions=positions,
-    velocities=velocities,
-    colors=colors,
-    output_formats=config["particles"]["output_formats"],
+    positions=positions, velocities=velocities, colors=colors
 )
+particles.set_output_formats(config["particles"]["output_formats"])
 
 # 4. Create material
 material = LinearElastic(

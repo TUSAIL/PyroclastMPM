@@ -91,7 +91,7 @@ public:
 
   void set_spawner(int spawnRate, int spawnVolume);
 
-  void set_output_formats(const cpu_array<OutputType> &_output_formats);
+  void set_output_formats(const std::vector<std::string> &_output_formats);
 
   /*! @brief particles' stresses, we always store 3x3 matrix for stresses
    */
@@ -144,7 +144,7 @@ public:
   GPULaunchConfig launch_config;
 #endif
 
-  cpu_array<OutputType> output_formats;
+  std::vector<std::string> output_formats;
 
   /*! @brief Total Number of particles */
   int num_particles = 0;

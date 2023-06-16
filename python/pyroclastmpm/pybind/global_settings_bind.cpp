@@ -43,13 +43,6 @@ void global_settings_module(py::module &m) {
       .value("CubicShapeFunction", CubicShapeFunction)
       .export_values();
 
-  py::enum_<OutputType>(m, "OutputType")
-      .value("VTK", VTK)
-      .value("OBJ", OBJ)
-      .value("CSV", CSV)
-      .value("GTFL", GTFL)
-      .export_values();
-
   m.def("set_global_shapefunction", &set_global_shapefunction,
         "Set the global shape function based on a dimension");
   m.def("set_global_timestep", &set_global_dt, "Set the global timestep");

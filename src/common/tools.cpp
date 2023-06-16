@@ -35,7 +35,7 @@ namespace pyroclastmpm {
  * @return std::vector<Vector3r>
  */
 std::vector<Vector3r>
-uniform_random_points_in_volume(const std::string stl_filename,
+uniform_random_points_in_volume(const std::string &stl_filename,
                                 const int num_points) {
   vtkNew<vtkSTLReader> reader;
   reader->SetFileName(stl_filename.c_str());
@@ -50,9 +50,12 @@ uniform_random_points_in_volume(const std::string stl_filename,
 
   geometry = normals->GetOutput();
 
-  std::mt19937 mt(4355412); // Standard mersenne_twister_engine
-  double bounds[6];
-  geometry->GetBounds(bounds);
+  std::mt19937 mt(4355412);
+
+  std::array<Real, 6> bounds;
+
+  std::copy(bounds.begin(), bounds.end(), geometry->GetBounds());
+
   std::cout << "Bounds: " << bounds[0] << ", " << bounds[1] << " " << bounds[2]
             << ", " << bounds[3] << " " << bounds[4] << ", " << bounds[5]
             << std::endl;
@@ -66,11 +69,11 @@ uniform_random_points_in_volume(const std::string stl_filename,
 
   points->SetNumberOfPoints(num_points);
   for (auto i = 0; i < num_points; ++i) {
-    double point[3];
-    point[0] = distributionX(mt);
-    point[1] = distributionY(mt);
-    point[2] = distributionZ(mt);
-    points->SetPoint(i, point);
+    std::array<Real, 3> point;
+    point[0] = static_cast<Real>(distributionX(mt));
+    point[1] = static_cast<Real>(distributionY(mt));
+    point[2] = static_cast<Real>(distributionZ(mt));
+    points->SetPoint(i, point[0], point[1], point[2]);
   }
 
   vtkNew<vtkExtractEnclosedPoints> extract;
@@ -82,18 +85,19 @@ uniform_random_points_in_volume(const std::string stl_filename,
 
   std::vector<Vector3r> positions_cpu;
   positions_cpu.resize(num_points);
-  double p[3];
+
+  std::array<Real, 3> point;
   for (int id = 0; id < num_points; id++) {
-    extract->GetOutput()->GetPoint(id, p);
-    positions_cpu[id][0] = p[0];
-    positions_cpu[id][1] = p[1];
-    positions_cpu[id][2] = p[2];
+    std::copy(point.begin(), point.end(), extract->GetOutput()->GetPoint(id));
+    positions_cpu[id][0] = point[0];
+    positions_cpu[id][1] = point[1];
+    positions_cpu[id][2] = point[2];
   }
 
   return positions_cpu;
 }
 
-std::vector<Vector3r> grid_points_in_volume(const std::string stl_filename,
+std::vector<Vector3r> grid_points_in_volume(const std::string &stl_filename,
                                             const Real cell_size,
                                             const int point_per_cell) {
   vtkNew<vtkSTLReader> reader;
@@ -109,20 +113,24 @@ std::vector<Vector3r> grid_points_in_volume(const std::string stl_filename,
 
   geometry = normals->GetOutput();
 
-  std::mt19937 mt(4355412); // Standard mersenne_twister_engine
-  double bounds[6];         // xmin,xmax,ymin,ymax,zmin,zmax
-  geometry->GetBounds(bounds);
+  std::mt19937 mt(4355412);
+
+  // xmin,xmax,ymin,ymax,zmin,zmax
+  std::array<Real, 6> bounds;
+
+  std::copy(bounds.begin(), bounds.end(), geometry->GetBounds());
+
   std::cout << "Bounds: " << bounds[0] << ", " << bounds[1] << " " << bounds[2]
             << ", " << bounds[3] << " " << bounds[4] << ", " << bounds[5]
             << std::endl;
 
-  int grid_sizes[3];
+  std::array<int, 3> grid_sizes;
 
-  Real gap = cell_size / point_per_cell;
+  Real gap = cell_size / static_cast<Real>(point_per_cell);
 
-  grid_sizes[0] = abs(bounds[1] - bounds[0]) / gap + 1.;
-  grid_sizes[1] = abs(bounds[3] - bounds[2]) / gap + 1.;
-  grid_sizes[2] = abs(bounds[5] - bounds[4]) / gap + 1.;
+  grid_sizes[0] = (int)floor(abs(bounds[1] - bounds[0]) / gap + 1.0);
+  grid_sizes[1] = (int)floor(abs(bounds[3] - bounds[2]) / gap + 1.0);
+  grid_sizes[2] = (int)floor(abs(bounds[5] - bounds[4]) / gap + 1.0);
 
   vtkNew<vtkPolyData> pointsPolyData;
   vtkNew<vtkPoints> points;
@@ -132,15 +140,16 @@ std::vector<Vector3r> grid_points_in_volume(const std::string stl_filename,
   for (auto xi = 0; xi < grid_sizes[0]; ++xi) {
     for (auto yi = 0; yi < grid_sizes[1]; ++yi) {
       for (auto zi = 0; zi < grid_sizes[2]; ++zi) {
-        double point[3];
-        point[0] = bounds[0] + 0.5 * gap + xi * gap;
-        point[1] = bounds[2] + 0.5 * gap + yi * gap;
-        point[2] = bounds[4] + 0.5 * gap + zi * gap;
+
+        std::array<Real, 3> point;
+        point[0] = bounds[0] + ((Real)0.5) * gap + ((Real)xi) * gap;
+        point[1] = bounds[2] + ((Real)0.5) * gap + ((Real)yi) * gap;
+        point[2] = bounds[4] + ((Real)0.5) * gap + ((Real)zi) * gap;
 
         const unsigned int index =
             xi + yi * grid_sizes[0] + zi * grid_sizes[0] * grid_sizes[1];
 
-        points->SetPoint(index, point);
+        points->SetPoint(index, point[0], point[1], point[2]);
       }
     }
   }
@@ -149,24 +158,25 @@ std::vector<Vector3r> grid_points_in_volume(const std::string stl_filename,
   extract->SetSurfaceData(geometry);
   extract->SetInputData(pointsPolyData);
   extract->SetTolerance(.00000000001);
-  // extract->CheckSurfaceOn();
   extract->Update();
 
-  int num_points = extract->GetOutput()->GetNumberOfPoints();
+  auto num_points = (int)extract->GetOutput()->GetNumberOfPoints();
+
   std::vector<Vector3r> positions_cpu;
   positions_cpu.resize(num_points);
-  double p[3];
+
+  std::array<Real, 3> point;
   for (int id = 0; id < num_points; id++) {
-    extract->GetOutput()->GetPoint(id, p);
-    positions_cpu[id][0] = p[0];
-    positions_cpu[id][1] = p[1];
-    positions_cpu[id][2] = p[2];
+    std::copy(point.begin(), point.end(), extract->GetOutput()->GetPoint(id));
+    positions_cpu[id][0] = point[0];
+    positions_cpu[id][1] = point[1];
+    positions_cpu[id][2] = point[2];
   }
   return positions_cpu;
 }
 
 std::tuple<std::vector<Vector3r>, std::vector<Vector3r>>
-grid_points_on_surface(const std::string stl_filename, const Real cell_size,
+grid_points_on_surface(const std::string &stl_filename, const Real cell_size,
                        const int point_per_cell) {
   vtkNew<vtkSTLReader> reader;
   reader->SetFileName(stl_filename.c_str());
@@ -178,7 +188,7 @@ grid_points_on_surface(const std::string stl_filename, const Real cell_size,
 
   vtkNew<vtkPolyDataPointSampler> sampler;
 
-  Real gap = cell_size / point_per_cell;
+  Real gap = cell_size / static_cast<Real>(point_per_cell);
 
   sampler->SetInputConnection(normals->GetOutputPort());
   sampler->SetPointGenerationModeToRegular();
@@ -186,16 +196,17 @@ grid_points_on_surface(const std::string stl_filename, const Real cell_size,
   sampler->SetDistance(gap);
   sampler->Update();
 
-  int num_points = sampler->GetOutput()->GetNumberOfPoints();
+  auto num_points = (int)sampler->GetOutput()->GetNumberOfPoints();
   std::vector<Vector3r> positions_cpu;
   positions_cpu.resize(num_points);
-  double p[3];
 
+  std::array<Real, 3> point;
   for (int id = 0; id < num_points; id++) {
-    sampler->GetOutput()->GetPoint(id, p);
-    positions_cpu[id][0] = p[0];
-    positions_cpu[id][1] = p[1];
-    positions_cpu[id][2] = p[2];
+    std::copy(point.begin(), point.end(), sampler->GetOutput()->GetPoint(id));
+    ;
+    positions_cpu[id][0] = point[0];
+    positions_cpu[id][1] = point[1];
+    positions_cpu[id][2] = point[2];
   }
 
   // TODO make normals
@@ -203,29 +214,31 @@ grid_points_on_surface(const std::string stl_filename, const Real cell_size,
   return std::make_tuple(positions_cpu, positions_cpu);
 }
 
-std::tuple<Vector3r, Vector3r> get_bounds(const std::string stl_filename) {
+std::tuple<Vector3r, Vector3r> get_bounds(const std::string &stl_filename) {
   vtkNew<vtkSTLReader> reader;
   reader->SetFileName(stl_filename.c_str());
   reader->Update();
 
-  double bounds[6]; // xmin,xmax,ymin,ymax,zmin,zmax
-  reader->GetOutput()->GetBounds(bounds);
+  // xmin,xmax,ymin,ymax,zmin,zmax
+  std::array<Real, 6> bounds;
 
-  Vector3r bound_start = {(float)bounds[0], (float)bounds[2], (float)bounds[4]};
+  std::copy(bounds.begin(), bounds.end(), reader->GetOutput()->GetBounds());
 
-  Vector3r bound_end = {(float)bounds[1], (float)bounds[3], (float)bounds[5]};
+  Vector3r bound_start = {bounds[0], bounds[2], bounds[4]};
+
+  Vector3r bound_end = {bounds[1], bounds[3], bounds[5]};
 
   return std::make_tuple(bound_start, bound_end);
 }
 
+#ifdef CUDA_ENABLED
 void set_device(int device_id) {
 
-#ifdef CUDA_ENABLED
   cudaSetDevice(device_id);
 
   gpuErrchk(cudaDeviceSynchronize());
+}
 
 #endif
-}
 
 } // namespace pyroclastmpm

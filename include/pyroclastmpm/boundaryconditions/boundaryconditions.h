@@ -91,11 +91,11 @@ struct BoundaryCondition {
 
   // VARIABLES
 
-  /*!
-   * @brief Enum of type of boundary condition (NodeBoundaryCondition,
-   * ParticleBoundaryCondition)
-   */
-  BCType type;
+  //   /*!
+  //    * @brief Enum of type of boundary condition (NodeBoundaryCondition,
+  //    * ParticleBoundaryCondition)
+  //    */
+  //   BCType type;
 
   /**
    * @brief Is the boundary condition active or not

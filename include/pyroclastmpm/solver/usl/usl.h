@@ -51,11 +51,12 @@ public:
    * @param _boundaryconditions a list of boundary conditions to be applied
    * @param _materials a list of materials to be applied
    */
-  explicit USL(ParticlesContainer _particles, NodesContainer _nodes,
-               cpu_array<MaterialType> _materials = cpu_array<MaterialType>(),
-               cpu_array<BoundaryConditionType> _boundaryconditions =
-                   cpu_array<BoundaryConditionType>(),
-               Real _alpha = 0.99);
+  explicit USL(
+      const ParticlesContainer &_particles, const NodesContainer &_nodes,
+      const cpu_array<MaterialType> &_materials = cpu_array<MaterialType>(),
+      const cpu_array<BoundaryConditionType> &_boundaryconditions =
+          cpu_array<BoundaryConditionType>(),
+      Real _alpha = (Real)0.99);
 
   // FUNCTIONS
   /**

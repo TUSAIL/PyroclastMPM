@@ -23,6 +23,18 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "pyroclastmpm/common/types_common.h"
+
+namespace pyroclastmpm {
+
+#ifdef CUDA_ENABLED
+extern Real __constant__ dt_gpu;
+#else
+extern const Real dt_cpu;
+#endif
+
+extern const SFType shape_function_cpu;
+
 __device__ __host__ inline void
 integrate_nodes(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
                 const Vectorr *nodes_forces_external_gpu,
@@ -68,3 +80,5 @@ __global__ void KERNEL_INTEGRATE(Vectorr *nodes_moments_nt_gpu,
 }
 
 #endif
+
+} // namespace pyroclastmpm

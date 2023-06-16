@@ -36,7 +36,9 @@ particles = pv.read("./output/particles0.vtp")
 
 scalars = calc_ke(particles)
 
-particles.point_data.set_scalars(scalars, name="Kinetic Energy")
+scalar_name = "Kinetic Energy"
+
+particles.point_data.set_scalars(scalars, name=scalar_name)
 
 nodes = pv.read("./output/nodes0.vtp")
 
@@ -49,7 +51,7 @@ pl.add_mesh(
     particles,
     render_points_as_spheres=True,
     point_size=15,
-    scalars="Kinetic Energy",
+    scalars=scalar_name,
     cmap="hot",
     pbr=False,
     lighting=True,
@@ -76,7 +78,7 @@ for i in range(output_steps, total_steps, output_steps):
     particles_updated = pv.read(f"./output/particles{i}.vtp")
     scalars = calc_ke(particles)
     particles.copy_from(particles_updated)
-    particles.point_data.set_scalars(scalars, name="Kinetic Energy")
+    particles.point_data.set_scalars(scalars, name=scalar_name)
     time.append(i * config["global"]["dt"])
     KE.append(scalars.sum())
     pl.render()

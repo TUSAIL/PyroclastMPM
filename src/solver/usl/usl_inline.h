@@ -23,6 +23,22 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "pyroclastmpm/common/types_common.h"
+
+namespace pyroclastmpm {
+
+#ifdef CUDA_ENABLED
+extern __constant__ Real dt_gpu;
+extern __constant__ int num_surround_nodes_gpu;
+extern __constant__ int g2p_window_gpu[64][3];
+extern __constant__ int p2g_window_gpu[64][3];
+#else
+extern const Real dt_cpu;
+extern const int num_surround_nodes_cpu;
+extern const int g2p_window_cpu[64][3];
+extern const int p2g_window_cpu[64][3];
+#endif
+
 __device__ __host__ void inline usl_p2g_kernel(
     Vectorr *nodes_moments_gpu, Vectorr *nodes_forces_internal_gpu,
     Real *nodes_masses_gpu, const Vectori *node_ids_gpu,
@@ -250,3 +266,5 @@ __global__ void KERNEL_USL_G2P(
                  nodes_moments_nt_gpu, nodes_masses_gpu, num_cells, alpha, tid);
 }
 #endif
+
+} // namespace pyroclastmpm

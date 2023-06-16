@@ -51,8 +51,8 @@ py::tuple pickle_save_particles(const ParticlesContainer &particles) {
                         particles.masses_gpu.end()), // 5
       std::vector<Real>(particles.volumes_gpu.begin(),
                         particles.volumes_gpu.end()), // 6
-      std::vector<OutputType>(particles.output_formats.begin(),
-                              particles.output_formats.end()), // 7
+      std::vector<std::string>(particles.output_formats.begin(),
+                               particles.output_formats.end()), // 7
       std::vector<Matrixr>(particles.F_gpu.begin(), particles.F_gpu.end()),
       std::vector<Matrixr>(particles.velocity_gradient_gpu.begin(),
                            particles.velocity_gradient_gpu.end()),
@@ -70,7 +70,7 @@ ParticlesContainer pickle_load_particles(py::tuple t) {
   particles.stresses_gpu = t[4].cast<std::vector<Matrix3r>>();
   particles.masses_gpu = t[5].cast<std::vector<Real>>();
   particles.volumes_gpu = t[6].cast<std::vector<Real>>();
-  particles.output_formats = t[7].cast<std::vector<OutputType>>();
+  particles.output_formats = t[7].cast<std::vector<std::string>>();
   particles.F_gpu = t[8].cast<std::vector<Matrixr>>();
   particles.velocity_gradient_gpu = t[9].cast<std::vector<Matrixr>>();
   particles.dpsi_gpu = t[10].cast<std::vector<Vectorr>>();
@@ -188,17 +188,6 @@ void particles_module(const py::module &m) {
           [](ParticlesContainer &self, const std::vector<int> &value) {
             cpu_array<int> host_val = value;
             self.colors_gpu = host_val;
-          } // setter
-          ) // COLORS
-      .def_property(
-          "output_formats",
-          [](ParticlesContainer &self) {
-            return std::vector<OutputType>(self.output_formats.begin(),
-                                           self.output_formats.end());
-          }, // getter
-          [](ParticlesContainer &self, const std::vector<OutputType> &value) {
-            cpu_array<OutputType> host_val = value;
-            self.output_formats = host_val;
           } // setter
           ) // COLORS
       .def(py::pickle(

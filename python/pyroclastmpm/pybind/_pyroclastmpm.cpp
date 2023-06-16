@@ -31,11 +31,11 @@ namespace py = pybind11;
 
 namespace pyroclastmpm {
 
-void particles_module(py::module &);
-void nodes_module(py::module &);
-void boundaryconditions_module(py::module &);
-void materials_module(py::module &);
-void solver_module(py::module &);
+void particles_module(const py::module &);
+void nodes_module(const py::module &);
+void boundaryconditions_module(const py::module &);
+void materials_module(const py::module &);
+void solver_module(const py::module &);
 void global_settings_module(py::module &);
 void tools_module(py::module &);
 

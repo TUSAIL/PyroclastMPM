@@ -49,8 +49,10 @@ void tools_module(py::module &m) {
   m.def("get_bounds", &get_bounds,
         "Set the global dimension of the simulation");
 
+#ifdef CUDA_ENABLED
   m.def("set_device", &set_device,
         "Set the global dimension of the simulation");
+#endif
 }
 
 } // namespace pyroclastmpm

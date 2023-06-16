@@ -45,11 +45,9 @@ struct RigidBodyLevelSet : BoundaryCondition {
   RigidBodyLevelSet(const Vectorr _COM = Vectorr::Zero(),
                     const cpu_array<int> _frames = {},
                     const cpu_array<Vectorr> _locations = {},
-                    const cpu_array<Vectorr> _rotations = {},
-                    const cpu_array<OutputType> _output_formats = {}
+                    const cpu_array<Vectorr> _rotations = {});
 
-  );
-  ~RigidBodyLevelSet(){};
+  void set_output_formats(const std::vector<std::string> &_output_formats);
 
   void initialize(NodesContainer &nodes_ref, ParticlesContainer &particles_ref);
 
@@ -104,7 +102,7 @@ struct RigidBodyLevelSet : BoundaryCondition {
   cpu_array<Vectorr> rotations_cpu;
 
   int current_frame = 0;
-  cpu_array<OutputType> output_formats;
+  std::vector<std::string> output_formats;
 
   Vectorr euler_angles;
   Vectorr angular_velocities;

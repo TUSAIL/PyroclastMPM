@@ -24,27 +24,16 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include "pyroclastmpm/nodes/nodes.h"
+#include "nodes_inline.h"
 
 namespace pyroclastmpm {
 
-#ifdef CUDA_ENABLED
-extern Real __constant__ dt_gpu;
-#else
-extern Real dt_cpu;
-#endif
-
-extern SFType shape_function_cpu;
-
-#include "nodes_inline.h"
-
 NodesContainer::NodesContainer(const Vectorr _node_start,
                                const Vectorr _node_end,
-                               const Real _node_spacing,
-                               const cpu_array<OutputType> _output_formats)
-    : node_start(_node_start), node_end(_node_end), node_spacing(_node_spacing),
-      output_formats(_output_formats) {
-  inv_node_spacing = 1.0 / node_spacing;
-  num_nodes_total = 1;
+                               const Real _node_spacing)
+    : node_start(_node_start), node_end(_node_end),
+      node_spacing(_node_spacing) {
+  inv_node_spacing = ((Real)1.0) / node_spacing;
   num_nodes = Vectori::Ones();
 
   for (int axis = 0; axis < DIM; axis++) {
@@ -128,6 +117,11 @@ NodesContainer::NodesContainer(const Vectorr _node_start,
 #endif
 }
 
+void NodesContainer::set_output_formats(
+    const std::vector<std::string> &_output_formats) {
+  output_formats = _output_formats;
+}
+
 void NodesContainer::reset() {
   thrust::fill(moments_gpu.begin(), moments_gpu.end(), Vectorr::Zero());
   thrust::fill(moments_nt_gpu.begin(), moments_nt_gpu.end(), Vectorr::Zero());
@@ -148,8 +142,7 @@ struct IntegrateFunctor {
     const Vectorr &forces_external = thrust::get<2>(tuple);
     const Vectorr &forces_internal = thrust::get<3>(tuple);
     const Vectorr &moments = thrust::get<4>(tuple);
-    const Real &mass = thrust::get<5>(tuple);
-    if (mass <= 0.000000001) {
+    if (const Real &mass = thrust::get<5>(tuple); mass <= 0.000000001) {
       return;
     }
     const Vectorr ftotal = forces_internal + forces_external;
@@ -182,7 +175,7 @@ void NodesContainer::integrate() {
 #endif
 }
 
-gpu_array<Vectorr> NodesContainer::give_node_coords() {
+gpu_array<Vectorr> NodesContainer::give_node_coords() const {
   gpu_array<Vectorr> node_coords_cpu;
   node_coords_cpu.resize(num_nodes_total);
   cpu_array<Vectori> node_ids_cpu = node_ids_gpu;
@@ -194,12 +187,12 @@ gpu_array<Vectorr> NodesContainer::give_node_coords() {
   return node_coords_gpu;
 }
 
-std::vector<Vectorr> NodesContainer::give_node_coords_stl() {
+std::vector<Vectorr> NodesContainer::give_node_coords_stl() const {
   gpu_array<Vectorr> node_coords_gpu = give_node_coords();
   return std::vector<Vectorr>(node_coords_gpu.begin(), node_coords_gpu.end());
 }
 
-void NodesContainer::output_vtk() {
+void NodesContainer::output_vtk() const {
 
   vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 

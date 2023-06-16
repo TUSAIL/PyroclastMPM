@@ -55,10 +55,11 @@ extern int global_step_cpu;
  * @param _boundaryconditions a list of boundary conditions to be applied
  * @param _materials a list of materials to be applied
  */
-Solver::Solver(ParticlesContainer _particles, NodesContainer _nodes,
-               cpu_array<MaterialType> _materials,
-               cpu_array<BoundaryConditionType> _boundaryconditions)
-    : particles(_particles), nodes(_nodes), materials(_materials),
+Solver::Solver(const ParticlesContainer &_particles,
+               const NodesContainer &_nodes,
+               const cpu_array<MaterialType> &_materials,
+               const cpu_array<BoundaryConditionType> &_boundaryconditions)
+    : nodes(_nodes), particles(_particles), materials(_materials),
       boundaryconditions(_boundaryconditions) {
   particles.set_spatialpartition(nodes.node_start, nodes.node_end,
                                  nodes.node_spacing);
@@ -74,7 +75,7 @@ Solver::Solver(ParticlesContainer _particles, NodesContainer _nodes,
   }
 
   particles.numColors = materials.size();
-  // particles.reorder(); // broken ? warning fails tests for instance
+  // TODO: reorder particles with particles.reorder(_)
   output();
 }
 

@@ -48,8 +48,7 @@ public:
    * @param _node_spacing cell size of the background grid
    */
   NodesContainer(const Vectorr _node_start, const Vectorr _node_end,
-                 const Real _node_spacing,
-                 const cpu_array<OutputType> _output_formats = {});
+                 const Real _node_spacing);
 
   ~NodesContainer() = default;
 
@@ -58,18 +57,20 @@ public:
 
   /** @brief Calls CUDA kernel to calculate the nodal coordinates from the hash
    * table */
-  gpu_array<Vectorr> give_node_coords();
+  gpu_array<Vectorr> give_node_coords() const;
 
   // TODO is this function needed?
   /** @brief Calls CUDA kernel to calculate the nodal coordinates from the hash
    * table. Given as an STL output */
-  std::vector<Vectorr> give_node_coords_stl();
+  std::vector<Vectorr> give_node_coords_stl() const;
 
   /** @brief integrate the nodal forces to the momentum */
   void integrate();
 
   /** @brief integrate the nodal forces to the momentum */
-  void output_vtk();
+  void output_vtk() const;
+
+  void set_output_formats(const std::vector<std::string> &_output_formats);
 
   // VARIABLES
 
@@ -107,7 +108,7 @@ public:
   Real node_spacing;
 
   /** @brief Number of nodes in the background grid Mx*My*Mz */
-  int num_nodes_total;
+  int num_nodes_total = 1;
 
   /** @brief Number of nodes on each axis */
   Vectori num_nodes;
@@ -119,7 +120,7 @@ public:
   GPULaunchConfig launch_config;
 #endif
 
-  cpu_array<OutputType> output_formats;
+  std::vector<std::string> output_formats;
 };
 
 } // namespace pyroclastmpm

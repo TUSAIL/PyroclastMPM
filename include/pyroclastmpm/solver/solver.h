@@ -82,16 +82,16 @@ public:
    * @param _materials a list of materials to be applied
    */
   explicit Solver(
-      ParticlesContainer _particles, NodesContainer _nodes,
-      cpu_array<MaterialType> _materials = cpu_array<MaterialType>(),
-      cpu_array<BoundaryConditionType> _boundaryconditions =
+      const ParticlesContainer &_particles, const NodesContainer &_nodes,
+      const cpu_array<MaterialType> &_materials = cpu_array<MaterialType>(),
+      const cpu_array<BoundaryConditionType> &_boundaryconditions =
           cpu_array<BoundaryConditionType>());
 
   /**
    * @brief Destroy the Solver object
    *
    */
-  ~Solver();
+  virtual ~Solver();
 
   /**
    * @brief Solve the main loop for n_steps

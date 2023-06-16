@@ -95,8 +95,6 @@ template <typename T> using gpu_array = thrust::host_vector<T>;
 
 template <typename T> using cpu_array = thrust::host_vector<T>;
 
-enum OutputType { VTK, OBJ, CSV, GTFL };
-
 enum SFType {
   LinearShapeFunction = 0,
   QuadraticShapeFunction = 1,

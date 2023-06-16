@@ -78,9 +78,8 @@ ParticlesContainer::ParticlesContainer(
 
   reset(); // reset needed
 }
-
 void ParticlesContainer::set_output_formats(
-    const cpu_array<OutputType> &_output_formats) {
+    const std::vector<std::string> &_output_formats) {
   output_formats = _output_formats;
 }
 

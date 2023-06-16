@@ -25,29 +25,17 @@
 
 #include "pyroclastmpm/solver/usl/usl.h"
 
-namespace pyroclastmpm {
-
-#ifdef CUDA_ENABLED
-extern __constant__ Real dt_gpu;
-extern __constant__ int num_surround_nodes_gpu;
-extern __constant__ int g2p_window_gpu[64][3];
-extern __constant__ int p2g_window_gpu[64][3];
-#else
-extern Real dt_cpu;
-extern int num_surround_nodes_cpu;
-extern int g2p_window_cpu[64][3];
-extern int p2g_window_cpu[64][3];
-#endif
-
 // include private header with kernels here to inline them
 #include "usl_inline.h"
 
-USL::USL(ParticlesContainer _particles, NodesContainer _nodes,
-         cpu_array<MaterialType> _materials,
-         cpu_array<BoundaryConditionType> _boundaryconditions, Real _alpha)
-    : Solver(_particles, _nodes, _materials, _boundaryconditions) {
-  alpha = _alpha;
-}
+namespace pyroclastmpm {
+
+USL::USL(const ParticlesContainer &_particles, const NodesContainer &_nodes,
+         const cpu_array<MaterialType> &_materials,
+         const cpu_array<BoundaryConditionType> &_boundaryconditions,
+         Real _alpha)
+    : Solver(_particles, _nodes, _materials, _boundaryconditions),
+      alpha(_alpha) {}
 
 /**
  * @brief Reset the temporary arrays for the USL solver
@@ -73,22 +61,23 @@ void USL::solve() {
   calculate_shape_function(nodes, particles);
 
   for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
-    std::visit([&](auto &arg) { arg.apply_on_particles(particles); },
+    std::visit([this](auto &arg) { arg.apply_on_particles(particles); },
                boundaryconditions[bc_id]);
   }
 
   P2G();
 
   for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
-    std::visit([&](auto &arg) { arg.apply_on_nodes_f_ext(nodes); },
+    std::visit([this](auto &arg) { arg.apply_on_nodes_f_ext(nodes); },
                boundaryconditions[bc_id]);
   }
 
   nodes.integrate();
 
   for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
-    std::visit([&](auto &arg) { arg.apply_on_nodes_moments(nodes, particles); },
-               boundaryconditions[bc_id]);
+    std::visit(
+        [this](auto &arg) { arg.apply_on_nodes_moments(nodes, particles); },
+        boundaryconditions[bc_id]);
   }
 
   G2P();
@@ -96,7 +85,7 @@ void USL::solve() {
   stress_update();
 
   for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
-    std::visit([&](auto &arg) { arg.apply_on_particles(particles); },
+    std::visit([this](auto &arg) { arg.apply_on_particles(particles); },
                boundaryconditions[bc_id]);
   }
 }
@@ -128,7 +117,7 @@ void USL::P2G() {
       nodes.inv_node_spacing, nodes.num_nodes_total);
   gpuErrchk(cudaDeviceSynchronize());
 #else
-  for (size_t ti = 0; ti < nodes.num_nodes_total; ti++) {
+  for (int ti = 0; ti < nodes.num_nodes_total; ti++) {
 
     usl_p2g_kernel(
         nodes.moments_gpu.data(), nodes.forces_internal_gpu.data(),
@@ -170,7 +159,7 @@ void USL::G2P() {
       particles.spatial.num_cells, particles.num_particles, alpha);
   gpuErrchk(cudaDeviceSynchronize());
 #else
-  for (size_t ti = 0; ti < particles.num_particles; ti++) {
+  for (int ti = 0; ti < particles.num_particles; ti++) {
     usl_g2p_kernel(particles.velocity_gradient_gpu.data(),
                    particles.F_gpu.data(), particles.velocities_gpu.data(),
                    particles.positions_gpu.data(), particles.volumes_gpu.data(),

@@ -41,10 +41,6 @@ class ParticlesContainer(MPM.ParticlesContainer):
         velocities: np.ndarray = None,
         colors: t.List[int] = None,
         is_rigid: t.List[bool] = None,
-        stresses: np.ndarray = None,
-        masses: np.ndarray = None,
-        volumes: np.ndarray = None,
-        output_formats: t.List[t.Type[MPM.OutputFormat]] = None,
     ):
         """Initialize Particles Container
 
@@ -71,39 +67,28 @@ class ParticlesContainer(MPM.ParticlesContainer):
                                     ("vtk", "csv", "obj")
                                     Defaults to None.
         """
-        if output_formats is None:
-            output_formats = []
         if colors is None:
             colors = []
         if is_rigid is None:
             is_rigid = []
         if velocities is None:
             velocities = []
-        if stresses is None:
-            stresses = []
-        if masses is None:
-            masses = []
-        if volumes is None:
-            volumes = []
-
-        out_fmt = []
-        for fmt in output_formats:
-            if fmt == "vtk":
-                out_fmt.append(MPM.VTK)
-            elif fmt == "csv":
-                out_fmt.append(MPM.CSV)
-            elif fmt == "obj":
-                out_fmt.append(MPM.OBJ)
-            else:
-                raise ValueError("Unknown output format: {}".format(fmt))
 
         super(ParticlesContainer, self).__init__(
             positions=positions,
             velocities=velocities,
             colors=colors,
             is_rigid=is_rigid,
-            stresses=stresses,
-            masses=masses,
-            volumes=volumes,
-            output_formats=out_fmt,
         )
+
+    def set_output_formats(self, output_formats: t.List[str]):
+        """_summary_
+
+        Args:
+            output_formats (t.List[str], optional): list formats to
+                            output ("vtk", "csv", "obj")
+
+        Raises:
+            ValueError: if output format is not supported
+        """
+        super(ParticlesContainer, self).set_output_formats(output_formats)

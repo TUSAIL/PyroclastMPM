@@ -48,12 +48,12 @@ extern Real dt_cpu;
 // include private header with kernels here to inline theu
 #include "rigidbodylevelset_inline.h"
 
-RigidBodyLevelSet::RigidBodyLevelSet(
-    const Vectorr _COM, const cpu_array<int> _frames,
-    const cpu_array<Vectorr> _locations, const cpu_array<Vectorr> _rotations,
-    const cpu_array<OutputType> _output_formats)
-    : output_formats(_output_formats), frames_cpu(_frames),
-      locations_cpu(_locations), rotations_cpu(_rotations) {
+RigidBodyLevelSet::RigidBodyLevelSet(const Vectorr _COM,
+                                     const cpu_array<int> _frames,
+                                     const cpu_array<Vectorr> _locations,
+                                     const cpu_array<Vectorr> _rotations)
+    : frames_cpu(_frames), locations_cpu(_locations),
+      rotations_cpu(_rotations) {
   num_frames = _frames.size();
 
   if (DIM != 3) {
@@ -86,6 +86,11 @@ void RigidBodyLevelSet::apply_on_nodes_moments(
 
   current_frame += 1;
 };
+
+void RigidBodyLevelSet::set_output_formats(
+    const std::vector<std::string> &_output_formats) {
+  output_formats = _output_formats;
+}
 
 void RigidBodyLevelSet::set_velocities(ParticlesContainer &particles_ref) {
   if (current_frame >= num_frames - 1) {

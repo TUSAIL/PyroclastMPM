@@ -62,30 +62,27 @@ class NodesContainer(MPM.NodesContainer):
             node_start (np.ndarray): Grid (domain) origin coordinate
             node_end (np.ndarray): Grid (domain) end coordinate
             node_spacing (float): spacing of the uniform grid
-            output_formats (t.List[str], optional): list formats to
-                            output ("vtk", "csv", "obj")
+
             type. Defaults to None.
         """
         if output_formats is None:
             output_formats = []
 
-        out_fmt = []
-        for fmt in output_formats:
-            if fmt == "vtk":
-                out_fmt.append(MPM.VTK)
-            elif fmt == "csv":
-                out_fmt.append(MPM.CSV)
-            elif fmt == "obj":
-                out_fmt.append(MPM.OBJ)
-            else:
-                raise ValueError("Unknown output format: {}".format(fmt))
-
         super(NodesContainer, self).__init__(
-            node_start=node_start,
-            node_end=node_end,
-            node_spacing=node_spacing,
-            output_formats=out_fmt,
+            node_start=node_start, node_end=node_end, node_spacing=node_spacing
         )
+
+    def set_output_formats(self, output_formats: t.List[str]):
+        """_summary_
+
+        Args:
+            output_formats (t.List[str], optional): list formats to
+                            output ("vtk", "csv", "obj")
+
+        Raises:
+            ValueError: if output format is not supported
+        """
+        super(NodesContainer, self).set_output_formats(output_formats)
 
     def give_coords(self) -> np.ndarray:
         """
