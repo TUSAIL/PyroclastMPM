@@ -12,7 +12,8 @@
         "njpwerner.autodocstring",
         "ms-python.python",
         "cschlosser.doxdocgen",
-        "github.vscode-github-actions"
+        "github.vscode-github-actions",
+        "SonarSource.sonarlint-vscode"
       ]
     },
     "terminal.integrated.shell.linux": "bash",

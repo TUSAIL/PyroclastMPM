@@ -53,24 +53,10 @@ def store_stress(particles, material, step):
     print("stress", particles.stresses[0])
 
     print("strain", strain)
-    # print(strain)
-    # stress_list = np.append(stress_list, particles.stresses[0])
-    # F_list = np.append(F_list, particles.F[0])
-    # eps_e_list = np.append(eps_e_list, material.eps_e[0])
 
 
 particles, material = create_new_test()
 
-# def servo_control(
-#     particles,
-#     material,
-#     max_load_rate,
-#     control,
-#     targets,
-#     callback=None,
-#     accuracy=1e-3,
-#     dim=3,
-# ):
 
 particles, material = servo_control(
     particles,
@@ -94,55 +80,3 @@ particles, material = servo_control(
     10,
     store_stress,
 )
-
-# isotropic_compression(
-#     particles,
-#     material,
-#     config["uniaxial"]["deps_xx"] * dt,
-#     config["global"]["total_steps"],
-#     store_stress,
-# )
-
-# print("Stress list:", stress_list)
-
-# stress_list = np.array(stress_list)
-# F_list = np.array(F_list)
-
-# np.save(config["uniaxial"]["output_directory"] + "stress.npy", stress_list)
-# np.save(config["uniaxial"]["output_directory"] + "F.npy", F_list)
-
-
-# print("Running simple stress test")
-# """
-# 2. Simple shear loading conditions, shear strain rate = deps_xy
-# [ 0, deps, 0]
-# [ deps, 0   , 0]
-# [ 0, 0   , 0]
-# """
-# particles, material = create_new_test()
-
-# deps = np.zeros((3, 3))
-# deps[0, 1] = config["simpleshear"]["deps_xy"]
-# deps[1, 0] = config["simpleshear"]["deps_xy"]
-
-
-# particles.velocity_gradient = [deps]
-
-# stress_list, F_list, eps_e_list = [], [], []
-# for step in range(config["global"]["num_steps"]):
-#     # update deformation gradient
-#     particles.F = [
-#         (np.identity(3) + np.array(particles.velocity_gradient[0]) * dt)
-#         @ np.array(particles.F[0])
-#     ]
-#     particles, _ = material.stress_update(particles, 0)
-#     if step % config["global"]["output_steps"] == 0:
-#         stress_list.append(particles.stresses[0])
-#         F_list.append(particles.F[0])
-#         eps_e_list.append(material.eps_e[0])
-
-# stress_list = np.array(stress_list)
-# F_list = np.array(F_list)
-
-# np.save(config["simpleshear"]["output_directory"] + "stress.npy", stress_list)
-# np.save(config["simpleshear"]["output_directory"] + "F.npy", F_list)

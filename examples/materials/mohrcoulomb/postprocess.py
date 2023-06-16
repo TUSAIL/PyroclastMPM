@@ -124,5 +124,3 @@ plot_utils.plot_stress_subplot(
     "./plots/simpleshear/strain_stress",
     "Simple shear strain-stress curves",
 )
-
-# %%

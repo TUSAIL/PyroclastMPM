@@ -1,5 +1,3 @@
-# %%
-
 import tomllib
 
 import matplotlib.pyplot as plt

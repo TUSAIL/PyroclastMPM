@@ -23,14 +23,13 @@ def plot_stress_strain_components(stresses, strain, i, j, file, title):
     plt.grid()
     plt.savefig(
         file,
-        # dpi=300,
         transparent=False,
         bbox_inches="tight",
     )
     plt.clf()
 
 
-def give_implicit3D(fn, bbox=(-2.5, 2.5), res=100):
+def give_implicit(fn, bbox=(-2.5, 2.5), res=100):
     """create a plot of an implicit function
     fn  ...implicit function (plot where fn==0)
     bbox ..the x,y,and z limits of plotted interval"""
@@ -87,7 +86,7 @@ def plot_principal(stresses, file, title, res=25):
     w_list = np.array(w_list)
     v_list = np.array(v_list)
 
-    fig, ax = give_implicit3D(von_mises, bbox=(-2000, 2000), res=res)
+    _, ax = give_implicit(von_mises, bbox=(-2000, 2000), res=res)
     ax.scatter(
         w_list[:, 0], w_list[:, 1], w_list[:, 2], color="blue", marker="s"
     )
@@ -96,11 +95,8 @@ def plot_principal(stresses, file, title, res=25):
     plt.title(title)
     plt.xlabel(r"$\sigma_1$")
     plt.ylabel(r"$\sigma_2$")
-    # plt.zlabel(r'$sigma_3$ ')
-    # plt.show()
     plt.savefig(
         file,
-        # dpi=300,
         transparent=False,
         bbox_inches="tight",
     )
@@ -117,13 +113,11 @@ def plot_stress_subplot(stresses, steps, file, title):
             nx = i + 1  # x component of stress/strain component
             ny = j + 1  # y component of stress/strain component
             axs[i, j].set_ylabel(f"$\sigma_{{{nx}{ny}}}$ ")
-            # axs[i,j].set_ylabel(f'$\varepsilon_{{{nx}{ny}}}$ ')
             axs[i, j].grid()
 
     plt.tight_layout()
     plt.savefig(
         file,
-        # dpi=300,
         transparent=False,
         bbox_inches="tight",
     )

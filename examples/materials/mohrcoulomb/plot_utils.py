@@ -23,7 +23,6 @@ def plot_stress_strain_components(stresses, strain, i, j, file, title):
     plt.grid()
     plt.savefig(
         file,
-        # dpi=300,
         transparent=False,
         bbox_inches="tight",
     )
@@ -54,14 +53,13 @@ def q_p_plot(stresses, file, title):
     plt.grid()
     plt.savefig(
         file,
-        # dpi=300,
         transparent=False,
         bbox_inches="tight",
     )
     plt.clf()
 
 
-def give_implicit3D(fig, ax, fn, bbox=(-2.5, 2.5), res=100, alpha=0.9):
+def give_implicit(fig, ax, fn, bbox=(-2.5, 2.5), res=100, alpha=0.9):
     """create a plot of an implicit function
     fn  ...implicit function (plot where fn==0)
     bbox ..the x,y,and z limits of plotted interval"""
@@ -166,45 +164,37 @@ def mohr_coulomb5(x, y, z):
     return phi
 
 
-# def von_mises(x, y, z):
-#     global sigma_y
-#     J2 = (1 / 6.0) * ((x - y) ** 2 + (y - z) ** 2 + (z - x) ** 2)
-
-#     q = np.sqrt(3 * J2)
-#     return q - sigma_y
-
-
 def plot_principal(stresses, file, title, res=100):
     w_list, v_list = [], []
     for stress in stresses:
-        eigenValues, eigenVectors = np.linalg.eig(stress)
+        eigen_values, eigen_vectors = np.linalg.eig(stress)
 
-        idx = eigenValues.argsort()[::-1]
-        eigenValues = eigenValues[idx]
-        eigenVectors = eigenVectors[:, idx]
-        w_list.append(eigenValues)
-        v_list.append(eigenVectors)
+        idx = eigen_values.argsort()[::-1]
+        eigen_values = eigen_values[idx]
+        eigen_vectors = eigen_vectors[:, idx]
+        w_list.append(eigen_values)
+        v_list.append(eigen_vectors)
 
     w_list = np.array(w_list)
     v_list = np.array(v_list)
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
-    fig, ax = give_implicit3D(
+    fig, ax = give_implicit(
         fig, ax, mohr_coulomb0, bbox=(35000, -22000), res=res
     )
-    fig, ax = give_implicit3D(
+    fig, ax = give_implicit(
         fig, ax, mohr_coulomb1, bbox=(35000, -22000), res=res
     )
-    fig, ax = give_implicit3D(
+    fig, ax = give_implicit(
         fig, ax, mohr_coulomb2, bbox=(35000, -22000), res=res
     )
-    fig, ax = give_implicit3D(
+    fig, ax = give_implicit(
         fig, ax, mohr_coulomb3, bbox=(35000, -22000), res=res
     )
-    fig, ax = give_implicit3D(
+    fig, ax = give_implicit(
         fig, ax, mohr_coulomb4, bbox=(35000, -22000), res=res
     )
-    fig, ax = give_implicit3D(
+    fig, ax = give_implicit(
         fig, ax, mohr_coulomb5, bbox=(35000, -22000), res=res
     )
     ax.scatter(
@@ -219,11 +209,8 @@ def plot_principal(stresses, file, title, res=100):
     plt.title(title)
     plt.xlabel(r"$\sigma_1$")
     plt.ylabel(r"$\sigma_2$")
-    # plt.zlabel(r'$sigma_3$ ')
-    # plt.show()
     plt.savefig(
         file,
-        # dpi=300,
         transparent=False,
         bbox_inches="tight",
     )
@@ -232,7 +219,6 @@ def plot_principal(stresses, file, title, res=100):
 
     plt.savefig(
         ".".join(file.split(".")[:2]) + "2.png",
-        # dpi=300,
         transparent=False,
         bbox_inches="tight",
     )
@@ -251,13 +237,11 @@ def plot_stress_subplot(stresses, steps, file, title):
             nx = i + 1  # x component of stress/strain component
             ny = j + 1  # y component of stress/strain component
             axs[i, j].set_ylabel(f"$\sigma_{{{nx}{ny}}}$ ")
-            # axs[i,j].set_ylabel(f'$\varepsilon_{{{nx}{ny}}}$ ')
             axs[i, j].grid()
 
     plt.tight_layout()
     plt.savefig(
         file,
-        # dpi=300,
         transparent=False,
         bbox_inches="tight",
     )

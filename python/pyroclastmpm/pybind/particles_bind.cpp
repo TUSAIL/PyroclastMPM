@@ -36,7 +36,49 @@ namespace py = pybind11;
 
 namespace pyroclastmpm {
 
-void particles_module(py::module &m) {
+py::tuple pickle_save_particles(const ParticlesContainer &particles) {
+  return py::make_tuple(
+      std::vector<Vectorr>(particles.positions_gpu.begin(),
+                           particles.positions_gpu.end()),
+      std::vector<Vectorr>(particles.velocities_gpu.begin(),
+                           particles.velocities_gpu.end()),
+      std::vector<int>(particles.colors_gpu.begin(),
+                       particles.colors_gpu.end()),
+      std::vector<int>(particles.is_rigid_gpu.begin(),
+                       particles.is_rigid_gpu.end()),
+      std::vector<Matrix3r>(particles.stresses_gpu.begin(),
+                            particles.stresses_gpu.end()),
+      std::vector<Real>(particles.masses_gpu.begin(),
+                        particles.masses_gpu.end()),
+      std::vector<Real>(particles.volumes_gpu.begin(),
+                        particles.volumes_gpu.end()),
+      std::vector<OutputType>(particles.output_formats.begin(),
+                              particles.output_formats.end()),
+      std::vector<Matrixr>(particles.F_gpu.begin(), particles.F_gpu.end()),
+      std::vector<Matrixr>(particles.velocity_gradient_gpu.begin(),
+                           particles.velocity_gradient_gpu.end()),
+      std::vector<Vectorr>(particles.dpsi_gpu.begin(),
+                           particles.dpsi_gpu.end()),
+      std::vector<Real>(particles.volumes_original_gpu.begin(),
+                        particles.volumes_original_gpu.end()),
+      std::vector<Real>(particles.psi_gpu.begin(), particles.psi_gpu.end()));
+}
+
+ParticlesContainer pickle_load_particles(py::tuple t) {
+  auto particles = ParticlesContainer(
+      t[0].cast<std::vector<Vectorr>>(), t[1].cast<std::vector<Vectorr>>(),
+      t[2].cast<std::vector<int>>(), t[3].cast<std::vector<bool>>(),
+      t[4].cast<std::vector<Matrix3r>>(), t[5].cast<std::vector<Real>>(),
+      t[6].cast<std::vector<Real>>(), t[7].cast<std::vector<OutputType>>());
+  particles.F_gpu = t[8].cast<std::vector<Matrixr>>();
+  particles.velocity_gradient_gpu = t[9].cast<std::vector<Matrixr>>();
+  particles.dpsi_gpu = t[10].cast<std::vector<Vectorr>>();
+  particles.volumes_original_gpu = t[11].cast<std::vector<Real>>();
+  particles.psi_gpu = t[12].cast<std::vector<Real>>();
+  return particles;
+}
+
+void particles_module(const py::module &m) {
   py::class_<ParticlesContainer>(m, "ParticlesContainer")
       .def(
           py::init<std::vector<Vectorr>, std::vector<Vectorr>, std::vector<int>,
@@ -164,50 +206,11 @@ void particles_module(py::module &m) {
           } // setter
           ) // COLORS
       .def(py::pickle(
-          [](const ParticlesContainer &a) { // dump
-            return py::make_tuple(
-                std::vector<Vectorr>(a.positions_gpu.begin(),
-                                     a.positions_gpu.end()),
-                std::vector<Vectorr>(a.velocities_gpu.begin(),
-                                     a.velocities_gpu.end()),
-                std::vector<int>(a.colors_gpu.begin(), a.colors_gpu.end()),
-                std::vector<int>(a.is_rigid_gpu.begin(), a.is_rigid_gpu.end()),
-                std::vector<Matrix3r>(a.stresses_gpu.begin(),
-                                      a.stresses_gpu.end()),
-                std::vector<Real>(a.masses_gpu.begin(), a.masses_gpu.end()),
-                std::vector<Real>(a.volumes_gpu.begin(), a.volumes_gpu.end()),
-                std::vector<OutputType>(a.output_formats.begin(),
-                                        a.output_formats.end()),
-                std::vector<Matrixr>(a.F_gpu.begin(), a.F_gpu.end()),
-                std::vector<Matrixr>(a.velocity_gradient_gpu.begin(),
-                                     a.velocity_gradient_gpu.end()),
-                std::vector<Vectorr>(a.dpsi_gpu.begin(), a.dpsi_gpu.end()),
-                std::vector<Real>(a.volumes_original_gpu.begin(),
-                                  a.volumes_original_gpu.end()),
-                std::vector<Real>(a.psi_gpu.begin(), a.psi_gpu.end())
-                // std::vector<Real>(a.densities_gpu.begin(),
-                // a.densities_gpu.end()),
-                // std::vector<Real>(a.pressures_gpu.begin(),
-                // a.pressures_gpu.end()),
-            );
-
+          [](const ParticlesContainer &particles) { // NOSONAR
+            return pickle_save_particles(particles);
           },
-          [](py::tuple t) { // load
-            ParticlesContainer particles = ParticlesContainer(
-                t[0].cast<std::vector<Vectorr>>(),
-                t[1].cast<std::vector<Vectorr>>(),
-                t[2].cast<std::vector<int>>(), t[3].cast<std::vector<bool>>(),
-                t[4].cast<std::vector<Matrix3r>>(),
-                t[5].cast<std::vector<Real>>(), t[6].cast<std::vector<Real>>(),
-                t[7].cast<std::vector<OutputType>>());
-            particles.F_gpu = t[8].cast<std::vector<Matrixr>>();
-            particles.velocity_gradient_gpu = t[9].cast<std::vector<Matrixr>>();
-            particles.dpsi_gpu = t[10].cast<std::vector<Vectorr>>();
-            particles.volumes_original_gpu = t[11].cast<std::vector<Real>>();
-            particles.psi_gpu = t[12].cast<std::vector<Real>>();
-            // particles.densities_gpu = t[14].cast<std::vector<Real>>();
-            // particles.pressures_gpu = t[15].cast<std::vector<Real>>();
-            return particles;
+          [](py::tuple t) { // NOSONAR
+            return pickle_load_particles(t);
           }));
 };
 

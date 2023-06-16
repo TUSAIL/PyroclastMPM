@@ -44,7 +44,7 @@ namespace pyroclastmpm {
  *
  * @param m pybind11 module
  */
-void materials_module(py::module &m) {
+void materials_module(const py::module &m) {
 
   py::class_<Material>(m, "Material")
       .def(py::init<>())
@@ -81,8 +81,8 @@ void materials_module(py::module &m) {
                                   a.bulk_modulus);
           },
           [](py::tuple t) { // load
-            LinearElastic mat = LinearElastic{
-                t[0].cast<Real>(), t[1].cast<Real>(), t[2].cast<Real>()};
+            auto mat = LinearElastic{t[0].cast<Real>(), t[1].cast<Real>(),
+                                     t[2].cast<Real>()};
             mat.name = t[3].cast<std::string>();
             mat.shear_modulus = t[4].cast<Real>();
             mat.lame_modulus = t[5].cast<Real>();
@@ -171,8 +171,8 @@ void materials_module(py::module &m) {
                                   a.gamma, a.name);
           },
           [](py::tuple t) { // load
-            NewtonFluid mat = NewtonFluid{t[0].cast<Real>(), t[1].cast<Real>(),
-                                          t[2].cast<Real>(), t[3].cast<Real>()};
+            auto mat = NewtonFluid{t[0].cast<Real>(), t[1].cast<Real>(),
+                                   t[2].cast<Real>(), t[3].cast<Real>()};
             mat.name = t[4].cast<std::string>();
             return mat;
           }));
@@ -212,7 +212,7 @@ void materials_module(py::module &m) {
                                   a.lame_modulus, a.bulk_modulus, a.EPS);
           },
           [](py::tuple t) { // load
-            LocalGranularRheology mat = LocalGranularRheology{
+            auto mat = LocalGranularRheology{
                 t[0].cast<Real>(), t[1].cast<Real>(), t[2].cast<Real>(),
                 t[3].cast<Real>(), t[4].cast<Real>(), t[5].cast<Real>(),
                 t[6].cast<Real>(), t[7].cast<Real>(), t[8].cast<Real>()};

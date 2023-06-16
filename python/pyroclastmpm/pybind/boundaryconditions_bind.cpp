@@ -39,7 +39,7 @@ namespace py = pybind11;
 
 namespace pyroclastmpm {
 
-void boundaryconditions_module(py::module &m) {
+void boundaryconditions_module(const py::module &m) {
   py::class_<BoundaryCondition>(m, "BoundaryCondition").def(py::init<>());
 
   py::class_<BodyForce>(m, "BodyForce")

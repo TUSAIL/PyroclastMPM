@@ -51,25 +51,6 @@ void tools_module(py::module &m) {
 
   m.def("set_device", &set_device,
         "Set the global dimension of the simulation");
-
-  //----------------------------------
-  // void uniform_random_points_in_volume(const thrust::host_vector<Vector3r>
-  // input,
-  //                            const std::string stl_filename,
-  //                            const int num_points)
-
-  //   m.def("set_global_dimension", &set_global_dimension,
-  //         "Set the global dimension of the simulation");
-  //   m.def("set_global_shapefunction", &set_global_shapefunction,
-  //         "Set the global shape function based on a dimension");
-  //   m.def("set_global_timestep", &set_global_dt, "Set the global timestep");
-  //   m.def("set_global_output_directory", &set_global_output_directory,
-  //         "Set the global output directory");
-
-  //   m.def(
-  //       "set_globals", &set_globals,
-  //       "Set the global dimension, shapefunction, timestep and output
-  //       directory");
 }
 
 } // namespace pyroclastmpm

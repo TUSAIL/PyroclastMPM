@@ -41,7 +41,7 @@ class Material(MPM.Material):
 class LinearElastic(MPM.LinearElastic):
     """Isotropic Linear Elasticity"""
 
-    def __init__(self, density: float, E: float, pois: float = 0):
+    def __init__(self, density: float, E: float, pois: float = 0):  # NOSONAR
         """Initialize isotropic linear elastic material
 
         Args:
@@ -64,10 +64,10 @@ class VonMises(MPM.VonMises):
     def __init__(
         self,
         density: float,
-        E: float,
+        E: float,  # NOSONAR
         pois: float = 0,
         yield_stress: float = 0,
-        H: float = 1,
+        H: float = 1,  # NOSONAR
     ):
         """Initialize Associative Von Mises plasticity
 
@@ -129,12 +129,12 @@ class MohrCoulomb(MPM.MohrCoulomb):
     def __init__(
         self,
         density: float,
-        E: float,
+        E: float,  # NOSONAR
         pois: float = 0,
         cohesion: float = 0,
         friction_angle: float = 0,
         dilatancy_angle: float = 0,
-        H: float = 1,
+        H: float = 1,  # NOSONAR
     ):
         """Initialize Non-Associative Mohr-Coulomb plasticity
 
@@ -238,9 +238,9 @@ class LocalGranularRheology(MPM.LocalGranularRheology):
     def __init__(
         self,
         density: float,
-        E: float,
+        E: float,  # NOSONAR
         pois: float,
-        I0: float,
+        I0: float,  # NOSONAR
         mu_s: float,
         mu_2: float,
         rho_c: float,

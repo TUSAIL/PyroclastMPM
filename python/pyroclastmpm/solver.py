@@ -140,7 +140,7 @@ class USL(MPM.USL):
 
         self.solve_nsteps(self.output_start)
 
-        for step in tqdm(
+        for _ in tqdm(
             range(self.output_start, self.total_steps, self.output_steps),
             desc="PyroclastMPM ",
             unit=" step",

@@ -23,6 +23,18 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file body_force.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief This file contains methods to apply a body force or moments nodes
+ *
+ * @version 0.1
+ * @date 2023-06-16
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+
 #pragma once
 
 #include "pyroclastmpm/boundaryconditions/boundaryconditions.h"
@@ -32,23 +44,56 @@ namespace pyroclastmpm {
 
 struct BodyForce : BoundaryCondition {
 
-  // FUNCTIONS
-  BodyForce(const std::string _mode, const cpu_array<Vectorr> _values,
-            const cpu_array<bool> _mask);
+  /**
+   * @brief Construct a new Body Force object
+   *
+   * If the mode is "forces" then the body force is applied on the external
+   * forces of the background grid
+   *
+   * If the mode is "moments" then moments are applied on the background grid,
+   * or "fixed", meaning they constraint to a fixed value
+   *
+   * @param _mode On what is it applied ("forces","moments","fixed")
+   * @param _values Values of the body force
+   * @param _mask Mask to apply the body force
+   */
+  BodyForce(const std::string_view &_mode, const cpu_array<Vectorr> &_values,
+            const cpu_array<bool> &_mask);
 
-  ~BodyForce(){};
-
+  /**
+   * @brief Update node values for eternal forces
+   *
+   * @param nodes_ptr  NodeContainer reference
+   */
   void apply_on_nodes_f_ext(NodesContainer &nodes_ptr) override;
+
+  /**
+   * @brief Update node values for moments
+   *
+   * @param nodes_ref NodeContainer reference
+   * @param particles_ref ParticleContainer reference
+   */
   void apply_on_nodes_moments(NodesContainer &nodes_ref,
                               ParticlesContainer &particles_ref) override;
 
-  // VARIABLES
-
+  /**
+   * @brief Values to be applied to the forces or moments
+   *
+   */
   gpu_array<Vectorr> values_gpu;
 
+  /**
+   * @brief mask on which nodes to apply the body force
+   * has the same size as the number of nodes
+   *
+   */
   gpu_array<bool> mask_gpu;
 
-  int mode_id; // 0 forces, 1 is moments, 2 fixed moments
+  /**
+   * @brief Mode of the body force
+   *  0 forces, 1 is moments, 2 fixed moments
+   */
+  int mode_id;
 };
 
 } // namespace pyroclastmpm

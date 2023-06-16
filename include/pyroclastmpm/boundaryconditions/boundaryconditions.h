@@ -47,37 +47,47 @@ struct BoundaryCondition {
   /*!
    * @brief default destructor
    */
-  ~BoundaryCondition() = default;
+  virtual ~BoundaryCondition() = default;
 
   /*!
    * @brief Apply on node forces
    * @param nodes_ref reference to node container
    */
-  virtual void apply_on_nodes_loads(NodesContainer &nodes_ref){};
+  virtual void apply_on_nodes_loads(NodesContainer &nodes_ref){
+      // override in derived classes
+  };
 
   /*!
    * @brief Apply on node moments
    * @param nodes_ref reference to node container
    */
   virtual void apply_on_nodes_moments(NodesContainer &nodes_ref,
-                                      ParticlesContainer &particles_ref){};
+                                      ParticlesContainer &particles_ref){
+      // override in derived classes
+  };
 
   /*!
    * @brief Apply on nodes forces
    * @param nodes_ref reference to node container
    */
-  virtual void apply_on_nodes_f_ext(NodesContainer &nodes_ref){};
+  virtual void apply_on_nodes_f_ext(NodesContainer &nodes_ref){
+      // override in derived classes
+  };
 
   /*!
    * @brief Apply on particles
    * @param particles_ref reference to particles
    */
-  virtual void apply_on_particles(ParticlesContainer &particles_ref){};
+  virtual void apply_on_particles(ParticlesContainer &particles_ref){
+      // override in derived classes
+  };
 
   /*!
    * @brief Output after certain number of steps
    */
-  virtual void output_vtk(){};
+  virtual void output_vtk(){
+      // override in derived classes
+  };
 
   // VARIABLES
 

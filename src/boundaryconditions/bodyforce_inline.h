@@ -23,6 +23,19 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "pyroclastmpm/common/types_common.h"
+
+namespace pyroclastmpm {
+
+/**
+ * @brief Apply a body force on the external forces of the background grid
+ *
+ * @param nodes_forces_external_gpu array of external forces of the background
+ * grid
+ * @param values_gpu values of the body force
+ * @param mask_gpu mask on which nodes to apply the body force on
+ * @param node_mem_index index of the node
+ */
 __device__ __host__ inline void
 apply_bodyforce(Vectorr *nodes_forces_external_gpu, const Vectorr *values_gpu,
                 const bool *mask_gpu, const int node_mem_index) {
@@ -49,6 +62,19 @@ __global__ void KERNEL_APPLY_BODYFORCE(Vectorr *nodes_forces_external_gpu,
 }
 #endif
 
+/**
+ * @brief Apply a moment on the background grid
+ *
+ * isFixed means it constraints the nodes
+ *
+ * @param nodes_moments_nt_gpu array of moments of the background grid (with
+ * respect to USL or MUSL algorithms)
+ * @param nodes_moments_gpu array of moments of the background grid
+ * @param values_gpu values of the body moment to be applied
+ * @param mask_gpu mask on which nodes to apply the body moment on
+ * @param isFixed option to say if the nodes are added or constrained
+ * @param node_mem_index index of the node
+ */
 __device__ __host__ inline void
 apply_bodymoments(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
                   const Vectorr *values_gpu, const bool *mask_gpu,
@@ -60,7 +86,6 @@ apply_bodymoments(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
       nodes_moments_nt_gpu[node_mem_index] = values_gpu[node_mem_index];
     } else {
       nodes_moments_gpu[node_mem_index] += values_gpu[node_mem_index];
-
       // TODO check if nodes_moments_nt needs to be incremented?
     }
   }
@@ -83,4 +108,7 @@ __global__ void KERNEL_APPLY_BODYMOMENT(Vectorr *nodes_moments_nt_gpu,
   apply_bodymoments(nodes_moments_nt_gpu, nodes_moments_gpu, values_gpu,
                     mask_gpu, isFixed, node_mem_index);
 }
+
 #endif
+
+} // namespace pyroclastmpm

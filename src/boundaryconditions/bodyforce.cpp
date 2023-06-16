@@ -23,14 +23,39 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file body_force.cpp
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief This file contains methods to apply a body force or moments nodes
+ *
+ * @version 0.1
+ * @date 2023-06-16
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+
 #include "pyroclastmpm/boundaryconditions/bodyforce.h"
+#include "bodyforce_inline.h"
 
 namespace pyroclastmpm {
 
-#include "bodyforce_inline.h"
-
-BodyForce::BodyForce(const std::string _mode, const cpu_array<Vectorr> _values,
-                     const cpu_array<bool> _mask) {
+/**
+ * @brief Construct a new Body Force object
+ *
+ * If the mode is "forces" then the body force is applied on the external
+ * forces of the background grid
+ *
+ * If the mode is "moments" then moments are applied on the background grid,
+ * or "fixed", meaning they constraint to a fixed value
+ *
+ * @param _mode On what is it applied ("forces","moments","fixed")
+ * @param _values Values of the body force
+ * @param _mask Mask to apply the body force
+ */
+BodyForce::BodyForce(const std::string_view &_mode,
+                     const cpu_array<Vectorr> &_values,
+                     const cpu_array<bool> &_mask) {
   if (_mode == "forces") {
     mode_id = 0;
   } else if (_mode == "moments") {
@@ -39,14 +64,20 @@ BodyForce::BodyForce(const std::string _mode, const cpu_array<Vectorr> _values,
     mode_id = 2;
   }
 
-  set_default_device<Vectorr>(_values.size(), _values, values_gpu,
-                              Vectorr::Zero());
-  set_default_device<bool>(_mask.size(), _mask, mask_gpu, false);
+  set_default_device<Vectorr>(static_cast<int>(_values.size()), _values,
+                              values_gpu, Vectorr::Zero());
+  set_default_device<bool>(static_cast<int>(_mask.size()), _mask, mask_gpu,
+                           false);
 
   // TODO check if window size is set
   // TODO add "checker for each class"
 }
 
+/**
+ * @brief Update values of node forces external
+ *
+ * @param nodes_ref NodesContainers reference
+ */
 void BodyForce::apply_on_nodes_f_ext(NodesContainer &nodes_ref) {
   if (!isActive) {
     return;
@@ -70,6 +101,12 @@ void BodyForce::apply_on_nodes_f_ext(NodesContainer &nodes_ref) {
   }
 };
 
+/**
+ * @brief Update values of node moments
+ *
+ * @param nodes_ref NodesContainers reference
+ * @param particles_ref ParticlesContainer reference
+ */
 void BodyForce::apply_on_nodes_moments(NodesContainer &nodes_ref,
                                        ParticlesContainer &particles_ref) {
   if (!isActive) {

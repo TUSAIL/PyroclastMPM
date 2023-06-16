@@ -34,7 +34,7 @@ namespace py = pybind11;
 
 namespace pyroclastmpm {
 
-void nodes_module(py::module &m) {
+void nodes_module(const py::module &m) {
   py::class_<NodesContainer>(m, "NodesContainer")
       .def(py::init<Vectorr, Vectorr, Real, std::vector<OutputType>>(),
            py::arg("node_start"), py::arg("node_end"), py::arg("node_spacing"),

@@ -23,6 +23,20 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "pyroclastmpm/common/types_common.h"
+
+namespace pyroclastmpm {
+
+/**
+ * @brief Apply gravity to the nodes of the background grid.
+ *
+ * The nodes must have a mass mass > 0.000000001
+ *
+ * @param nodes_forces_external_gpu external forces of the background grid
+ * @param nodes_masses_gpu masses of the nodes
+ * @param gravity gravity vector
+ * @param node_mem_index index of the node
+ */
 __device__ __host__ inline void
 apply_gravity(Vectorr *nodes_forces_external_gpu, const Real *nodes_masses_gpu,
               const Vectorr gravity, const int node_mem_index) {
@@ -55,3 +69,5 @@ __global__ void KERNEL_APPLY_GRAVITY(Vectorr *nodes_forces_external_gpu,
 }
 
 #endif
+
+} // namespace pyroclastmpm

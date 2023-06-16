@@ -23,6 +23,18 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file gravity.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief This header file contains the gravity boundary condition
+ *
+ * @version 0.1
+ * @date 2023-06-16
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+
 #pragma once
 
 #include "pyroclastmpm/boundaryconditions/boundaryconditions.h"
@@ -33,7 +45,6 @@ namespace pyroclastmpm {
 class NodesContainer;
 
 struct Gravity : BoundaryCondition {
-  // FUNCTIONS
 
   /**
    * @brief Gravity boundary condition, either constant or linear ramping
@@ -46,7 +57,11 @@ struct Gravity : BoundaryCondition {
   Gravity(Vectorr _gravity, bool _is_ramp = false, int _ramp_step = 0,
           Vectorr _gravity_end = Vectorr::Zero());
 
-  ~Gravity(){};
+  /**
+   * @brief Update the external forces of the background grid
+   *
+   * @param nodes_ptr NodesContainer reference
+   */
   void apply_on_nodes_f_ext(NodesContainer &nodes_ptr) override;
 
   /**

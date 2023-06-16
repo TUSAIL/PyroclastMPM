@@ -50,7 +50,9 @@ def set_global_shapefunction(shape_function):
     elif shape_function == "linear":
         shp_type = MPM.LinearShapeFunction
     else:
-        ValueError("Unknown shape function type: {}".format(shape_function))
+        raise ValueError(
+            "Unknown shape function type: {}".format(shape_function)
+        )
     MPM.set_global_shapefunction(shp_type)
 
 
@@ -91,6 +93,8 @@ def set_globals(
     elif shape_function == "linear":
         shp_type = MPM.LinearShapeFunction
     else:
-        ValueError("Unknown shape function type: {}".format(shape_function))
+        raise ValueError(
+            "Unknown shape function type: {}".format(shape_function)
+        )
 
     MPM.set_globals(dt, particles_per_cell, shp_type, output_directory)
