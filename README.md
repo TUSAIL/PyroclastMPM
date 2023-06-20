@@ -35,7 +35,7 @@ Checking requirements 📋
 - GCC version `gcc --version` and `g++ --version` should be less than `>8 or <12`
 - CMAKE version `cmake --version` should be `>=3.11`
 - CUDA `nvcc --version`
-- Poetry `poetry --version`
+- [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer) `poetry --version` should be `>=1.2.0`
 - vtk9 and libvtk9-dev
 
 # Installation
@@ -53,6 +53,7 @@ cd PyroclastMPM
 3. Install Python dependencies `poetry install`
 4. Build project
 
+<!-- @Retief, how do you like ccmake? -->
 ```bash
 
 mkdir build
