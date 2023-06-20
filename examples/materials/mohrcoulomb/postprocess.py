@@ -23,7 +23,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import tomllib
+import tomli
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,7 +34,7 @@ plt.rcParams["text.usetex"] = True
 
 # load config file
 with open("./config.toml", "rb") as f:
-    config = tomllib.load(f)
+    config = tomli.load(f)
 
 
 """

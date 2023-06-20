@@ -1,4 +1,4 @@
-import tomllib
+import tomli
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,7 +9,7 @@ plt.rcParams["text.usetex"] = True
 
 # load config file
 with open("./config.toml", "rb") as f:
-    config = tomllib.load(f)
+    config = tomli.load(f)
 
 
 """

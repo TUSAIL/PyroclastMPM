@@ -21,7 +21,7 @@ Notes:
 Computer methods in applied mechanics and engineering 118.1-2 (1994): 179-196.
 """
 
-import tomllib
+import tomli
 
 import numpy as np
 from circles import create_circle
@@ -36,7 +36,7 @@ from pyroclastmpm import (
 
 # 1. Load config file and set global variables
 with open("./config.toml", "rb") as f:
-    config = tomllib.load(f)
+    config = tomli.load(f)
 
 check_dimension(config["global"]["dimension"])
 

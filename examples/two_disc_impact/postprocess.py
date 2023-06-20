@@ -5,7 +5,7 @@ This is a postprocessing script for the 2D body impact example.
 """
 
 
-import tomllib
+import tomli
 
 import matplotlib.pyplot as plt
 import pyvista as pv
@@ -27,7 +27,7 @@ def calc_ke(particles):
 
 # 3. Load config file
 with open("./config.toml", "rb") as f:
-    config = tomllib.load(f)
+    config = tomli.load(f)
 
 # 4. Load particles and nodes
 

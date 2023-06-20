@@ -1,5 +1,5 @@
 # Loading a config file and running a uniaxial stress test
-import tomllib
+import tomli
 
 import numpy as np
 from constitutive_analysis import servo_control
@@ -13,7 +13,7 @@ from pyroclastmpm import (
 
 # load config file
 with open("./config.toml", "rb") as f:
-    config = tomllib.load(f)
+    config = tomli.load(f)
 
 check_dimension(3)
 
