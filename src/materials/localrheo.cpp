@@ -22,71 +22,53 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-
-#include "pyroclastmpm/materials/localrheo.h"
-
-namespace pyroclastmpm {
-
 /**
- * @brief global step counter
+ * @file localrheo.cpp
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief Local rheology material
+ * @version 0.1
+ * @date 2023-06-15
  *
+ * @copyright Copyright (c) 2023
  */
-extern int global_step_cpu;
-
-#ifdef CUDA_ENABLED
-extern Real __constant__ dt_gpu;
-#else
-extern Real dt_cpu;
-#endif
+#include "pyroclastmpm/materials/localrheo.h"
 
 #include "localrheo_inline.h"
 
-/**
- * @brief Construct a new Local Granular Rheology:: Local Granular Rheology
- * object
- *
- * @param _density material density
- * @param _E  Young's modulus
- * @param _pois Poisson's ratio
- * @param _I0 inertial number
- * @param _mu_s static friction coefficient
- * @param _mu_2 dynamic friction coefficient
- * @param _rho_c critical density
- * @param _particle_diameter particle diameter
- * @param _particle_density particle density
- */
+namespace pyroclastmpm {
+
+/// @brief Construct a new Local Granular Rheology object
+/// @param _density material density
+/// @param _E Young's modulus
+/// @param _pois Poisson's ratio
+/// @param _I0 inertial number
+/// @param _mu_s critical friction angle (max)
+/// @param _mu_2 critical friction angle (min)
+/// @param _rho_c critical density
+/// @param _particle_diameter particle diameter
+/// @param _particle_density particle solid density
 LocalGranularRheology::LocalGranularRheology(const Real _density, const Real _E,
                                              const Real _pois, const Real _I0,
                                              const Real _mu_s, const Real _mu_2,
                                              const Real _rho_c,
                                              const Real _particle_diameter,
-                                             const Real _particle_density) {
-  E = _E;
-  pois = _pois;
+                                             const Real _particle_density)
+    : mu_s(_mu_s), mu_2(_mu_2), rho_c(_rho_c), I0(_I0),
+      particle_diameter(_particle_diameter),
+      particle_density(_particle_density), E(_E), pois(_pois) {
+  bulk_modulus =
+      ((Real)1. / (Real)3.) * (E / ((Real)1. - (Real)2. * pois)); // K
+  shear_modulus = ((Real)1. / (Real)2.) * E / ((Real)1 + pois);   // G
+  lame_modulus = (pois * E) /
+                 (((Real)1.0 + pois) * ((Real)1 - (Real)2.0 * pois)); // lambda
+
+  EPS = I0 / (Real)sqrt(pow(particle_diameter, 2) * _particle_density);
   density = _density;
-
-  bulk_modulus = (1. / 3.) * (E / (1. - 2. * pois));
-  shear_modulus = (1. / 2.) * E / (1. + pois);
-  lame_modulus = (pois * E) / ((1. + pois) * (1. - 2. * pois));
-
-  I0 = _I0;
-  mu_s = _mu_s;
-  mu_2 = _mu_2;
-  rho_c = _rho_c;
-  particle_diameter = _particle_diameter;
-  particle_density = _particle_density;
-
-  EPS = I0 / sqrt(pow(particle_diameter, 2) * _particle_density);
-
-  name = "LocalGranularRheology";
 }
 
-/**
- * @brief call stress update procedure
- *
- * @param particles_ref particles container
- * @param mat_id material id
- */
+/// @brief Perform stress update
+/// @param particles_ptr particles container
+/// @param mat_id material id
 void LocalGranularRheology::stress_update(ParticlesContainer &particles_ref,
                                           int mat_id) {
 
@@ -117,7 +99,5 @@ void LocalGranularRheology::stress_update(ParticlesContainer &particles_ref,
 
 #endif
 }
-
-LocalGranularRheology::~LocalGranularRheology() {}
 
 } // namespace pyroclastmpm

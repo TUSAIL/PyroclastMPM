@@ -32,22 +32,26 @@ set(
   "boundaryconditions/planardomain.cpp"
   "boundaryconditions/nodedomain.cpp"
 
-  "materials/linearelastic.cpp"
-  "materials/newtonfluid.cpp"
   "materials/localrheo.cpp"
   "materials/vonmises.cpp"
   "materials/mohrcoulomb.cpp"
 
+
+
+  "materials/linearelastic.cpp"
+  "materials/newtonfluid.cpp"
+
   "solver/solver.cpp"
-  "shapefunction/shapefunction.cpp"
   "solver/usl/usl.cpp"
+
+  "shapefunction/shapefunction.cpp"
   "particles/particles.cpp"
   "nodes/nodes.cpp"
 
-  "common/helper.cpp"
   "common/global_settings.cpp"
   "common/output.cpp"
   "common/tools.cpp"
+  "common/helper.cpp"
 
   "spatialpartition/spatialpartition.cpp"
 
@@ -62,6 +66,7 @@ set(
   # "solver/tlmpm/tlmpm.cu"
 
 add_library(pyroclastmpm ${PyroclastSrc})
+
 
 target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen ${VTK_LIBRARIES} )
 

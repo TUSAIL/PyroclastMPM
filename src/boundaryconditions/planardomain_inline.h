@@ -23,22 +23,54 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "pyroclastmpm/common/types_common.h"
+
+namespace pyroclastmpm {
+
+#ifdef CUDA_ENABLED
+extern Real __constant__ dt_gpu;
+#else
+extern const Real dt_cpu;
+#endif
+
+/**
+ * @brief Apply DEM planar domain boundary conditions
+ *
+ * The contact algorithm implemented is based on the one described in
+ *
+ * de Vaucorbeil, Alban, and Vinh Phu Nguyen.
+ * "Modelling contacts with a total Lagrangian material point method."
+ * Computer Methods in Applied Mechanics and Engineering 373 (2021): 113503.
+ *
+ * @param particles_forces_external_gpu external forces of particles
+ * @param particles_positions_gpu positions of particles
+ * @param particles_velocities_gpu velocities of particles
+ * @param particles_volumes_gpu volumes of particles (updated)
+ * @param particle_masses_gpu masses of particles
+ * @param face0_friction friction angle for faces x0,y0,z0 (radians)
+ * @param face1_friction friction angle for face x1,y1,z1 (radians)
+ * @param domain_start start of domain
+ * @param domain_end end of domain
+ * @param mem_index index of particle in memory
+ */
 __host__ __device__ inline void apply_planardomain(
     Vectorr *particles_forces_external_gpu,
     const Vectorr *particles_positions_gpu,
     const Vectorr *particles_velocities_gpu, const Real *particles_volumes_gpu,
-    const Real *particle_masses_gpu, const Vectorr axis0_friction,
-    const Vectorr axis1_friction, const Vectorr domain_start,
+    const Real *particle_masses_gpu, const Vectorr face0_friction,
+    const Vectorr face1_friction, const Vectorr domain_start,
     const Vectorr domain_end, const int mem_index) {
 
   const Vectorr pos = particles_positions_gpu[mem_index];
   const Vectorr vel = particles_velocities_gpu[mem_index];
 
-  const Vectorr vel_norm = vel.normalized();
-
   const Real vol = particles_volumes_gpu[mem_index];
 
-  const Real Radius = 0.5 * pow(vol, 1. / DIM);
+  const Real inv_dim = (Real)1. / (Real)DIM;
+
+  const double pow_vol = pow(vol, inv_dim);
+
+  const Real Radius = (Real)0.5 * (Real)pow_vol; // avoiding implicit casting
 
   const Real mass = particle_masses_gpu[mem_index];
 
@@ -72,7 +104,7 @@ __host__ __device__ inline void apply_planardomain(
           (overlap0[i] * normals0[i]).dot(vel) * normals0[i];
       const Vectorr fric_term =
           normals0[i] -
-          axis0_friction(i) * (vel - normals0[i].dot(vel) * normals0[i]);
+          face0_friction(i) * (vel - normals0[i].dot(vel) * normals0[i]);
       particles_forces_external_gpu[mem_index] +=
           (mass / pow(dt, 2.)) * overlap0[i] * fric_term;
     }
@@ -86,7 +118,7 @@ __host__ __device__ inline void apply_planardomain(
           (overlap1[i] * normals1[i]).dot(vel) * normals1[i];
       const Vectorr fric_term =
           normals1[i] -
-          axis1_friction(i) * (vel - normals1[i].dot(vel) * normals1[i]);
+          face1_friction(i) * (vel - normals1[i].dot(vel) * normals1[i]);
       particles_forces_external_gpu[mem_index] +=
           (mass / pow(dt, 2.)) * overlap1[i] * fric_term;
     }
@@ -98,8 +130,8 @@ __global__ void KERNELS_APPLY_PLANARDOMAIN(
     Vectorr *particles_forces_external_gpu,
     const Vectorr *particles_positions_gpu,
     const Vectorr *particles_velocities_gpu, const Real *particles_volumes_gpu,
-    const Real *particle_masses_gpu, const Vectorr axis0_friction,
-    const Vectorr axis1_friction, const Vectorr domain_start,
+    const Real *particle_masses_gpu, const Vectorr face0_friction,
+    const Vectorr face1_friction, const Vectorr domain_start,
     const Vectorr domain_end, const int num_particles) {
   const int mem_index = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -109,8 +141,10 @@ __global__ void KERNELS_APPLY_PLANARDOMAIN(
 
   apply_planardomain(particles_forces_external_gpu, particles_positions_gpu,
                      particles_velocities_gpu, particles_volumes_gpu,
-                     particle_masses_gpu, axis0_friction, axis1_friction,
+                     particle_masses_gpu, face0_friction, face1_friction,
                      domain_start, domain_end, mem_index);
 }
 
 #endif
+
+} // namespace pyroclastmpm

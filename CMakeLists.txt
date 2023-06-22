@@ -71,6 +71,12 @@ endif()
 # EIGEN3
 add_subdirectory(ext/eigen/)
 
+# TQDM-CPP
+include_directories("ext/indicators/include")
+
+
+# find_package(indicators REQUIRED)
+
 # VTK
 find_package(VTK REQUIRED
     COMPONENTS
@@ -113,12 +119,12 @@ if(BUILD_TESTING)
 endif()
 
 if(BUILD_DOCS)
-    add_subdirectory(doc)
+    add_subdirectory(docs)
 endif()
 
 if(BUILD_PYTHON)
     add_subdirectory(ext/pybind11)
-    add_subdirectory(python/pyroclastmpm/pybind)
+    add_subdirectory(python/pybind)
 endif()
 
 # Add an alias target for use if this project is included as a subproject in another project

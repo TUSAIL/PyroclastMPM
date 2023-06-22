@@ -23,11 +23,29 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file solver.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief Solver base class combines all the components of the MPM solver
+ * @details The solver is responsible for the main loop of the simulation
+ * The base class is responsible for defining the initialization, output,
+ * and stress update procedures. These procedures are further called or
+ * modified by the derived classes.
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ */
 #pragma once
+
+#include <indicators/progress_bar.hpp>
+
+#include <indicators/cursor_control.hpp>
 
 #include <variant>
 
 // Common
+#include "pyroclastmpm/common/global_settings.h"
 #include "pyroclastmpm/common/types_common.h"
 
 // Boundary conditions
@@ -51,95 +69,78 @@
 
 namespace pyroclastmpm {
 
-/**
- * @brief Define the material type as a variant of all the possible materials
- *
- */
+/// @brief All the possible materials used in the simulation
 using MaterialType =
     std::variant<Material, LinearElastic, NewtonFluid, LocalGranularRheology>;
 
-/**
- * @brief Define the boundary condition type as a variant of all the possible
- * boundary conditions
- *
- */
+/// @brief All possible boundary conditions used in the simulation
 using BoundaryConditionType =
     std::variant<BoundaryCondition, Gravity, RigidBodyLevelSet, BodyForce,
                  PlanarDomain, NodeDomain>;
 
 /**
- * @brief MPM solver base class
+ * @brief Solver base class
+ * @details The solver is responsible for the main loop of the simulation
+ * The base class is responsible for defining the initialization, output,
+ * and stress update procedures. These procedures are further called or
+ * modified by the derived classes.
+ *
  *
  */
 class Solver {
 public:
-  /**
-   * @brief Construct a new Solver object
-   *
-   * @param _particles particles container
-   * @param _nodes nodes container
-   * @param _boundaryconditions a list of boundary conditions to be applied
-   * @param _materials a list of materials to be applied
-   */
+  /// @brief Construct a new Solver object
+  /// @param _particles A ParticlesContainer class
+  /// @param _nodes A NodesContainer class
+  /// @param _boundaryconditions A list of boundary conditions to be applied
+  /// @param _materials A list of materials to be applied
   explicit Solver(
       const ParticlesContainer &_particles, const NodesContainer &_nodes,
       const cpu_array<MaterialType> &_materials = cpu_array<MaterialType>(),
       const cpu_array<BoundaryConditionType> &_boundaryconditions =
           cpu_array<BoundaryConditionType>());
 
-  /**
-   * @brief Destroy the Solver object
-   *
-   */
+  /// @brief Destroy the Solver object
   virtual ~Solver();
 
-  /**
-   * @brief Solve the main loop for n_steps
-   *
-   * @param n_steps
-   */
+  /// @brief Solve the main loop for n_steps
+  /// @param n_steps
   void solve_nsteps(int n_steps);
 
-  /**
-   * @brief Output the results (particles,nodes,boundaryconditions, etc. )
-   *
-   */
+  /// @brief Output the results (ParticlesContainer,NodesContainer, etc. )
+  /// @details calls .output_vtk() for all the components
   void output();
 
-  /**
-   * @brief Do stress update for all particles (using constitutive law)
-   *
-   */
+  /// @brief Do stress update for all the materials
   void stress_update();
 
-  /**
-   * @brief reset (temporary) arrays to initial state
-   *
-   */
-  virtual void reset(){};
+  ///@brief reset (temporary) arrays to initial state
+  ///@details override this function in derived classes
+  virtual void reset(){
+      /// override this function in derived classes
+  };
 
-  /**
-   * @brief main loop of the solver
-   *
-   */
-  virtual void solve(){};
+  ///@brief main loop of the solver
+  ///@details override this function in derived classes
+  virtual void solve(){
+      // override this function in derived classes
+  };
 
-  /*!
-   * @brief Smart pointer to nodes container
-   */
+  /// @brief Solve the main loop for n_steps
+  /// @param total_steps number of steps to solve for
+  /// @param output_frequency output frequency
+  void run(const int total_steps, const int output_frequency);
+
+  ///@brief NodesContainer
   NodesContainer nodes;
 
-  /*!
-   * @brief Smart pointer to particles container
-   */
+  ///@brief ParticlesContainer
   ParticlesContainer particles;
 
-  /*! @brief list of materials */
+  ///@brief A list of MaterialType
   cpu_array<MaterialType> materials;
 
-  /*!
-   * @brief a list of pointers to the boundary conditions
-   */
+  ///@brief A list of BoundaryConditionType
   cpu_array<BoundaryConditionType> boundaryconditions;
 
   /** current step of the main loop */

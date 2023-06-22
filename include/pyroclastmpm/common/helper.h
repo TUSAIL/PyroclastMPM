@@ -35,39 +35,78 @@
  * @copyright Copyright (c) 2023
  *
  */
+
 #include "pyroclastmpm/common/types_common.h"
 
 namespace pyroclastmpm {
 
 /**
- * @brief Allocates device memory and copies the input array (or value) to the
- * array
+ * @brief  Helper function to allocate device memory
+ * @details Allocates device memory and assigns it a default host array or
+ * constant value. \verbatim embed:rst:leading-asterisk Example usage
  *
- * @tparam T data type (float,double, int, Matrixr, etc.)
- * @param input_size size of the input array
- * @param input input array
- * @param output output array
- * @param default_value default value to set the array to
+ *     .. code-block:: cpp
+ *
+ *         #include "pyroclastmpm/common/helper.h"
+ *
+ *         // Resize array to num and assigns default value -1 to all ids
+ *         set_default_device<int>(num, {}, ids, -1);
+ *
+ *         //  Copies a host array to a device array
+ *         set_default_device<int>(num, ids_, ids, 0);
+ *
+ * \endverbatim
+ * @tparam T data type (float, double, int, Matrixr, etc.)
+ * @param input_size input_size size of the input array
+ * @param input input_size size of the input array
+ * @param output output output array (of device type
+ * @param default_value default_value default value to set the array to
  */
 template <typename T>
 void set_default_device(const int input_size, const cpu_array<T> input,
                         gpu_array<T> &output, T default_value);
 
 /**
- * @brief Reorders the input array according to the sorted index
+ * @brief Helper function reorder a device array based on a sorted index
+ * @details The sorted index is obtained normally obtained from the hashing
+ * algorithm. If the topology of the points changes, this function is useful to
+ * reorder the array to ensure coalesced memory access. \verbatim
+ * embed:rst:leading-asterisk Example usage
  *
- * @tparam T data type (float,double, int, Matrixr, etc.)
- * @param output array to be sorted
- * @param sorted_index sorted index
+ *     .. code-block:: cpp
+ *
+ *         #include "pyroclastmpm/common/helper.h"
+ *
+ *         // Reorders an array of points based on a sorted index
+ *         reorder_device_array<Vectorr>(positions, sorted_index);
+ *
+ *
+ * \endverbatim
+ * @tparam T data type (float, double, int, Matrixr, etc.)
+ * @param output array to be reordered
+ * @param sorted_index array of sorted indices
  */
 template <typename T>
 void reorder_device_array(gpu_array<T> &output, gpu_array<int> sorted_index);
 
 /**
- * @brief Prints the input array
+ * @brief Helper function to print a device or host array
+ * @details This function is useful for debugging purposes
  *
- * @tparam T data type (float,double, int, Matrixr, etc.)
- * @param input input array to be printed
+ * \verbatim embed:rst:leading-asterisk
+ *     Example usage
+ *
+ *     .. code-block:: cpp
+ *
+ *         #include "pyroclastmpm/common/helper.h"
+ *
+ *         // Prints matrices in a formatted way
+ *         print_array<Matrixr>(matrices);
+ *
+ *
+ * \endverbatim
+ * @tparam T data type (float, double, int, Matrixr, etc.)
+ * @param input array to be printed
  */
 template <typename T> void print_array(const cpu_array<T> input);
 

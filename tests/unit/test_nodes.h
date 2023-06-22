@@ -25,35 +25,25 @@
 
 #include "pyroclastmpm/nodes/nodes.h"
 
-// Functions tested
-// [x] NodesContainer::NodesContainer
-// [x] NodesContainer::NodeContainer (get ids)
-// [x] NodesContainer::integrate
-// [ ] NodesContainer::NodeContainer (get types)
-// [x] NodesContainer::give_coordinates (implicitly at test_nodes.py)
-// [ ] NodesContainer::output_vtk
-
-using namespace pyroclastmpm;
-
 /**
  * @brief Construct a new TEST object for NodesContainer to test the constructor
  *
  */
 TEST(NodesContainer, CONSTRUCTOR) {
 
-  Vectorr min = Vectorr::Zero();
-  Vectorr max = Vectorr::Ones();
+  auto min = Vectorr::Zero();
+  auto max = Vectorr::Ones();
   Real nodal_spacing = 0.5;
 
-  NodesContainer nodes = NodesContainer(min, max, nodal_spacing);
+  auto nodes = pyroclastmpm::NodesContainer(min, max, nodal_spacing);
 
   cpu_array<Vectori> node_ids = nodes.node_ids_gpu;
 
 #if DIM == 3
-  EXPECT_EQ(nodes.num_nodes_total, 27);
-  EXPECT_EQ(nodes.num_nodes[0], 3);
-  EXPECT_EQ(nodes.num_nodes[1], 3);
-  EXPECT_EQ(nodes.num_nodes[2], 3);
+  EXPECT_EQ(nodes.grid.num_cells_total, 27);
+  EXPECT_EQ(nodes.grid.num_cells[0], 3);
+  EXPECT_EQ(nodes.grid.num_cells[1], 3);
+  EXPECT_EQ(nodes.grid.num_cells[2], 3);
   EXPECT_EQ(node_ids[0], Vectori({0, 0, 0}));
   EXPECT_EQ(node_ids[1], Vectori({1, 0, 0}));
   EXPECT_EQ(node_ids[2], Vectori({2, 0, 0}));
@@ -86,9 +76,9 @@ TEST(NodesContainer, CONSTRUCTOR) {
 
 #elif DIM == 2
 
-  EXPECT_EQ(nodes.num_nodes_total, 9);
-  EXPECT_EQ(nodes.num_nodes[0], 3);
-  EXPECT_EQ(nodes.num_nodes[1], 3);
+  EXPECT_EQ(nodes.grid.num_cells_total, 9);
+  EXPECT_EQ(nodes.grid.num_cells[0], 3);
+  EXPECT_EQ(nodes.grid.num_cells[1], 3);
   EXPECT_EQ(node_ids[0], Vectori({0, 0}));
   EXPECT_EQ(node_ids[1], Vectori({1, 0}));
   EXPECT_EQ(node_ids[2], Vectori({2, 0}));
@@ -100,27 +90,25 @@ TEST(NodesContainer, CONSTRUCTOR) {
   EXPECT_EQ(node_ids[8], Vectori({2, 2}));
 
 #else // DIM == 1
-  EXPECT_EQ(nodes.num_nodes_total, 3);
-  EXPECT_EQ(nodes.num_nodes[0], 3);
+  EXPECT_EQ(nodes.grid.num_cells_total, 3);
+  EXPECT_EQ(nodes.grid.num_cells[0], 3);
   EXPECT_EQ(node_ids[0], Vectori(0));
   EXPECT_EQ(node_ids[1], Vectori(1));
   EXPECT_EQ(node_ids[2], Vectori(2));
 #endif
-
-  // TODO insert test for node types
 }
 
-// /**
-//  * @brief Construct a new TEST object for integrating the nodes
-//  *
-//  */
+/**
+ * @brief Construct a new TEST object for integrating the nodes
+ *
+ */
 TEST(NodesContainer, INTEGRATE) {
   set_global_dt(0.1);
-  Vectorr min = Vectorr::Zero();
-  Vectorr max = Vectorr::Ones();
+  auto min = Vectorr::Zero();
+  auto max = Vectorr::Ones();
   Real nodal_spacing = 0.5;
 
-  NodesContainer nodes = NodesContainer(min, max, nodal_spacing);
+  auto nodes = pyroclastmpm::NodesContainer(min, max, nodal_spacing);
 
   cpu_array<Real> masses = nodes.masses_gpu;
   masses[0] = 1.;

@@ -23,6 +23,29 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "pyroclastmpm/materials/newtonfluid.h"
+
+namespace pyroclastmpm {
+
+#ifdef CUDA_ENABLED
+extern const Real __constant__ dt_gpu;
+#else
+extern const Real dt_cpu;
+#endif
+
+///@brief Stress update for Newtonian fluid
+///@param particles_stresses_gpu stress tensor
+///@param particles_velocity_gradients_gpu velocity gradient
+///@param particles_masses_gpu particle masses
+///@param particles_volumes_gpu particle volumes (updated)
+///@param particles_volumes_original_gpu particle volumes (original)
+///@param particles_colors_gpu particle colors (or material ids)
+///@param particles_is_active_gpu flag if has active status
+///@param viscosity fluid viscosity
+///@param bulk_modulus bulk modulus
+///@param gamma gamma (7 for water and 1.4 for air)
+///@param mat_id material id
+///@param tid thread id
 __device__ __host__ inline void stress_update_newtonfluid(
     Matrix3r *particles_stresses_gpu,
     const Matrixr *particles_velocity_gradients_gpu,
@@ -36,9 +59,7 @@ __device__ __host__ inline void stress_update_newtonfluid(
     return;
   }
 
-  const int particle_color = particles_colors_gpu[tid];
-
-  if (particle_color != mat_id) {
+  if (particles_colors_gpu[tid] != mat_id) {
     return;
   }
 
@@ -48,22 +69,20 @@ __device__ __host__ inline void stress_update_newtonfluid(
   const Real dt = dt_cpu;
 #endif
 
-  // printf("runs after check");
   const Matrixr vel_grad = particles_velocity_gradients_gpu[tid];
   const Matrixr vel_grad_T = vel_grad.transpose();
   const Matrixr strain_rate = 0.5 * (vel_grad + vel_grad_T) * dt;
 
   Matrixr deviatoric_part =
-      strain_rate - (1. / 3) * strain_rate.trace() * Matrixr::Identity();
+      strain_rate - (1. / 3.) * strain_rate.trace() * Matrixr::Identity();
 
-  // printf("deviatoric_part: %f\n", deviatoric_part);
   const Real density = particles_masses_gpu[tid] / particles_volumes_gpu[tid];
 
   const Real density_original =
       particles_masses_gpu[tid] / particles_volumes_original_gpu[tid];
   Real mu = density / density_original;
 
-  Real pressure = bulk_modulus * (pow(mu, gamma) - 1.);
+  Real pressure = bulk_modulus * (Real)(pow(mu, gamma) - (Real)1.);
 
   Matrixr cauchy_stress =
       2 * viscosity * deviatoric_part - pressure * Matrixr::Identity();
@@ -98,3 +117,5 @@ __global__ void KERNEL_STRESS_UPDATE_NEWTONFLUID(
 }
 
 #endif
+
+} // namespace pyroclastmpm

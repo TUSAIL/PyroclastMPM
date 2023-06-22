@@ -23,17 +23,25 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file tools.cpp
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief Contains tools to generate points in a volume or on a surface (STL)
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+
 #include "pyroclastmpm/common/tools.h"
 
 namespace pyroclastmpm {
 
-/**
- * @brief a function to sample a random number of points in a volume
- *
- * @param stl_filename string containing the path to the stl file
- * @param num_points number of points to sample
- * @return std::vector<Vector3r>
- */
+/// @brief Samples points randomly in a volume
+/// @param stl_filename String containing the path to the STL file
+/// @param num_points Number of points to sample
+/// @return std::vector<Vector3r> output points
 std::vector<Vector3r>
 uniform_random_points_in_volume(const std::string &stl_filename,
                                 const int num_points) {
@@ -97,6 +105,11 @@ uniform_random_points_in_volume(const std::string &stl_filename,
   return positions_cpu;
 }
 
+/// @brief Samples points as a grid within a volume
+/// @param stl_filename String containing the path to the STL file
+/// @param cell_size Cell spacing of each point in the grid
+/// @param point_per_cell Number of points per cell
+/// @return std::vector<Vector3r> Output points
 std::vector<Vector3r> grid_points_in_volume(const std::string &stl_filename,
                                             const Real cell_size,
                                             const int point_per_cell) {
@@ -175,6 +188,11 @@ std::vector<Vector3r> grid_points_in_volume(const std::string &stl_filename,
   return positions_cpu;
 }
 
+/// @brief Samples points as a grid on the surface of an STL file
+/// @param stl_filename String containing the path to the STL file
+/// @param cell_size Cell spacing of each point in the grid
+/// @param point_per_cell Number of points per cell
+/// @return std::vector<Vector3r> Output points
 std::tuple<std::vector<Vector3r>, std::vector<Vector3r>>
 grid_points_on_surface(const std::string &stl_filename, const Real cell_size,
                        const int point_per_cell) {
@@ -214,6 +232,9 @@ grid_points_on_surface(const std::string &stl_filename, const Real cell_size,
   return std::make_tuple(positions_cpu, positions_cpu);
 }
 
+/// @brief Get the start and end position of the bounding box of an STL file
+/// @param stl_filename  String containing the path to the STL file
+/// @return std::tuple<Vector3r, Vector3r> Tuple containing the start and end
 std::tuple<Vector3r, Vector3r> get_bounds(const std::string &stl_filename) {
   vtkNew<vtkSTLReader> reader;
   reader->SetFileName(stl_filename.c_str());
@@ -232,6 +253,7 @@ std::tuple<Vector3r, Vector3r> get_bounds(const std::string &stl_filename) {
 }
 
 #ifdef CUDA_ENABLED
+/// @brief Set the GPU device id to run on
 void set_device(int device_id) {
 
   cudaSetDevice(device_id);

@@ -25,46 +25,45 @@
 
 #include "pyroclastmpm/boundaryconditions/rigidbodylevelset.h"
 
-namespace pyroclastmpm {
-
-#ifdef CUDA_ENABLED
-extern __constant__ Real dt_gpu;
-extern __constant__ int num_surround_nodes_gpu;
-extern __constant__ int g2p_window_gpu[64][3];
-extern __constant__ int p2g_window_gpu[64][3];
-#else
-extern int num_surround_nodes_cpu;
-extern int g2p_window_cpu[64][3];
-extern int p2g_window_cpu[64][3];
-#endif
-
-extern int global_step_cpu;
-
-#ifdef CUDA_ENABLED
-extern Real __constant__ dt_gpu;
-#endif
-extern Real dt_cpu;
-
-// include private header with kernels here to inline theu
 #include "rigidbodylevelset_inline.h"
 
+namespace pyroclastmpm {
+
+extern const int global_step_cpu;
+
+/// @brief Construct a new Rigid Body Level Set object
+/// @param _COM center of mass of rigid body
+/// @param _frames animation frames
+/// @param _locations animation locations
+/// @param _rotations animation rotations
 RigidBodyLevelSet::RigidBodyLevelSet(const Vectorr _COM,
-                                     const cpu_array<int> _frames,
-                                     const cpu_array<Vectorr> _locations,
-                                     const cpu_array<Vectorr> _rotations)
-    : frames_cpu(_frames), locations_cpu(_locations),
-      rotations_cpu(_rotations) {
-  num_frames = _frames.size();
+                                     const cpu_array<int> &_frames,
+                                     const cpu_array<Vectorr> &_locations,
+                                     const cpu_array<Vectorr> &_rotations)
+    : num_frames((int)_frames.size()), frames_cpu(_frames),
+      locations_cpu(_locations), rotations_cpu(_rotations) {
 
   if (DIM != 3) {
     printf("Rigid body level set only supports 3D simulations\n");
     exit(1);
   }
+
+  if (_locations.empty()) {
+    COM = _COM;
+  }
+
   COM = _locations[0];
+
+  locations_cpu = _locations;
+
   current_frame = 0;
 
   euler_angles = _rotations[0];
 }
+
+/// @brief apply rigid body contact on background grid
+/// @param nodes_ref Nodes container
+/// @param particles_ref Particles container
 void RigidBodyLevelSet::apply_on_nodes_moments(
     NodesContainer &nodes_ref, ParticlesContainer &particles_ref) {
 
@@ -87,11 +86,15 @@ void RigidBodyLevelSet::apply_on_nodes_moments(
   current_frame += 1;
 };
 
+/// @brief Set the output formats
+/// @param _output_formats output formats
 void RigidBodyLevelSet::set_output_formats(
     const std::vector<std::string> &_output_formats) {
   output_formats = _output_formats;
 }
 
+/// @brief set velocities of rigid particles
+/// @param particles_ref Particles container
 void RigidBodyLevelSet::set_velocities(ParticlesContainer &particles_ref) {
   if (current_frame >= num_frames - 1) {
     return;
@@ -121,6 +124,8 @@ void RigidBodyLevelSet::set_velocities(ParticlesContainer &particles_ref) {
 #endif
 };
 
+/// @brief set position of rigid particles
+/// @param particles_ref Particles container
 void RigidBodyLevelSet::set_position(ParticlesContainer &particles_ref) {
 #ifdef CUDA_ENABLED
   KERNEL_UPDATE_RIGID_POSITION<<<particles_ref.launch_config.tpb,
@@ -144,16 +149,24 @@ void RigidBodyLevelSet::set_position(ParticlesContainer &particles_ref) {
   euler_angles += angular_velocities * dt_cpu;
 };
 
-void RigidBodyLevelSet::initialize(NodesContainer &nodes_ref,
-                                   ParticlesContainer &particles_ref) {
-  set_default_device<Vectorr>(nodes_ref.num_nodes_total, {}, normals_gpu,
+/// @brief allocates memory for rigid body level set
+/// @param nodes_ref Nodes container
+/// @param particles_ref Particles container
+void RigidBodyLevelSet::initialize(
+    const NodesContainer &nodes_ref,
+    [[maybe_unused]] const ParticlesContainer &particles_ref) {
+  set_default_device<Vectorr>(nodes_ref.grid.num_cells_total, {}, normals_gpu,
                               Vectorr::Zero());
-  set_default_device<bool>(nodes_ref.num_nodes_total, {}, is_overlapping_gpu,
-                           false);
-  set_default_device<int>(nodes_ref.num_nodes_total, {},
+
+  set_default_device<bool>(nodes_ref.grid.num_cells_total, {},
+                           is_overlapping_gpu, false);
+  set_default_device<int>(nodes_ref.grid.num_cells_total, {},
                           closest_rigid_particle_gpu, -1);
 }
 
+/// @brief calculates grid normals of rigid body level set
+/// @param nodes_ref Nodes container
+/// @param particles_ref Particles container
 void RigidBodyLevelSet::calculate_grid_normals(
     NodesContainer &nodes_ref, ParticlesContainer &particles_ref) {
 
@@ -173,11 +186,10 @@ void RigidBodyLevelSet::calculate_grid_normals(
       thrust::raw_pointer_cast(particles_ref.spatial.sorted_index_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.is_rigid_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.positions_gpu.data()),
-      nodes_ref.node_start, nodes_ref.inv_node_spacing,
-      particles_ref.spatial.num_cells, particles_ref.spatial.num_cells_total);
+      nodes_ref.grid);
   gpuErrchk(cudaDeviceSynchronize());
 #else
-  for (int nid = 0; nid < nodes_ref.num_nodes_total; nid++) {
+  for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++) {
     calculate_grid_normals_nn_rigid(
         nodes_ref.moments_gpu.data(), nodes_ref.moments_nt_gpu.data(),
         nodes_ref.node_ids_gpu.data(), nodes_ref.masses_gpu.data(),
@@ -187,13 +199,14 @@ void RigidBodyLevelSet::calculate_grid_normals(
         particles_ref.spatial.cell_end_gpu.data(),
         particles_ref.spatial.sorted_index_gpu.data(),
         particles_ref.is_rigid_gpu.data(), particles_ref.positions_gpu.data(),
-        nodes_ref.node_start, nodes_ref.inv_node_spacing,
-        particles_ref.spatial.num_cells, particles_ref.spatial.num_cells_total,
-        nid);
+        nodes_ref.grid, nid);
   }
 #endif
 }
 
+/// @brief finds the closest rigid particle to each grid node
+/// @param nodes_ref Nodes container
+/// @param particles_ref Particles container
 void RigidBodyLevelSet::calculate_overlapping_rigidbody(
     NodesContainer &nodes_ref, ParticlesContainer &particles_ref) {
 #ifdef CUDA_ENABLED
@@ -215,9 +228,7 @@ void RigidBodyLevelSet::calculate_overlapping_rigidbody(
         is_overlapping_gpu.data(), nodes_ref.node_ids_gpu.data(),
         particles_ref.positions_gpu.data(),
         particles_ref.spatial.bins_gpu.data(),
-        particles_ref.is_rigid_gpu.data(), particles_ref.spatial.num_cells,
-        particles_ref.spatial.grid_start, particles_ref.spatial.inv_cell_size,
-        particles_ref.spatial.num_cells_total, pid);
+        particles_ref.is_rigid_gpu.data(), nodes_ref.grid, pid);
   }
 #endif
 }

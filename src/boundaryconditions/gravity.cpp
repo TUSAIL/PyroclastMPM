@@ -26,7 +26,8 @@
 /**
  * @file gravity.cpp
  * @author Retief Lubbe (r.lubbe@utwente.nl)
- * @brief This file contains the gravity boundary condition
+ * @brief Gravity is applied on the background grid through external forces on
+ * the nodes
  *
  * @version 0.1
  * @date 2023-06-16
@@ -43,29 +44,18 @@ namespace pyroclastmpm {
 
 extern const int global_step_cpu;
 
-/**
- * @brief Gravity boundary condition.
- *
- * This applies gravity to the external forces of the background grid.
- * It can either be constant or linear ramping.
- * If linear ramping is used, the gravity is ramped from the initial value to
- * the final value in a given number of steps.
- *
- * @param _gravity initial gravity vector
- * @param _is_ramp whether the gravity is linear ramping or not
- * @param _ramp_step time when full gravity is reached
- * @param _gravity_end gravity value at end of ramp
- */
+/// @brief Construct a new Gravity object
+/// @param _gravity gravity vector
+/// @param _is_ramp flag whether gravity is ramping linearly or not
+/// @param _ramp_step the amount of steps to ramp gravity to full value
+/// @param _gravity_end gravity value at end of ramp
 Gravity::Gravity(Vectorr _gravity, bool _is_ramp, int _ramp_step,
                  Vectorr _gravity_end)
     : gravity(_gravity), is_ramp(_is_ramp), ramp_step(_ramp_step),
       gravity_end(_gravity_end) {}
 
-/**
- * @brief Update the external forces of the background grid
- *
- * @param nodes_ref NodesContainer reference
- */
+/// @brief Apply graivity to external node forces
+/// @param nodes_ref reference to NodesContainer
 void Gravity::apply_on_nodes_f_ext(NodesContainer &nodes_ref) {
 
   const Real ramp_factor =
@@ -78,10 +68,10 @@ void Gravity::apply_on_nodes_f_ext(NodesContainer &nodes_ref) {
                          nodes_ref.launch_config.bpg>>>(
       thrust::raw_pointer_cast(nodes_ref.forces_external_gpu.data()),
       thrust::raw_pointer_cast(nodes_ref.masses_gpu.data()), gravity,
-      nodes_ref.num_nodes_total);
+      nodes_ref.grid.num_cells_total);
   gpuErrchk(cudaDeviceSynchronize());
 #else
-  for (int nid = 0; nid < nodes_ref.num_nodes_total; nid++) {
+  for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++) {
     apply_gravity(nodes_ref.forces_external_gpu.data(),
                   nodes_ref.masses_gpu.data(), gravity, nid);
   }

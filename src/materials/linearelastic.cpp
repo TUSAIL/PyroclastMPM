@@ -23,42 +23,42 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file linearelastic.cpp
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief Isotropic linear elastic material
+ * @details This is a small strain implementation of the isotropic linear
+ * elastic
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ */
+
 #include "pyroclastmpm/materials/linearelastic.h"
-
-namespace pyroclastmpm {
-
-#ifdef CUDA_ENABLED
-extern Real __constant__ dt_gpu;
-#else
-extern Real dt_cpu;
-#endif
 
 #include "linearelastic_inline.h"
 
-/**
- * @brief Construct a new Linear Elastic:: Linear Elastic object
- *
- * @param _density density of the material
- * @param _E young's modulus
- * @param _pois poissons ratio
- */
+namespace pyroclastmpm {
+
+/// @brief Construct a new Linear Elastic material
+/// @param _E Young's modulus
+/// @param _pois Poisson's ratio
 LinearElastic::LinearElastic(const Real _density, const Real _E,
-                             const Real _pois) {
-  E = _E;
-  pois = _pois;
-  bulk_modulus = (1. / 3.) * (E / (1. - 2. * pois));         // K
-  shear_modulus = (1. / 2.) * E / (1 + pois);                // G
-  lame_modulus = (pois * E) / ((1 + pois) * (1 - 2 * pois)); // lambda
+                             const Real _pois)
+    : E(_E), pois(_pois) {
+  bulk_modulus =
+      ((Real)1. / (Real)3.) * (E / ((Real)1. - (Real)2. * pois)); // K
+  shear_modulus = ((Real)1. / (Real)2.) * E / ((Real)1 + pois);   // G
+  lame_modulus = (pois * E) /
+                 (((Real)1.0 + pois) * ((Real)1 - (Real)2.0 * pois)); // lambda
+
   density = _density;
-  name = "LinearElastic";
 }
 
-/**
- * @brief Compute the stress tensor for the material
- *
- * @param particles_ref particles container reference
- * @param mat_id material id
- */
+/// @brief Perform stress update
+/// @param particles_ptr ParticlesContainer class
+/// @param mat_id material id
 void LinearElastic::stress_update(ParticlesContainer &particles_ref,
                                   int mat_id) {
 
@@ -68,7 +68,6 @@ void LinearElastic::stress_update(ParticlesContainer &particles_ref,
       thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.F_gpu.data()),
-      thrust::raw_pointer_cast(particles_ref.masses_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.is_active_gpu.data()),
       particles_ref.num_particles, shear_modulus, bulk_modulus, mat_id);
@@ -79,9 +78,8 @@ void LinearElastic::stress_update(ParticlesContainer &particles_ref,
     update_linearelastic(
         particles_ref.stresses_gpu.data(),
         particles_ref.velocity_gradient_gpu.data(), particles_ref.F_gpu.data(),
-        particles_ref.masses_gpu.data(), particles_ref.colors_gpu.data(),
-        particles_ref.is_active_gpu.data(), shear_modulus, bulk_modulus, mat_id,
-        pid);
+        particles_ref.colors_gpu.data(), particles_ref.is_active_gpu.data(),
+        shear_modulus, bulk_modulus, mat_id, pid);
   }
 #endif
 }
@@ -95,14 +93,13 @@ void LinearElastic::stress_update(ParticlesContainer &particles_ref,
  */
 Real LinearElastic::calculate_timestep(Real cell_size, Real factor) {
   // https://www.sciencedirect.com/science/article/pii/S0045782520306885
-  const Real c = sqrt((bulk_modulus + 4. * shear_modulus / 3.) / density);
+  const auto c = (Real)sqrt(
+      (bulk_modulus + (Real)4. * shear_modulus / (Real)3.) / density);
 
   const Real delta_t = factor * (cell_size / c);
 
   printf("LinearElastic::calculate_timestep: %f", delta_t);
   return delta_t;
 }
-
-LinearElastic::~LinearElastic() {}
 
 } // namespace pyroclastmpm

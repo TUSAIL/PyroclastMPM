@@ -23,6 +23,16 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file particles.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief MPM particles class
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ */
+
 #include "pyroclastmpm/particles/particles.h"
 
 namespace pyroclastmpm {
@@ -31,13 +41,11 @@ extern const int num_surround_nodes_cpu;
 extern const int particles_per_cell_cpu;
 extern const int global_step_cpu;
 
-/*!
- * @brief Constructs Particle container class
- * @param _positions particle positions
- * @param _velocities particle velocities
- * @param _colors particle types (optional)
- * @param _is_rigid particle rigidness (optional)
- */
+/// @brief Constructs Particle container class
+/// @param _positions Particle positions (required)
+/// @param _velocities Particle velocities (optional)
+/// @param _colors Particle types (optional)
+/// @param _is_rigid mask of rigid particles (optional)
 ParticlesContainer::ParticlesContainer(
     const cpu_array<Vectorr> &_positions, const cpu_array<Vectorr> &_velocities,
     const cpu_array<uint8_t> &_colors,
@@ -78,11 +86,17 @@ ParticlesContainer::ParticlesContainer(
 
   reset(); // reset needed
 }
+
+/// @brief Set output formats ("vtk","csv","obj")
 void ParticlesContainer::set_output_formats(
     const std::vector<std::string> &_output_formats) {
   output_formats = _output_formats;
 }
 
+/**
+ * @brief Resets the gpu arrays
+ * @param reset_psi If the node/particle shape functions should be reset
+ */
 void ParticlesContainer::reset(bool reset_psi) {
 
   if (reset_psi) {
@@ -93,9 +107,9 @@ void ParticlesContainer::reset(bool reset_psi) {
                Matrixr::Zero());
 }
 
+/// @brief Reorder Particles arrays
 void ParticlesContainer::reorder() {
   // TODO fix reordering
-  printf("Reorder not working correctly \n");
   reorder_device_array<Vectorr>(positions_gpu, spatial.sorted_index_gpu);
   reorder_device_array<Vectorr>(velocities_gpu, spatial.sorted_index_gpu);
   reorder_device_array<Matrix3r>(stresses_gpu, spatial.sorted_index_gpu);
@@ -113,37 +127,17 @@ void ParticlesContainer::reorder() {
   reorder_device_array<Vectorr>(forces_external_gpu, spatial.sorted_index_gpu);
 }
 
-void ParticlesContainer::set_spawner(int _spawnRate, int _spawnVolume) {
-
-  spawnRate = _spawnRate;
-  spawnVolume = _spawnVolume;
-  spawnIncrement = 0;
+/// @brief Set the spawner rate and volume
+/// @param rate Rate of spawning (in steps)
+/// @param volume Volume (number of particles) to spawn
+void ParticlesContainer ::set_spawner(int _rate, int _volume) {
+  spawner = SpawnerData(_rate, _volume);
   thrust::fill(is_active_gpu.begin(), is_active_gpu.end(), false);
 }
 
-void ParticlesContainer::spawn_particles() {
-  if (spawnRate <= 0) {
-    return;
-  }
-  if (global_step_cpu % spawnRate != 0) {
-    return;
-  }
-  if (spawnIncrement >= num_particles) {
-    return;
-  }
-
-  cpu_array<bool> is_active_cpu = is_active_gpu;
-
-  for (int si = 0; si < spawnVolume; si++) {
-
-    is_active_cpu[spawnIncrement + si] = true;
-  }
-  spawnIncrement += spawnVolume;
-
-  is_active_gpu = is_active_cpu;
-}
-
-void ParticlesContainer::output_vtk() {
+/// @brief Output particle data
+/// @details Calls VTK helper functions located in `output.h`
+void ParticlesContainer::output_vtk() const {
 
   vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 
@@ -192,18 +186,20 @@ void ParticlesContainer::output_vtk() {
                              exclude_rigid_from_output);
 
   // loop over output_formats
-  for (auto format : output_formats) {
+  for (const auto &format : output_formats) {
     write_vtk_polydata(polydata, "particles", format);
   }
 }
 
-void ParticlesContainer::set_spatialpartition(const Vectorr start,
-                                              const Vectorr end,
-                                              const Real spacing) {
-  spatial = SpatialPartition(start, end, spacing, num_particles);
+/// @brief Set the spatial partition of the particles
+/// @param _grid Grid structure containing the grid information
+void ParticlesContainer::set_spatialpartition(const Grid &_grid) {
+  spatial = SpatialPartition(_grid, num_particles);
   partition();
 }
 
+/// @brief Calls the SpatialPartion class to partition particles into a
+/// background grid
 void ParticlesContainer::partition() {
   spatial.calculate_hash(positions_gpu);
 
@@ -212,6 +208,10 @@ void ParticlesContainer::partition() {
   spatial.bin_particles();
 };
 
+/// @brief calculate the particle volumes
+/// @details Requires global variable particles_per_cell and to be
+/// @param particles_per_cell number of particles per cell
+/// @param cell_size cell size
 void ParticlesContainer::calculate_initial_volumes() {
   if (isRestart) {
     return;
@@ -223,18 +223,24 @@ void ParticlesContainer::calculate_initial_volumes() {
       continue;
     }
 #if DIM == 3
-    volumes_cpu[pi] = spatial.cell_size * spatial.cell_size * spatial.cell_size;
+    volumes_cpu[pi] = spatial.grid.cell_size * spatial.grid.cell_size *
+                      spatial.grid.cell_size;
 #elif DIM == 2
-    volumes_cpu[pi] = spatial.cell_size * spatial.cell_size;
+    volumes_cpu[pi] = spatial.grid.cell_size * spatial.grid.cell_size;
 #else
-    volumes_cpu[pi] = spatial.cell_size;
+    volumes_cpu[pi] = spatial.grid.cell_size;
 #endif
-    volumes_cpu[pi] /= particles_per_cell_cpu;
+    volumes_cpu[pi] /= (Real)particles_per_cell_cpu;
   }
   volumes_gpu = volumes_cpu;
   volumes_original_gpu = volumes_cpu;
 }
 
+/// @brief calculate the particle masses
+/// @details Requires global variable particles_per_cell and to be
+/// set using `set_global_particles_per_cell`
+/// @param mat_id material id
+/// @param density material density
 void ParticlesContainer::calculate_initial_masses(int mat_id, Real density) {
   if (isRestart) {
     return;
@@ -252,6 +258,29 @@ void ParticlesContainer::calculate_initial_masses(int mat_id, Real density) {
   }
 
   masses_gpu = masses_cpu;
+}
+
+void ParticlesContainer::spawn_particles() {
+  if (spawner.rate <= 0) {
+    return;
+  }
+
+  if (global_step_cpu % spawner.rate != 0) {
+    return;
+  }
+  if (spawner.increment >= num_particles) {
+    return;
+  }
+
+  cpu_array<bool> is_active_cpu = is_active_gpu;
+
+  for (int si = 0; si < spawner.volume; si++) {
+
+    is_active_cpu[spawner.increment + si] = true;
+  }
+  spawner.increment += spawner.volume;
+
+  is_active_gpu = is_active_cpu;
 }
 
 } // namespace pyroclastmpm

@@ -25,52 +25,47 @@
 
 #include "pyroclastmpm/materials/mohrcoulomb.h"
 
-namespace pyroclastmpm {
-
-#ifdef CUDA_ENABLED
-extern Real __constant__ dt_gpu;
-#else
-extern Real dt_cpu;
-#endif
-
 #include "mohrcoulomb_inline.h"
 
-/**
- * @brief Construct a new Linear Elastic:: Linear Elastic object
- *
- * @param _density density of the material
- * @param _E young's modulus
- * @param _pois poissons ratio
- */
+namespace pyroclastmpm {
+
+/// @brief Construct a new Mohr Coulomb object
+/// @param _density material density (original)
+/// @param _E Young's modulus
+/// @param _pois Poisson's ratio
+/// @param _cohesion cohesion (related to thermodynamical hardening force)
+/// @param _friction_angle friction angle (degrees)
+/// @param dilatancy_angle dilatancy angle (degrees)
+/// @param _H hardening coefficient
 MohrCoulomb::MohrCoulomb(const Real _density, const Real _E, const Real _pois,
                          const Real _cohesion, const Real _friction_angle,
-                         const Real _dilatancy_angle, const Real _H) {
-  E = _E;
-  pois = _pois;
-  bulk_modulus = (1. / 3.) * (E / (1. - 2. * pois));         // K
-  shear_modulus = (1. / 2.) * E / (1 + pois);                // G
-  lame_modulus = (pois * E) / ((1 + pois) * (1 - 2 * pois)); // lambda
-  density = _density;
+                         const Real _dilatancy_angle, const Real _H)
+    : cohesion(_cohesion), H(_H), E(_E), pois(_pois) {
 
-  cohesion = _cohesion;
-  H = _H;
-  friction_angle = _friction_angle * (PI / 180);
-  dilatancy_angle = _dilatancy_angle * (PI / 180);
-  name = "MohrCoulomb";
+  bulk_modulus =
+      ((Real)1. / (Real)3.) * (E / ((Real)1. - (Real)2. * pois)); // K
+  shear_modulus = ((Real)1. / (Real)2.) * E / ((Real)1 + pois);   // G
+  lame_modulus = (pois * E) /
+                 (((Real)1.0 + pois) * ((Real)1 - (Real)2.0 * pois)); // lambda
+
+  friction_angle = _friction_angle * (Real)(PI / 180.);
+  dilatancy_angle = _dilatancy_angle * (Real)(PI / 180.);
+  density = _density;
 }
 
-void MohrCoulomb::initialize(ParticlesContainer &particles_ref, int mat_id) {
+/// @brief Initialize material (allocate memory for history variables)
+/// @param particles_ref ParticleContainer reference
+/// @param mat_id material id
+void MohrCoulomb::initialize(const ParticlesContainer &particles_ref,
+                             [[maybe_unused]] int mat_id) {
   set_default_device<Real>(particles_ref.num_particles, {}, acc_eps_p_gpu, 0.0);
   set_default_device<Matrixr>(particles_ref.num_particles, {}, eps_e_gpu,
                               Matrixr::Zero());
 }
 
-/**
- * @brief Compute the stress tensor for the material
- *
- * @param particles_ref particles container reference
- * @param mat_id material id
- */
+/// @brief Perform stress update
+/// @param particles_ptr ParticlesContainer class
+/// @param mat_id material id
 void MohrCoulomb::stress_update(ParticlesContainer &particles_ref, int mat_id) {
 #ifdef CUDA_ENABLED
   printf("CUDA implementation missing \n");
@@ -95,14 +90,12 @@ void MohrCoulomb::stress_update(ParticlesContainer &particles_ref, int mat_id) {
  */
 Real MohrCoulomb::calculate_timestep(Real cell_size, Real factor) {
   // https://www.sciencedirect.com/science/article/pii/S0045782520306885
-  const Real c = sqrt((bulk_modulus + 4. * shear_modulus / 3.) / density);
+  const auto c = (Real)sqrt((bulk_modulus + 4. * shear_modulus / 3.) / density);
 
   const Real delta_t = factor * (cell_size / c);
 
   printf("MohrCoulomb::calculate_timestep: %f", delta_t);
   return delta_t;
 }
-
-MohrCoulomb::~MohrCoulomb() {}
 
 } // namespace pyroclastmpm

@@ -29,15 +29,6 @@
 #include "pyroclastmpm/nodes/nodes.h"
 #include "pyroclastmpm/particles/particles.h"
 
-// Functions to test
-// [x] BodyForce::BodyForce, mode 0, forces (implicitly through
-// apply_on_nodes_f_ext) [x] BodyForce::BodyForce, mode 1, moments (implicitly
-// through apply_on_nodes_moments, mode1 ) [x] BodyForce::BodyForce, mode 2,
-// fixed (implicitly through apply_on_nodes_fixed, mode 2) [x]
-// BodyForce::apply_on_nodes_f_ext, mode 0, forces [x]
-// BodyForce::apply_on_nodes_moments, mode 1, moments [x]
-// BodyForce::apply_on_nodes_moments, mode 2, fixed
-
 using namespace pyroclastmpm;
 
 /**
@@ -58,7 +49,7 @@ TEST(BodyForce, ApplyOnNodesForces) {
   std::vector<Vectorr> values = {Vectorr(0.), Vectorr(0.8)};
 #endif
 
-  BodyForce boundarycondition = BodyForce("forces", values, mask);
+  auto boundarycondition = BodyForce("forces", values, mask);
 
   EXPECT_EQ(boundarycondition.mode_id, 0);
 
@@ -67,7 +58,7 @@ TEST(BodyForce, ApplyOnNodesForces) {
 
   Real nodal_spacing = 0.5;
 
-  NodesContainer nodes = NodesContainer(min, max, nodal_spacing);
+  auto nodes = NodesContainer(min, max, nodal_spacing);
 
   // this might be needed if we add particles to the apply_on_nodes_f_ext
   // argument later ParticlesContainer particles =

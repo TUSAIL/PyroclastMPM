@@ -23,116 +23,88 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file localrheo.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief Local rheology material
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ */
+
 #pragma once
 
 #include "pyroclastmpm/materials/materials.h"
 
 namespace pyroclastmpm {
 
-class ParticlesContainer; // Forward declarations
-
 /**
- * @brief Local Granular Rheology material. This material is based on the mu(I)
- * rheology of Dunatunga et al. (2015).
- *
+ * @brief This material is a hypoelastic material for local rheology
+ * The implementation is based on the paper
+ * Dunatunga, Sachith, and Ken Kamrin.
+ * "Continuum modelling and simulation of granular flows through their many
+ * phases." Journal of Fluid Mechanics 779 (2015): 483-513.
  */
-struct LocalGranularRheology : Material {
-  /**
-   * @brief Construct a new Local Granular Rheology object
-   *
-   * @param _density material density
-   * @param _E Young's modulus
-   * @param _pois Poisson's ratio
-   * @param _I0 inertial number
-   * @param _mu_s critical friction angle (max)
-   * @param _mu_2 critical friction angle (min)
-   * @param _rho_c critical density
-   * @param _particle_diameter particle diameter
-   * @param _particle_density particle solid density
-   */
+class LocalGranularRheology : public Material {
+public:
+  /// @brief Construct a new Local Granular Rheology object
+  /// @param _density material density
+  /// @param _E Young's modulus
+  /// @param _pois Poisson's ratio
+  /// @param _I0 inertial number
+  /// @param _mu_s critical friction angle (max)
+  /// @param _mu_2 critical friction angle (min)
+  /// @param _rho_c critical density
+  /// @param _particle_diameter particle diameter
+  /// @param _particle_density particle solid density
   LocalGranularRheology(const Real _density, const Real _E, const Real _pois,
                         const Real _I0, const Real _mu_s, const Real _mu_2,
                         const Real _rho_c, const Real _particle_diameter,
                         const Real _particle_density);
 
-  /**
-   * @brief Destroy the Local Granular Rheology object
-   *
-   *
-   */
-  ~LocalGranularRheology();
+  /// @brief Destroy the Local Granular Rheology object
+  ~LocalGranularRheology() final = default;
 
-  /**
-   * @brief Perform stress update
-   *
-   * @param particles_ptr particles container
-   * @param mat_id material id
-   */
+  /// @brief Perform stress update
+  /// @param particles_ptr particles container
+  /// @param mat_id material id
   void stress_update(ParticlesContainer &particles_ptr, int mat_id) override;
 
-  void mp_benchmark(std::vector<Matrix3r> &_stress_cpu,
-                    std::vector<uint8_t> &_phases_cpu,
-                    const std::vector<Matrixr> _velocity_gradient_cpu,
-                    const std::vector<Real> _volume_cpu,
-                    const std::vector<Real> _mass_cpu);
-
-  /**
-   * @brief Calculated value
-   */
+  /// @brief scalar composed of I0, particle diameter and particle density
   Real EPS;
 
-  /**
-   * @brief static critical friction angle
-   *
-   */
+  /// @brief static critical friction angle
   Real mu_s;
 
-  /**
-   * @brief minimum critical friction angle
-   *
-   */
+  /// @brief minimum critical friction angle
   Real mu_2;
 
-  /**
-   * @brief critical density
-   *
-   *
-   */
+  /// @brief critical density
   Real rho_c;
 
-  /**
-   * @brief Inertial number
-   *
-   */
+  /// @brief Inertial number
   Real I0;
 
-  /**
-   * @brief Particle diameter
-   *
-   *
-   */
+  /// @brief Particle diameter
   Real particle_diameter;
 
-  /**
-   * @brief Particle solid density
-   *
-   *
-   */
+  /// @brief Particle solid density
   Real particle_density;
 
-  /** @brief Youngs modulus */
+  //// @brief Youngs modulus
   Real E;
 
-  /** @brief Poisson's ratio */
+  /// @brief Poisson's ratio
   Real pois;
 
-  /** @brief Shear modulus (G) */
+  /// @brief Shear modulus (G)
   Real shear_modulus;
 
-  /** @brief Lame modulus (lambda) */
+  /// @brief Lame modulus (lambda)
   Real lame_modulus;
 
-  /** @brief Bulk modulus (K) */
+  /// @brief Bulk modulus (K)
   Real bulk_modulus;
 };
 

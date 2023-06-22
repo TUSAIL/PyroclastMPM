@@ -29,13 +29,6 @@
 
 using namespace pyroclastmpm;
 
-// Functions tested
-// [x] SpatialPartition::SpatialPartition
-// [x] SpatialPartition::calculate_hash
-// [x] SpatialPartition::sort_hash
-// [x] SpatialPartition::bin_particles
-// [ ] SpatialPartition::reset
-
 /**
  * @brief Construct a new TEST object for SpatialPartitioning object constructor
  * in 3D
@@ -48,29 +41,31 @@ TEST(SpatialPartition, CONSTRUCTOR) {
   Real cell_size = 0.5;
   int num_elements = 2;
 
-  SpatialPartition spatial =
-      SpatialPartition(min, max, cell_size, num_elements);
+  SpatialPartition spatial = SpatialPartition(
+
+      Grid(min, max, cell_size), num_elements);
 
 #if DIM == 3
-  EXPECT_EQ(spatial.num_cells_total, 27);
-  EXPECT_EQ(spatial.num_cells[0], 3);
-  EXPECT_EQ(spatial.num_cells[1], 3);
-  EXPECT_EQ(spatial.num_cells[2], 3);
+  EXPECT_EQ(spatial.grid.num_cells_total, 27);
+  EXPECT_EQ(spatial.grid.num_cells[0], 3);
+  EXPECT_EQ(spatial.grid.num_cells[1], 3);
+  EXPECT_EQ(spatial.grid.num_cells[2], 3);
 
 #elif DIM == 2
 
-  EXPECT_EQ(spatial.num_cells_total, 9);
-  EXPECT_EQ(spatial.num_cells[0], 3);
-  EXPECT_EQ(spatial.num_cells[1], 3);
+  EXPECT_EQ(spatial.grid.num_cells_total, 9);
+  EXPECT_EQ(spatial.grid.num_cells[0], 3);
+  EXPECT_EQ(spatial.grid.num_cells[1], 3);
 
 #else // DIM == 1
-  EXPECT_EQ(spatial.num_cells_total, 3);
-  EXPECT_EQ(spatial.num_cells[0], 3);
+  EXPECT_EQ(spatial.grid.num_cells_total, 3);
+  EXPECT_EQ(spatial.grid.num_cells[0], 3);
 #endif
 }
 
 /**
- * @brief Construct a new TEST object for calculating the hash of particles in
+ * @brief Construct a new TEST object for calculating the hash of particles
+ in
  * 3D
  *
  */
@@ -93,7 +88,7 @@ TEST(SpatialPartition, CALC_HASH) {
   gpu_array<Vectorr> pos_gpu(pos);
 
   SpatialPartition spatial =
-      SpatialPartition(min, max, cell_size, pos_gpu.size());
+      SpatialPartition(Grid(min, max, cell_size), (int)pos_gpu.size());
 
   spatial.reset();
 
@@ -170,7 +165,7 @@ TEST(SpatialPartition, SORT_HASH) {
   gpu_array<Vectorr> pos_gpu(pos);
 
   SpatialPartition spatial =
-      SpatialPartition(min, max, cell_size, pos_gpu.size());
+      SpatialPartition(Grid(min, max, cell_size), (int)pos_gpu.size());
 
   spatial.reset();
 
@@ -236,7 +231,7 @@ TEST(SpatialPartition, BIN_PARTICLES) {
   gpu_array<Vectorr> pos_gpu(pos);
 
   SpatialPartition spatial =
-      SpatialPartition(min, max, cell_size, pos_gpu.size());
+      SpatialPartition(Grid(min, max, cell_size), (int)pos_gpu.size());
 
   spatial.reset();
 
@@ -247,6 +242,7 @@ TEST(SpatialPartition, BIN_PARTICLES) {
   spatial.bin_particles();
 
   cpu_array<int> cell_start = spatial.cell_start_gpu;
+
   cpu_array<int> cell_end = spatial.cell_end_gpu;
 
 #if DIM == 3
@@ -284,14 +280,14 @@ TEST(SpatialPartition, BIN_PARTICLES) {
 #else // DIM == 1
   for (int nid = 0; nid < 3; nid++) {
     if (nid == 0) {
-      EXPECT_EQ(cell_start[nid], 0);
-      EXPECT_EQ(cell_end[nid], 2);
+      EXPECT_EQ(cell_range[nid], 0);
+      EXPECT_EQ(cell_range[nid], 2);
     } else if (nid == 1) {
-      EXPECT_EQ(cell_start[nid], 2);
-      EXPECT_EQ(cell_end[nid], 3);
+      EXPECT_EQ(cell_range[nid], 2);
+      EXPECT_EQ(cell_range[nid], 3);
     } else if (nid == 2) {
-      EXPECT_EQ(cell_start[nid], -1);
-      EXPECT_EQ(cell_end[nid], -1);
+      EXPECT_EQ(cell_range[nid], -1);
+      EXPECT_EQ(cell_range[nid], -1);
     }
   }
 #endif

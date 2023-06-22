@@ -22,7 +22,18 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
+namespace pyroclastmpm {
 
+#ifdef CUDA_ENABLED
+extern Real __constant__ dt_gpu;
+#else
+extern Real dt_cpu;
+#endif
+
+/// @brief Find the negative root of a quadratic equation
+/// @param a quadratic coefficient
+/// @param b linear coefficient
+/// @param c constant
 __device__ __host__ inline double negative_root(double a, double b, double c) {
   double x;
   if (b > 0) {
@@ -33,6 +44,31 @@ __device__ __host__ inline double negative_root(double a, double b, double c) {
   return x;
 }
 
+/**
+ * @brief Stress update algorithm for a
+ * hypoelastic local granular rheology
+ * for details see
+ * Dunatunga, Sachith, and Ken Kamrin.
+ * "Continuum modelling and simulation of granular flows through their many
+ * phases." Journal of Fluid Mechanics 779 (2015): 483-513.
+ *
+ *
+ * @param particles_stresses_gpu stress tensor
+ * @param particles_velocity_gradients_gpu velocity gradient
+ * @param particles_volume_gpu particle volumes (updated)
+ * @param particles_mass_gpu particle masses
+ * @param particles_colors_gpu particle colors (or material ids)
+ * @param shear_modulus shear modulus
+ * @param lame_modulus lame modulus
+ * @param bulk_modulus bulk modulus
+ * @param rho_c critical density
+ * @param mu_s static friction angle
+ * @param mu_2 dynamic friction angle
+ * @param I0 inertial number
+ * @param EPS particle diameter
+ * @param mat_id material id
+ * @param tid particle id
+ */
 __device__ __host__ inline void stress_update_localrheo(
     Matrix3r *particles_stresses_gpu,
     const Matrixr *particles_velocity_gradients_gpu,
@@ -42,12 +78,9 @@ __device__ __host__ inline void stress_update_localrheo(
     const Real mu_s, const Real mu_2, const Real I0, const Real EPS,
     const int mat_id, const int tid) {
 
-  const int particle_color = particles_colors_gpu[tid];
-
-  if (particle_color != mat_id) {
+  if (particles_colors_gpu[tid] != mat_id) {
     return;
   }
-  // particles_stresses_gpu[tid] += Matrix3r::Ones();
 
 #if DIM != 3
   Matrix3r vel_grad = Matrix3r::Zero();
@@ -92,7 +125,6 @@ __device__ __host__ inline void stress_update_localrheo(
 
   const Real tau = sqrt(0.5 * (stress_trail_0 * stress_trail_0_trans).trace());
 
-  // if ((pressure_trail < 0.0))
   if ((pressure_trail < 0.0) || (rho < rho_c)) {
     particles_stresses_gpu[tid] = Matrix3r::Zero();
     return;
@@ -121,6 +153,8 @@ __device__ __host__ inline void stress_update_localrheo(
   particles_stresses_gpu[tid] =
       scale_factor * stress_trail_0 - pressure_trail * Matrix3r::Identity();
 }
+
+} // namespace pyroclastmpm
 
 #ifdef CUDA_ENABLED
 

@@ -42,56 +42,84 @@
 
 namespace pyroclastmpm {
 
-struct BodyForce : BoundaryCondition {
+/**
+ * @brief Body force boundary conditions
+ * @details Applies a body force or moment on the background grid
+ *
+ * If the mode is "forces" then the body force is applied on the external
+ * forces of the background grid
+ *
+ * If the mode is "moments" then moments are applied on the background grid,
+ * or "fixed", meaning they are constraint to a fixed value
+ *
+ * \verbatim embed:rst:leading-asterisk
+ *     Example usage (constant)
+ *
+ *     .. code-block:: cpp
+ *
+ *        #include "pyroclastmpm/boundaryconditions/bodyforce.h"
+ *        #include "pyroclastmpm/nodes/nodes.h"
+ *
+ *        // set globals
+ *
+ *        // Create NodesContainer with M number of nodes
+ *
+ *        /// NodesContainer give_node_coords() function can help to define
+ * areas
+ *        /// which are affected by the body force
+ *
+ *
+ *        /// Mask of size M
+ *        std::vector<bool> mask = {false, true,...};
+ *
+ *        std::vector<Vectorr> external_forces = {Vectorr({0., 0.25, 0.}),
+ *                              Vectorr({0.8, 0.6, 0.4}),...};
+ *
+ *        /// Create BoundaryCondition
+ *        auto boundarycondition = BodyForce("forces", values, mask);
+ *
+ *        // Add gravity to Solver class
+ *
+ * \endverbatim
+ *
+ *
+ */
+class BodyForce : public BoundaryCondition {
 
-  /**
-   * @brief Construct a new Body Force object
-   *
-   * If the mode is "forces" then the body force is applied on the external
-   * forces of the background grid
-   *
-   * If the mode is "moments" then moments are applied on the background grid,
-   * or "fixed", meaning they constraint to a fixed value
-   *
-   * @param _mode On what is it applied ("forces","moments","fixed")
-   * @param _values Values of the body force
-   * @param _mask Mask to apply the body force
-   */
+public:
+  /// @brief Construct a new Body Force object
+  /// @param _mode mode of the body force
+  /// @param _values values of the body force
+  /// @param _mask mask on which nodes to apply the body force
   BodyForce(const std::string_view &_mode, const cpu_array<Vectorr> &_values,
             const cpu_array<bool> &_mask) noexcept;
 
-  /**
-   * @brief Update node values for eternal forces
-   *
-   * @param nodes_ptr  NodeContainer reference
-   */
+  /// @brief Apply body force to external node forces
+  /// @param nodes_ptr NodeContainer reference
   void apply_on_nodes_f_ext(NodesContainer &nodes_ptr) override;
 
-  /**
-   * @brief Update node values for moments
-   *
-   * @param nodes_ref NodeContainer reference
-   * @param particles_ref ParticleContainer reference
-   */
+  /// @brief Update node values for moments
+  /// @param nodes_ref NodeContainer reference
+  /// @param particles_ref ParticleContainer reference
   void apply_on_nodes_moments(NodesContainer &nodes_ref,
                               ParticlesContainer &particles_ref) override;
 
   /**
-   * @brief Values to be applied to the forces or moments
-   *
+   * @brief Values of the body force or moments
+   * @details has the same size as the number of nodes
    */
   gpu_array<Vectorr> values_gpu;
 
   /**
-   * @brief mask on which nodes to apply the body force
-   * has the same size as the number of nodes
+   * @brief Mask on which nodes to apply the body force
+   * @details has the same size as the number of nodes
    *
    */
   gpu_array<bool> mask_gpu;
 
   /**
    * @brief Mode of the body force
-   *  0 forces, 1 is moments, 2 fixed moments
+   * @details  0 forces, 1 is moments additve, 2 fixed moments
    */
   int mode_id;
 };

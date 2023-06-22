@@ -27,4 +27,4 @@ run:
 	python run.py 
 
 postprocess:
-	python postprocess.py >> logs/logfile.txt
+	python postprocess.py

@@ -33,12 +33,6 @@
 
 #include "pyroclastmpm/solver/solver.h"
 
-// features to test
-// [x] Solver::Solver
-// [x] Solver::stress_update (implicitly tested by material)
-// [x] Solver::solve_nsteps (implicitly tested)
-// [x] Solver::calculate_shape_function (implicitly tested by shapefunctions)
-
 /**
  * @brief Construct a new TEST object to test if solver constructor works
  * Only tests if the constructor works, not particle and node initialization
@@ -46,7 +40,7 @@
  *
  */
 TEST(Solver, Constructor) {
-  set_globals(0.1, 1, pyroclastmpm::LinearShapeFunction, "output");
+  set_globals(0.1, 1, "linear", "output");
   std::vector<Vectorr> pos = {Vectorr::Zero()};
 
   std::vector<pyroclastmpm::Material> materials;

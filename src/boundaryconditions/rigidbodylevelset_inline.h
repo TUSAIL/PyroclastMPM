@@ -23,6 +23,37 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "pyroclastmpm/common/types_common.h"
+
+namespace pyroclastmpm {
+
+#ifdef CUDA_ENABLED
+extern __constant__ Real dt_gpu;
+extern __constant__ int num_surround_nodes_gpu;
+extern __constant__ int g2p_window_gpu[64][3];
+extern __constant__ int p2g_window_gpu[64][3];
+extern Real __constant__ dt_gpu;
+#else
+extern const int num_surround_nodes_cpu;
+extern const int g2p_window_cpu[64][3];
+extern const int p2g_window_cpu[64][3];
+extern const Real dt_cpu;
+#endif
+
+/**
+ * @brief Update velocity of non rigid bodies
+ * @details The total velocity of a non rigid body is the sum of its
+ * translational and rotational velocity
+ *
+ * @param particles_velocities_gpu velocity of the particles
+ * @param particles_positions_gpu positions of the particles
+ * @param particle_is_rigid_gpu boolean array to check if particle is rigid
+ * @param body_velocity translational velocity of the body
+ * @param COM center of mass of the body
+ * @param angular_velocities angular velocity of the body
+ * @param euler_angles euler angles of the body
+ * @param tid particle id
+ */
 __device__ __host__ inline void update_rigid_velocity(
     Vectorr *particles_velocities_gpu, const Vectorr *particles_positions_gpu,
     const bool *particle_is_rigid_gpu, const Vectorr body_velocity,
@@ -33,8 +64,8 @@ __device__ __host__ inline void update_rigid_velocity(
     return;
   }
 
-  Vectorr omega = Vectorr::Zero();
 #if DIM == 3
+  Vectorr omega = Vectorr::Zero();
 
   const Real theta = euler_angles[0];
   const Real phi = euler_angles[1];
@@ -74,6 +105,15 @@ __global__ void KERNEL_UPDATE_RIGID_VELOCITY(
 }
 #endif
 
+/**
+ * @brief Update position of rigid particles
+ *
+ * @param particles_positions_gpu position of the particles
+ * @param particles_velocities_gpu velocity of the particles
+ * @param particle_is_rigid_gpu boolean array to check if particle is rigid
+ * @param tid
+ * @return __device__
+ */
 __device__ __host__ inline void
 update_rigid_position(Vectorr *particles_positions_gpu,
                       const Vectorr *particles_velocities_gpu,
@@ -105,6 +145,29 @@ __global__ void KERNEL_UPDATE_RIGID_POSITION(
 }
 #endif
 
+/**
+ * @brief  Calculate the grid normal and find the nearest rigid particle
+ * @param nodes_moments_gpu Node moments
+ * @param nodes_moments_nt_gpu Forward node moments
+ * @param node_ids_gpu node bin ids (idx,idy,idz)
+ * @param nodes_masses_gpu node masses
+ * @param is_overlapping_gpu a boolean array if rigid body and non rigidy body
+ * share the same nodes
+ * @param particles_velocities_gpu velocity of the particles
+ * @param particles_dpsi_gpu shape function gradient of the particles
+ * @param particles_masses_gpu mass of the particles
+ * @param particles_cells_start_gpu start index of the particles in the cell
+ * @param particles_cells_end_gpu end index of the particles in the cell
+ * @param particles_sorted_indices_gpu sorted indices of the particles
+ * @param particle_is_rigid_gpu boolean array to check if particle is rigid
+ * @param particles_positions_gpu position of the particles
+ * @param origin origin of the grid
+ * @param inv_cell_size inverse of the cell size
+ * @param num_nodes number of nodes in the grid
+ * @param num_nodes_total total number of nodes
+ * @param node_mem_index
+ * @return
+ */
 __device__ __host__ inline void calculate_grid_normals_nn_rigid(
     Vectorr *nodes_moments_gpu, Vectorr *nodes_moments_nt_gpu,
     const Vectori *node_ids_gpu, const Real *nodes_masses_gpu,
@@ -112,9 +175,8 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
     const Vectorr *particles_dpsi_gpu, const Real *particles_masses_gpu,
     const int *particles_cells_start_gpu, const int *particles_cells_end_gpu,
     const int *particles_sorted_indices_gpu, const bool *particle_is_rigid_gpu,
-    const Vectorr *particles_positions_gpu, const Vectorr origin,
-    const Real inv_cell_size, const Vectori num_nodes,
-    const int num_nodes_total, const int node_mem_index) {
+    const Vectorr *particles_positions_gpu, const Grid &grid,
+    const int node_mem_index) {
 
   if (!is_overlapping_gpu[node_mem_index]) {
     return;
@@ -130,7 +192,7 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
 
   Vectorr normal = Vectorr::Zero();
 
-  Real min_dist = 999999999999999.;
+  Real min_dist = (Real)999999999999999.;
   int min_id = -1;
 
 #ifdef CUDA_ENABLED
@@ -149,9 +211,9 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
     const Vectori selected_bin = WINDOW_BIN(node_bin, p2g_window_cpu, sid);
 #endif
 
-    const unsigned int node_hash = NODE_MEM_INDEX(selected_bin, num_nodes);
+    const unsigned int node_hash = NODE_MEM_INDEX(selected_bin, grid.num_cells);
 
-    if (node_hash >= num_nodes_total) {
+    if (node_hash >= grid.num_cells_total) {
       continue;
     }
 
@@ -170,7 +232,8 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
       if (particle_is_rigid_gpu[particle_id]) {
 
         const Vectorr relative_pos =
-            (particles_positions_gpu[particle_id] - origin) * inv_cell_size -
+            (particles_positions_gpu[particle_id] - grid.origin) *
+                grid.inv_cell_size -
             selected_bin.cast<Real>();
         const Real distance =
             relative_pos.dot(relative_pos); // squared distance is monotonic,
@@ -234,11 +297,10 @@ __global__ void KERNELS_GRID_NORMALS_AND_NN_RIGID(
     const int *particles_cells_start_gpu, const int *particles_cells_end_gpu,
     const int *particles_sorted_indices_gpu, const bool *particle_is_rigid_gpu,
     const Vectorr *particles_positions_gpu, const Vectorr origin,
-    const Real inv_cell_size, const Vectori num_nodes,
-    const int num_nodes_total) {
+    const Grid grid) {
   const int node_mem_index = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if (node_mem_index >= num_nodes_total) {
+  if (node_mem_index >= grid.num_cells_total) {
     return;
   }
 
@@ -247,8 +309,7 @@ __global__ void KERNELS_GRID_NORMALS_AND_NN_RIGID(
       is_overlapping_gpu, particles_velocities_gpu, particles_dpsi_gpu,
       particles_masses_gpu, particles_cells_start_gpu, particles_cells_end_gpu,
       particles_sorted_indices_gpu, particle_is_rigid_gpu,
-      particles_positions_gpu, origin, inv_cell_size, num_nodes,
-      num_nodes_total, node_mem_index);
+      particles_positions_gpu, grid, node_mem_index);
 }
 
 #endif
@@ -256,9 +317,7 @@ __global__ void KERNELS_GRID_NORMALS_AND_NN_RIGID(
 __device__ __host__ inline void get_overlapping_rigid_body_grid(
     bool *is_overlapping_gpu, const Vectori *node_ids_gpu,
     const Vectorr *particles_positions_gpu, const Vectori *particles_bins_gpu,
-    const bool *particle_is_rigid_gpu, const Vectori num_nodes,
-    const Vectorr origin, const Real inv_cell_size, const int num_nodes_total,
-    const int tid) {
+    const bool *particle_is_rigid_gpu, const Grid &grid, const int tid) {
 
   if (!particle_is_rigid_gpu[tid]) // block non-rigid particles
   {
@@ -287,9 +346,10 @@ __device__ __host__ inline void get_overlapping_rigid_body_grid(
     const Vectori selected_bin =
         WINDOW_BIN(particle_bin, linear_p2g_window_3d, sid);
 #endif
-    const unsigned int node_hash = NODE_MEM_INDEX(selected_bin, num_nodes);
+    const unsigned int node_hash = NODE_MEM_INDEX(selected_bin, grid.num_cells);
     const Vectorr relative_coordinates =
-        (particle_coords - origin) * inv_cell_size - selected_bin.cast<Real>();
+        (particle_coords - grid.origin) * grid.inv_cell_size -
+        selected_bin.cast<Real>();
 
     const Real radius = 1.;
     if (fabs(relative_coordinates(0)) >= radius) {
@@ -307,7 +367,7 @@ __device__ __host__ inline void get_overlapping_rigid_body_grid(
       continue;
 #endif
 
-    if (node_hash >= num_nodes_total) {
+    if (node_hash >= grid.num_cells_total) {
       continue;
     }
 
@@ -319,8 +379,7 @@ __device__ __host__ inline void get_overlapping_rigid_body_grid(
 __global__ void KERNEL_GET_OVERLAPPING_RIGID_BODY_GRID(
     bool *is_overlapping_gpu, const Vectori *node_ids_gpu,
     const Vectorr *particles_positions_gpu, const Vectori *particles_bins_gpu,
-    const bool *particle_is_rigid_gpu, const Vectori num_nodes,
-    const Vectorr origin, const Real inv_cell_size, const int num_nodes_total,
+    const bool *particle_is_rigid_gpu, const Vectori num_nodes, const Grid grid,
     const int num_particles) {
   const int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -330,8 +389,8 @@ __global__ void KERNEL_GET_OVERLAPPING_RIGID_BODY_GRID(
 
   get_overlapping_rigid_body_grid(is_overlapping_gpu, node_ids_gpu,
                                   particles_positions_gpu, particles_bins_gpu,
-                                  particle_is_rigid_gpu, num_nodes, origin,
-                                  inv_cell_size, num_nodes_total, tid);
+                                  particle_is_rigid_gpu, grid tid);
 }
 
 #endif
+} // namespace pyroclastmpm

@@ -80,7 +80,10 @@ instance/
 .scrapy
 
 # Sphinx documentation
-docs/_build/
+docs/sphinx/_build/
+docs/doxygen/html/
+docs/doxygen/latex/
+docs/doxygen/xml/
 
 # PyBuilder
 .pybuilder/

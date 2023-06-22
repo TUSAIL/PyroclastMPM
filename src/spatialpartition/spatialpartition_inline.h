@@ -23,74 +23,105 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/* @file spatialpartition_inline.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief CUDA kernels related to spatial partitioning
+ * @version 0.1
+ * @date 2023-06-17
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+
+#pragma once
+
+#include "pyroclastmpm/spatialpartition/spatialpartition.h"
+
+namespace pyroclastmpm {
+
+/// @brief Calculate the cartesian hash of a point based on the its position to
+/// in the grid
+/// @param bins_gpu spatial bin id (idx, idy, idz) of each point
+/// @param hash_unsorted_gpu the points' spatial hashes
+/// @param positions_gpu points' coordinates
+/// @param grid information about the grid
+/// @param tid id of the point
 __device__ __host__ inline void
-calculate_hashes(Vectori *bins_gpu, unsigned int *hashes_unsorted_gpu,
-                 const Vectorr *positions_gpu, const Vectorr grid_start,
-                 const Vectorr grid_end, const Vectori num_cells,
-                 const Real inv_cell_size, const int tid)
+calculate_hashes(Vectori *bins_gpu, unsigned int *hash_unsorted_gpu,
+                 const Vectorr *positions_gpu, const Grid &grid, const int tid)
 
 {
   const Vectorr relative_position =
-      (positions_gpu[tid] - grid_start) * inv_cell_size;
+      (positions_gpu[tid] - grid.origin) * grid.inv_cell_size;
+
   bins_gpu[tid] = relative_position.cast<int>();
-  hashes_unsorted_gpu[tid] = NODE_MEM_INDEX(
-      bins_gpu[tid], num_cells); // MACRO defined in type_commons.cuh
+
+  hash_unsorted_gpu[tid] =
+      NODE_MEM_INDEX(bins_gpu[tid],
+                     grid.num_cells); // MACRO defined in type_commons.cuh
 }
 
 #ifdef CUDA_ENABLED
-__global__ void
-KERNEL_CALC_HASH(Vectori *bins_gpu, unsigned int *hashes_unsorted_gpu,
-                 const Vectorr *positions_gpu, const Vectorr grid_start,
-                 const Vectorr grid_end, const Vectori num_cells,
-                 const Real inv_cell_size, const int num_elements) {
+__global__ void KERNEL_CALC_HASH(Vectori *bins_gpu,
+                                 unsigned int *hashes_unsorted_gpu,
+                                 const Vectorr *positions_gpu, const Grid grid,
+                                 const int num_elements) {
   const int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
   if (tid >= num_elements) {
     return;
   } // block access threads
 
-  calculate_hashes(bins_gpu, hashes_unsorted_gpu, positions_gpu, grid_start,
-                   grid_end, num_cells, inv_cell_size, tid);
+  calculate_hashes(bins_gpu, hashes_unsorted_gpu, positions_gpu, grid, tid);
 }
-
 #endif
 
+/// @brief Populate the cell start and end range of each point
+/// @param cell_start_gpu cell start range of each point
+/// @param cell_end_gpu cell end range of each point
+/// @param hash_sorted sorted spatial hashes of each point
+/// @param num_elements number of points
+/// @param tid id of the point
 __host__ __device__ inline void
-bin_particles_kernel(int *cell_start, int *cell_end,
-                     const unsigned int *hashes_sorted, const int num_elements,
+bin_particles_kernel(int *cell_start_gpu, int *cell_end_gpu,
+                     const unsigned int *hash_sorted, const int num_elements,
                      const int tid) {
 
   if (tid >= num_elements) {
     return;
   } // block access threads
 
-  unsigned int hash, nexthash;
-  hash = hashes_sorted[tid];
+  unsigned int hash;
+  unsigned int nexthash;
+  hash = hash_sorted[tid];
 
   if (tid < num_elements - 1) {
-    nexthash = hashes_sorted[tid + 1];
+    nexthash = hash_sorted[tid + 1];
 
     if (tid == 0) {
-      cell_start[hash] = tid;
+      cell_start_gpu[hash] = tid;
     }
 
     if (hash != nexthash) {
-      cell_end[hash] = tid + 1;
+      cell_end_gpu[hash] = tid + 1;
 
-      cell_start[nexthash] = tid + 1;
+      cell_start_gpu[nexthash] = tid + 1;
     }
   }
 
   if (tid == num_elements - 1) {
-    cell_end[hash] = tid + 1;
+    cell_end_gpu[hash] = tid + 1;
   }
 }
 
 #ifdef CUDA_ENABLED
-__global__ void KERNEL_BIN_PARTICLES(int *cell_start, int *cell_end,
-                                     const unsigned int *hashes_sorted,
+__global__ void KERNEL_BIN_PARTICLES(int *cell_start_gpu, int *cell_end_gpu,
+                                     const unsigned int *hash_sorted,
                                      const int num_elements) {
   int tid = blockDim.x * blockIdx.x + threadIdx.x;
-  bin_particles_kernel(cell_start, cell_end, hashes_sorted, num_elements, tid);
+  bin_particles_kernel(cell_start_gpu, cell_end_gpu, hash_sorted, num_elements,
+                       tid);
 }
 #endif
+
+} // namespace pyroclastmpm

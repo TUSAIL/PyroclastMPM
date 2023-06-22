@@ -23,6 +23,16 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file boundaryconditions.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief Boundary condition base class
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ */
+
 #pragma once
 
 #include "pyroclastmpm/common/types_common.h"
@@ -31,76 +41,46 @@
 
 namespace pyroclastmpm {
 
-/*!
- * @brief Boundary condition base class. The functions are called from a Solver
- * class.
- */
-struct BoundaryCondition {
-
-  // FUNCTIONS
-
-  /*!
-   * @brief default constructor
-   */
+/// @brief The base class for every boundary condition
+class BoundaryCondition {
+public:
+  /// @brief default constructor
   BoundaryCondition() = default;
 
-  /*!
-   * @brief default destructor
-   */
+  /// @brief Default destructor
   virtual ~BoundaryCondition() = default;
 
-  /*!
-   * @brief Apply on node forces
-   * @param nodes_ref reference to node container
-   */
+  /// @brief Apply to internal node forces
+  /// @param nodes_ref reference to NodesContainer
   virtual void apply_on_nodes_loads(NodesContainer &nodes_ref){
       // override in derived classes
   };
 
-  /*!
-   * @brief Apply on node moments
-   * @param nodes_ref reference to node container
-   */
+  /// @brief Apply to node moments
+  /// @param nodes_ref reference to NodesContainer
   virtual void apply_on_nodes_moments(NodesContainer &nodes_ref,
                                       ParticlesContainer &particles_ref){
       // override in derived classes
   };
 
-  /*!
-   * @brief Apply on nodes forces
-   * @param nodes_ref reference to node container
-   */
+  /// @brief Apply to external node forces
+  /// @param nodes_ref reference to NodesContainer
   virtual void apply_on_nodes_f_ext(NodesContainer &nodes_ref){
       // override in derived classes
   };
 
-  /*!
-   * @brief Apply on particles
-   * @param particles_ref reference to particles
-   */
+  /// @brief Apply to particles
+  /// @param nodes_ref reference to ParticlesContainer
   virtual void apply_on_particles(ParticlesContainer &particles_ref){
       // override in derived classes
   };
 
-  /*!
-   * @brief Output after certain number of steps
-   */
+  /// @brief Output arrays stored in boundary conditions
   virtual void output_vtk(){
       // override in derived classes
   };
 
-  // VARIABLES
-
-  //   /*!
-  //    * @brief Enum of type of boundary condition (NodeBoundaryCondition,
-  //    * ParticleBoundaryCondition)
-  //    */
-  //   BCType type;
-
-  /**
-   * @brief Is the boundary condition active or not
-   *
-   */
+  /// @brief Flag if the boundary condition active or not
   bool isActive = true;
 };
 

@@ -23,13 +23,27 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file usl.cpp
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief Update Stress Last (USL) solver
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ */
+
 #include "pyroclastmpm/solver/usl/usl.h"
 
-// include private header with kernels here to inline them
 #include "usl_inline.h"
 
 namespace pyroclastmpm {
-
+///@brief Construct a new USL object
+///@param _particles ParticlesContainer class
+///@param _nodes NodesContainer class
+///@param _materials A list of Materials
+///@param _boundaryconditions a list of boundary conditions
+///@param _alpha Flip/PIC mixture
 USL::USL(const ParticlesContainer &_particles, const NodesContainer &_nodes,
          const cpu_array<MaterialType> &_materials,
          const cpu_array<BoundaryConditionType> &_boundaryconditions,
@@ -37,20 +51,14 @@ USL::USL(const ParticlesContainer &_particles, const NodesContainer &_nodes,
     : Solver(_particles, _nodes, _materials, _boundaryconditions),
       alpha(_alpha) {}
 
-/**
- * @brief Reset the temporary arrays for the USL solver
- *
- */
+/// @brief Reset the temporary arrays for the USL solver
 void USL::reset() {
   nodes.reset();
   particles.reset();
   particles.spatial.reset();
 }
 
-/**
- * @brief Main loop of the USL solver
- *
- */
+/// @brief Main loop of the USL solver
 void USL::solve() {
   reset();
 
@@ -60,40 +68,34 @@ void USL::solve() {
 
   calculate_shape_function(nodes, particles);
 
-  for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
-    std::visit([this](auto &arg) { arg.apply_on_particles(particles); },
-               boundaryconditions[bc_id]);
+  for (auto bc : boundaryconditions) {
+    std::visit([this](auto &arg) { arg.apply_on_particles(particles); }, bc);
   }
 
   P2G();
 
-  for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
-    std::visit([this](auto &arg) { arg.apply_on_nodes_f_ext(nodes); },
-               boundaryconditions[bc_id]);
+  for (auto bc : boundaryconditions) {
+    std::visit([this](auto &arg) { arg.apply_on_nodes_f_ext(nodes); }, bc);
   }
 
   nodes.integrate();
 
-  for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
+  for (auto bc : boundaryconditions) {
     std::visit(
         [this](auto &arg) { arg.apply_on_nodes_moments(nodes, particles); },
-        boundaryconditions[bc_id]);
+        bc);
   }
 
   G2P();
 
   stress_update();
 
-  for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
-    std::visit([this](auto &arg) { arg.apply_on_particles(particles); },
-               boundaryconditions[bc_id]);
+  for (auto bc : boundaryconditions) {
+    std::visit([this](auto &arg) { arg.apply_on_particles(particles); }, bc);
   }
 }
 
-/**
- * @brief Particle to Grid (P2G) operation for USL (velocities gather)
- *
- */
+/// @brief Particle to Grid (P2G) operation for USL (velocities gather)
 void USL::P2G() {
 
 #ifdef CUDA_ENABLED
@@ -113,11 +115,10 @@ void USL::P2G() {
       thrust::raw_pointer_cast(particles.spatial.cell_end_gpu.data()),
       thrust::raw_pointer_cast(particles.spatial.sorted_index_gpu.data()),
       thrust::raw_pointer_cast(particles.is_rigid_gpu.data()),
-      thrust::raw_pointer_cast(particles.is_active_gpu.data()), nodes.num_nodes,
-      nodes.inv_node_spacing, nodes.num_nodes_total);
+      thrust::raw_pointer_cast(particles.is_active_gpu.data()), nodes.grid);
   gpuErrchk(cudaDeviceSynchronize());
 #else
-  for (int ti = 0; ti < nodes.num_nodes_total; ti++) {
+  for (int index = 0; index < nodes.grid.num_cells_total; index++) {
 
     usl_p2g_kernel(
         nodes.moments_gpu.data(), nodes.forces_internal_gpu.data(),
@@ -129,15 +130,12 @@ void USL::P2G() {
         particles.spatial.cell_end_gpu.data(),
         particles.spatial.sorted_index_gpu.data(),
         particles.is_rigid_gpu.data(), particles.is_active_gpu.data(),
-        nodes.num_nodes, nodes.inv_node_spacing, nodes.num_nodes_total, ti);
+        nodes.grid, index);
   }
 #endif
 }
 
-/**
- * @brief Grid to Particle (G2P) operation for USL (velocities scatter)
- *
- */
+/// @brief Grid to Particle (G2P) operation for USL (velocities scatter)
 void USL::G2P() {
 #ifdef CUDA_ENABLED
   KERNEL_USL_G2P<<<particles.launch_config.tpb, particles.launch_config.bpg>>>(
@@ -150,26 +148,24 @@ void USL::G2P() {
       thrust::raw_pointer_cast(particles.spatial.bins_gpu.data()),
       thrust::raw_pointer_cast(particles.volumes_original_gpu.data()),
       thrust::raw_pointer_cast(particles.psi_gpu.data()),
-      thrust::raw_pointer_cast(particles.masses_gpu.data()),
       thrust::raw_pointer_cast(particles.is_rigid_gpu.data()),
       thrust::raw_pointer_cast(particles.is_active_gpu.data()),
       thrust::raw_pointer_cast(nodes.moments_gpu.data()),
       thrust::raw_pointer_cast(nodes.moments_nt_gpu.data()),
       thrust::raw_pointer_cast(nodes.masses_gpu.data()),
-      particles.spatial.num_cells, particles.num_particles, alpha);
+      nodes.grid.particles.num_particles, alpha);
   gpuErrchk(cudaDeviceSynchronize());
 #else
-  for (int ti = 0; ti < particles.num_particles; ti++) {
+  for (int index = 0; index < particles.num_particles; index++) {
     usl_g2p_kernel(particles.velocity_gradient_gpu.data(),
                    particles.F_gpu.data(), particles.velocities_gpu.data(),
                    particles.positions_gpu.data(), particles.volumes_gpu.data(),
                    particles.dpsi_gpu.data(), particles.spatial.bins_gpu.data(),
                    particles.volumes_original_gpu.data(),
-                   particles.psi_gpu.data(), particles.masses_gpu.data(),
-                   particles.is_rigid_gpu.data(),
+                   particles.psi_gpu.data(), particles.is_rigid_gpu.data(),
                    particles.is_active_gpu.data(), nodes.moments_gpu.data(),
                    nodes.moments_nt_gpu.data(), nodes.masses_gpu.data(),
-                   particles.spatial.num_cells, alpha, ti);
+                   nodes.grid, alpha, index);
   }
 
 #endif

@@ -40,19 +40,10 @@
 
 namespace pyroclastmpm {
 
-/**
- * @brief Construct a new Body Force object
- *
- * If the mode is "forces" then the body force is applied on the external
- * forces of the background grid
- *
- * If the mode is "moments" then moments are applied on the background grid,
- * or "fixed", meaning they constraint to a fixed value
- *
- * @param _mode On what is it applied ("forces","moments","fixed")
- * @param _values Values of the body force
- * @param _mask Mask to apply the body force
- */
+/// @brief Construct a new Body Force object
+/// @param _mode mode of the body force
+/// @param _values values of the body force
+/// @param _mask mask on which nodes to apply the body force
 BodyForce::BodyForce(const std::string_view &_mode,
                      const cpu_array<Vectorr> &_values,
                      const cpu_array<bool> &_mask) noexcept {
@@ -68,16 +59,10 @@ BodyForce::BodyForce(const std::string_view &_mode,
                               values_gpu, Vectorr::Zero());
   set_default_device<bool>(static_cast<int>(_mask.size()), _mask, mask_gpu,
                            false);
-
-  // TODO check if window size is set
-  // TODO add "checker for each class"
 }
 
-/**
- * @brief Update values of node forces external
- *
- * @param nodes_ref NodesContainers reference
- */
+/// @brief Apply body force to external node forces
+/// @param nodes_ptr NodeContainer reference
 void BodyForce::apply_on_nodes_f_ext(NodesContainer &nodes_ref) {
   if (!isActive) {
     return;
@@ -90,9 +75,10 @@ void BodyForce::apply_on_nodes_f_ext(NodesContainer &nodes_ref) {
                              nodes_ref.launch_config.bpg>>>(
         thrust::raw_pointer_cast(nodes_ref.forces_external_gpu.data()),
         thrust::raw_pointer_cast(values_gpu.data()),
-        thrust::raw_pointer_cast(mask_gpu.data()), nodes_ref.num_nodes_total);
+        thrust::raw_pointer_cast(mask_gpu.data()),
+        nodes_ref.grid.num_cells_total);
 #else
-    for (int nid = 0; nid < nodes_ref.num_nodes_total; nid++) {
+    for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++) {
       apply_bodyforce(nodes_ref.forces_external_gpu.data(), values_gpu.data(),
                       mask_gpu.data(), nid);
     }
@@ -101,12 +87,9 @@ void BodyForce::apply_on_nodes_f_ext(NodesContainer &nodes_ref) {
   }
 };
 
-/**
- * @brief Update values of node moments
- *
- * @param nodes_ref NodesContainers reference
- * @param particles_ref ParticlesContainer reference
- */
+/// @brief Update node values for moments
+/// @param nodes_ref NodeContainer reference
+/// @param particles_ref ParticleContainer reference
 void BodyForce::apply_on_nodes_moments(NodesContainer &nodes_ref,
                                        ParticlesContainer &particles_ref) {
   if (!isActive) {
@@ -122,9 +105,9 @@ void BodyForce::apply_on_nodes_moments(NodesContainer &nodes_ref,
       thrust::raw_pointer_cast(nodes_ref.moments_gpu.data()),
       thrust::raw_pointer_cast(values_gpu.data()),
       thrust::raw_pointer_cast(mask_gpu.data()), isFixed,
-      nodes_ref.num_nodes_total);
+      nodes_ref.grid.num_cells_total);
 #else
-  for (int nid = 0; nid < nodes_ref.num_nodes_total; nid++) {
+  for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++) {
 
     apply_bodymoments(nodes_ref.moments_nt_gpu.data(),
                       nodes_ref.moments_gpu.data(), values_gpu.data(),

@@ -29,6 +29,32 @@
 methods for plasticity: theory and applications. John Wiley & Sons, 2011.
 */
 
+#include "pyroclastmpm/materials/mohrcoulomb.h"
+
+namespace pyroclastmpm {
+
+#ifdef CUDA_ENABLED
+extern Real __constant__ dt_gpu;
+#else
+extern const Real dt_cpu;
+#endif
+
+/**
+ * @brief Update stress using von mises yield criterion
+ *
+ * @param particles_stresses_gpu  particle stress tensor
+ * @param particles_eps_e_gpu  elastic strain tensor
+ * @param particles_acc_eps_p_gpu scalar accumulated plastic strain
+ * @param particles_velocity_gradient_gpu velocity gradient tensor
+ * @param particles_F_gpu deformation gradient tensor
+ * @param particle_colors_gpu particle material id
+ * @param bulk_modulus bulk modulus
+ * @param shear_modulus shear modulus
+ * @param yield_stress initial yield stress
+ * @param H hardening coefficient
+ * @param mat_id material id
+ * @param tid thread id
+ */
 __device__ __host__ inline void
 update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
                 Real *particles_acc_eps_p_gpu,
@@ -38,8 +64,7 @@ update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
                 const Real shear_modulus, const Real yield_stress, const Real H,
                 const int mat_id, const int tid) {
 
-  const int particle_color = particle_colors_gpu[tid];
-  if (particle_color != mat_id) {
+  if (particle_colors_gpu[tid] != mat_id) {
     return;
   }
 
@@ -80,7 +105,8 @@ update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
   const Real sigma_y_trail = yield_stress + H * acc_eps_p_tr;
 
   // yield function eq (6.106) and (6.110) [2]
-  const Real q_trail = sqrt(3 * 0.5 * (s_trail * s_trail.transpose()).trace());
+  const Real q_trail =
+      (Real)sqrt(3 * 0.5 * (s_trail * s_trail.transpose()).trace());
   const Real Phi_trail = q_trail - sigma_y_trail;
 
 #if DIM == 3
@@ -164,3 +190,5 @@ __global__ void KERNEL_STRESS_UPDATE_VONMISES(
                   shear_modulus, yield_stress, H, mat_id, tid);
 }
 #endif
+
+} // namespace pyroclastmpm

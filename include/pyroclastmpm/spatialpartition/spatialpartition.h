@@ -23,6 +23,21 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file spatialpartition.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief Declaration of the SpatialPartition class
+ * @details SpatialPartition class is used to bin
+ * and partition the particles into a grid. This
+ *  helps efficient access to the P2G and G2P kernels
+ * (amongst others).
+ *
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ */
+
 #pragma once
 
 #include "pyroclastmpm/common/helper.h"
@@ -32,86 +47,81 @@
 
 namespace pyroclastmpm {
 
-/*!
- * @brief Spatial partitioning class
+/**
+ * @brief Spatially partitions points into a grid
+ * @details This is a "neighborhood search" algorithm that bins points into a
+ * uniform grid which helps to efficiently access to the P2G and G2P kernels.
+ *
+ * \verbatim embed:rst:leading-asterisk
+ *     Example usage
+ *
+ *     .. code-block:: cpp
+ *
+ *        #include "pyroclastmpm/nodes/nodes.h"
+ *
+ *        SpatialPartition spatial =
+ *            SpatialPartition(Grid(grid_origin, grid_end, cell_size),
+ * num_points);
+ *
+ *        spatial.reset();
+ *
+ *        spatial.calculate_hash(point_coordinates);
+ *
+ *        spatial.sort_hashes();
+ *
+ *        spatial.bin_particles();
+ *
+ * \endverbatim
  */
 class SpatialPartition {
 public:
-  /**
-   * @brief Construct a new Spatial Partition object.
-   * @param _node_start start of the spatial partitioning domain
-   * @param _node_end end of the spatial partitioning domain
-   * @param _node_spacing cell size of the domain
-   * @param _num_elements number of particles (or stl centroid being
-   * partitioned) into the grid
-   */
-  SpatialPartition(const Vectorr _node_start, const Vectorr _node_end,
-                   const Real _node_spacing, const int _num_elements);
+  /// @brief Construct a new Spatial Partition object
+  /// @param _grid Grid object
+  /// @param _num_elements number of particles (or points) being partitioned
+  SpatialPartition(const Grid &_grid, const int _num_elements);
 
-  /**
-   * @brief Default constructor to create a temporary
-   *
-   */
+  /// @brief Destroy the Spatial Partition object
   SpatialPartition() = default;
 
-  /** @brief Destroy the Spatial Partition object */
-  ~SpatialPartition();
-
-  /** @brief Resets the memory of the Spatial Partition object */
+  /// @brief Resets the memory of the Spatial Partition object
   void reset();
 
-  /**
-   * @brief Calculates the cartesian hash of a set of coordinates.
-   * @param positions_gpu Set of coordinates with the same size as _num_elements
-   */
+  /// @brief Calculates the cartesian hash of a set of points
+  /// @param positions_gpu Set of points with the same size as _num_elements
   void calculate_hash(gpu_array<Vectorr> &positions_gpu);
 
-  /** @brief Sort hashes and keys */
+  /// @brief Sorts hashes of the points
   void sort_hashes();
 
-  /** @brief Bin incies in the cells */
+  /// @brief Bins the points into the grid
   void bin_particles();
 
-  /** @brief start indices of the bins */
+  /// @brief start cell indices of the points
   gpu_array<int> cell_start_gpu;
 
-  /** @brief end indices of the bins */
+  /// @brief end cell indices of the points
   gpu_array<int> cell_end_gpu;
 
-  /** @brief sorted indices of the coordinates */
+  /// @brief sorted indices of the points
   gpu_array<int> sorted_index_gpu;
 
-  /** @brief unsorted cartesian hashes of the coordinates */
+  ////@brief unsorted cartesian hashes of the coordinates
   gpu_array<unsigned int> hash_unsorted_gpu;
 
-  /** @brief sorted cartesian hashes with respect to the sorted indices. */
+  /// @brief sorted cartesian hashes with respect to the sorted indices.
   gpu_array<unsigned int> hash_sorted_gpu;
 
-  /** @brief the bins (counts) of particles/elements within a cell */
+  /// @brief bin ids of points within a cell, e.g  (x=1,y=2,z=3)
   gpu_array<Vectori> bins_gpu;
 
-  /** @brief start domain of the partitioning grid */
-  Vectorr grid_start;
+  /// @brief Grid object
+  Grid grid = Grid();
 
-  /** @brief end domain of the partitioning grid */
-  Vectorr grid_end;
-
-  /** @brief cell size of the partitioning grid */
-  Real cell_size;
-
-  /** @brief inverse cell size of the partitioning grid */
-  Real inv_cell_size;
-
-  /** @brief number of cells */
-  Vectori num_cells;
-
-  /** @brief number of elements being partitioned*/
-  int num_elements;
-
-  /** @brief total number of cells within the grid */
-  int num_cells_total;
+  /// @brief number of points being partitioned
+  int num_elements = 0;
 
 #ifdef CUDA_ENABLED
+  /// @brief GPU launch configuration for kernels
   GPULaunchConfig launch_config;
 #endif
 };

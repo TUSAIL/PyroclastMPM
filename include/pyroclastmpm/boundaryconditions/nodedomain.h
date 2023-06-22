@@ -30,18 +30,64 @@
 
 namespace pyroclastmpm {
 
-struct NodeDomain : BoundaryCondition {
+/**
+ * @brief Creates a wall boundary condition on the nodes
+ * @details The wall boundary condition is applied on the background grid
+ *
+ * The walls are defined by faces face0 =(x0, y0, z0) and face1 =(x1, y1, z1)
+ *
+ * \verbatim
+ * In Two dimensions:
+ *        x1
+ *      +-----+
+ *      |     |
+ * y0   |     |  y1
+ *      +-----+
+ *        x0
+ * \endverbatim
+ *
+ *
+ * Modes can be applied to walls with face0_mode and face1_mode (0 - roller, 1 -
+ * fixed)
+ *
+ * \verbatim embed:rst:leading-asterisk
+ *     Example usage
+ *
+ *     .. code-block:: cpp
+ *
+ *        #include "pyroclastmpm/boundaryconditions/nodesdomain.h"
+ *
+ *        // set globals
+ *
+ *        // Create NodesContainer
+ *
+ *        // Only floor wall is roller but rest are fixed
+ *        auto walls = NodeDomain(Vectori(0, 1, 0), Vectori(0.0, 0, 0));
+ *
+ *        // Add wall to Solver class
+ *
+ *  \endverbatim
+ *
+ */
+class NodeDomain : public BoundaryCondition {
 
-  NodeDomain(Vectori _axis0_mode = Vectori::Zero(),
-             Vectori _axis1_mode = Vectori::Zero());
+public:
+  /// @brief Construct a new object
+  /// @param face0_mode roller or fixed modes for cube face x0,y0,z0
+  /// @param face1_mode roller or fixed modes  for cube face x1,y1,z1
+  NodeDomain(Vectori _face0_mode = Vectori::Zero(),
+             Vectori _face1_mode = Vectori::Zero());
 
-  ~NodeDomain(){};
-
+  /// @brief Apply to node moments (walls)
+  /// @param nodes_ref reference to NodesContainer
   void apply_on_nodes_moments(NodesContainer &nodes_ref,
                               ParticlesContainer &particles_ref) override;
 
-  Vectori axis0_mode;
-  Vectori axis1_mode;
+  /// @brief roller or fixed modes (see class description)
+  Vectori face1_mode;
+
+  /// @brief roller or fixed modes (see class description)
+  Vectori face0_mode;
 };
 
 } // namespace pyroclastmpm

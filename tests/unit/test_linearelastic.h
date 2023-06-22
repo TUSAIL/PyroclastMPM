@@ -27,12 +27,6 @@
 
 #include "pyroclastmpm/materials/linearelastic.h"
 
-// Functions to test
-// [x] LinearElastic::LinearElastic (Tested implicitly via stress_update)
-// [x] LinearElastic::stress_update
-// [ ] LinearElastic::calculate_timestep (TODO confirm correct formula and
-// consistent with other code)
-
 TEST(LinearElastic, StressUpdateLinearElastic) {
 
 #if DIM == 3
@@ -42,13 +36,16 @@ TEST(LinearElastic, StressUpdateLinearElastic) {
 #else
   const std::vector<Vectorr> pos = {Vectorr(0.1)};
 #endif
-  const std::vector<Matrixr> velgrad = {Matrixr::Identity() * 0.1};
-  set_global_dt(0.1);
+  Real dt = 0.1;
+  set_global_dt(dt);
+  const auto velgrad = Matrixr::Identity() * 0.1;
   ParticlesContainer particles = ParticlesContainer(pos);
 
   LinearElastic mat = LinearElastic(1000, 0.1, 0.1);
 
-  particles.velocity_gradient_gpu = velgrad;
+  const std::vector<Matrixr> F = {(Matrixr::Identity() + velgrad * dt) *
+                                  Matrixr::Identity()};
+  particles.F_gpu = F;
 
   mat.stress_update(particles, 0);
 

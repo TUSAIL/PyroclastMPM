@@ -28,9 +28,8 @@
 namespace pyroclastmpm {
 
 /**
- * @brief Apply gravity to the nodes of the background grid.
- *
- * The nodes must have a mass mass > 0.000000001
+ * @brief Apply gravity to the nodes of the background grid. *
+ * @details The nodes must have a mass mass > 0.000000001
  *
  * @param nodes_forces_external_gpu external forces of the background grid
  * @param nodes_masses_gpu masses of the nodes

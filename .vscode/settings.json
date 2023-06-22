@@ -117,7 +117,9 @@
     "__tree": "cpp",
     "__locale": "cpp",
     "queue": "cpp",
-    "stack": "cpp"
+    "stack": "cpp",
+    "__functional_base_03": "cpp",
+    "__tuple": "cpp"
   },
   "C_Cpp.codeAnalysis.clangTidy.checks.disabled": ["clang-diagnostic-error"],
   "C_Cpp.errorSquiggles": "disabled",

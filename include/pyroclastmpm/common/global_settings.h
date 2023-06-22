@@ -41,45 +41,42 @@
 
 namespace pyroclastmpm {
 
+// TODO add global variables to this file
+// TODO add examples
 /**
- * @brief Set the global shapefunction type
- *
- * @param _dimension simulation dimension
- */
-void set_global_shapefunction(SFType _shapefunction);
-
-/**
- * @brief Set the global time step
- *
- * @param _dt timestep
- */
-void set_global_dt(const Real _dt);
-
-/**
- * @brief Set the global output directory string
- *
- * @param output_dir the output directory string
- */
-void set_global_output_directory(const std::string _output_dir);
-
-/**
- * @brief Set the initial particles per cell
- *
- * @param _particles_per_cell initial particles per cell
- */
-void set_global_particles_per_cell(const int _particles_per_cell);
-
-void set_global_step(const int _step);
-
-/**
- * @brief A master function to set all the globals variables
- *
- * @param _dt timestep
- * @param particles_per_cell initial particles per cell
- * @param _shapefunction shapefunction type
- * @param _output_dir output directory string
+ * @brief Set the globals object
+ * @details This is a master function that calls other functions to set the
+ * global variables
+ * @param _dt Time step
+ * @param particles_per_cell Number of particles per cell
+ * @param _shapefunction Shape function type ("linear" or "cubic"")
+ * @param _output_dir Output directory string
  */
 void set_globals(const Real _dt, const int particles_per_cell,
-                 SFType _shapefunction, const std::string _output_dir);
+                 const std::string_view &_shapefunction,
+                 const std::string &_output_dir);
 
+/// @brief Set the global shapefunction
+/// @param _shapefunction String of the shape function type ("linear" or
+/// "cubic")
+void set_global_shapefunction(const std::string_view &__shapefunction);
+
+/// @brief Set the global time step
+/// @param _dt timestep
+void set_global_dt(const Real _dt);
+
+/// @brief Set the global output directory string
+/// @param output_dir The output directory string (e.g. "./output")
+void set_global_output_directory(const std::string_view &_output_dir);
+
+/// @brief Set the initial particles per cell
+/// @param _particles_per_cell initial particles per cell
+void set_global_particles_per_cell(const int _particles_per_cell);
+
+/// @brief Set the global step
+/// @param _step Global simulation step
+void set_global_step(const int _step);
+
+/// @brief Set the global time
+void increment_global();
 } // namespace pyroclastmpm

@@ -29,9 +29,8 @@ namespace pyroclastmpm {
 
 /**
  * @brief Apply a body force on the external forces of the background grid
- *
- * @param nodes_forces_external_gpu array of external forces of the background
- * grid
+ * @details Skips the nodes if not masked
+ * @param nodes_forces_external_gpu node external forces
  * @param values_gpu values of the body force
  * @param mask_gpu mask on which nodes to apply the body force on
  * @param node_mem_index index of the node
@@ -64,12 +63,9 @@ __global__ void KERNEL_APPLY_BODYFORCE(Vectorr *nodes_forces_external_gpu,
 
 /**
  * @brief Apply a moment on the background grid
- *
- * isFixed means it constraints the nodes
- *
- * @param nodes_moments_nt_gpu array of moments of the background grid (with
- * respect to USL or MUSL algorithms)
- * @param nodes_moments_gpu array of moments of the background grid
+ * @details isFixed means it constraints the nodes
+ * @param nodes_moments_nt_gpu forward node moments (see USL)
+ * @param nodes_moments_gpu node moments
  * @param values_gpu values of the body moment to be applied
  * @param mask_gpu mask on which nodes to apply the body moment on
  * @param isFixed option to say if the nodes are added or constrained

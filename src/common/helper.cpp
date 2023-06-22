@@ -26,8 +26,10 @@
 /**
  * @file helper.cpp
  * @author Retief Lubbe (r.lubbe@utwente.nl)
- * @brief This file contains helper functions used to allocate,sort and print
- * arrays
+ * @brief Implementation of helper functions for host and device arrays
+ * @details Thrust dependent helper functions for host and device arrays
+ * significantly reduce the amount of code needed for memory management.
+ *
  * @version 0.1
  * @date 2023-06-15
  *
@@ -40,15 +42,12 @@
 
 namespace pyroclastmpm {
 
-/**
- * @brief Set the default device array to an input array or value
- *
- * @tparam T data type (float,double, int, Matrixr, etc.)
- * @param input_size input array size
- * @param input input array (to be copied to output), if empty, set to {}
- * @param output output array
- * @param default_value default value to set the array to
- */
+///@brief  Helper function to allocate device memory
+///@tparam T data type (float, double, int, Matrixr, etc.)
+///@param input_size input_size size of the input array
+///@param input input_size size of the input array
+///@param output output output array (of device type
+///@param default_value default_value default value to set the array to
 template <typename T>
 void set_default_device(const int input_size, const cpu_array<T> input,
                         gpu_array<T> &output, T default_value) {
@@ -66,13 +65,13 @@ void set_default_device(const int input_size, const cpu_array<T> input,
   }
 }
 
-/**
- * @brief Reorders the input array according to the sorted index
- *
- * @tparam T data type (float,double, int, Matrixr, etc.)
- * @param output array to be sorted
- * @param sorted_index sorted index
- */
+/// @brief  Helper function to allocate device memory
+/// @details Uses the thrust gather interface to reorder a device.
+/// @tparam T data type (float, double, int, Matrixr, etc.)
+/// @param input_size input_size size of the input array
+/// @param input input_size size of the input array
+/// @param output output output array (of device type
+/// @param default_value default_value default value to set the array to
 template <typename T>
 void reorder_device_array(gpu_array<T> &output, gpu_array<int> sorted_index) {
   gpu_array<T> device_temp = output;
@@ -80,12 +79,9 @@ void reorder_device_array(gpu_array<T> &output, gpu_array<int> sorted_index) {
                  output.begin());
 }
 
-/**
- * @brief Prints the input array
- *
- * @tparam T data type (float,double, int, Matrixr, etc.)
- * @param input input array to be printed
- */
+/// @brief Helper function to print a device or host array
+/// @tparam T data type (float, double, int, Matrixr, etc.)
+/// @param input array to be printed
 template <typename T> void print_array(const cpu_array<T> input) {
   std::cout << std::endl;
   for (auto &out : input) {

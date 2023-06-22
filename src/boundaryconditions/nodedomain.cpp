@@ -27,10 +27,14 @@
 #include "nodedomain_inline.h"
 
 namespace pyroclastmpm {
+/// @brief Construct a new object
+/// @param face0_mode roller or fixed modes for cube face x0,y0,z0
+/// @param face1_mode roller or fixed modes  for cube face x1,y1,z1
+NodeDomain::NodeDomain(Vectori _face0_mode, Vectori _face1_mode)
+    : face1_mode(_face1_mode), face0_mode(_face0_mode) {}
 
-NodeDomain::NodeDomain(Vectori _axis0_mode, Vectori _axis1_mode)
-    : axis0_mode(_axis0_mode), axis1_mode(_axis1_mode) {}
-
+/// @brief Apply to node moments (walls)
+/// @param nodes_ref reference to NodesContainer
 void NodeDomain::apply_on_nodes_moments(NodesContainer &nodes_ref,
                                         ParticlesContainer &particles_ref) {
 
@@ -41,15 +45,16 @@ void NodeDomain::apply_on_nodes_moments(NodesContainer &nodes_ref,
       thrust::raw_pointer_cast(nodes_ref.moments_gpu.data()),
       thrust::raw_pointer_cast(nodes_ref.masses_gpu.data()),
       thrust::raw_pointer_cast(nodes_ref.node_ids_gpu.data()),
-      nodes_ref.num_nodes, axis0_mode, axis1_mode, nodes_ref.num_nodes_total);
+      nodes_ref.grid.num_cells, axis0_mode, axis1_mode,
+      nodes_ref.grid.num_cells_total);
   gpuErrchk(cudaDeviceSynchronize());
 #else
-  for (int nid = 0; nid < nodes_ref.num_nodes_total; nid++) {
+  for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++) {
 
     apply_nodedomain(nodes_ref.moments_nt_gpu.data(),
                      nodes_ref.moments_gpu.data(), nodes_ref.masses_gpu.data(),
-                     nodes_ref.node_ids_gpu.data(), nodes_ref.num_nodes,
-                     axis0_mode, axis1_mode, nid);
+                     nodes_ref.node_ids_gpu.data(), nodes_ref.grid.num_cells,
+                     face0_mode, face1_mode, nid);
   }
 #endif
 };

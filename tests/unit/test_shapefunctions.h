@@ -25,15 +25,8 @@
 
 #include "pyroclastmpm/shapefunction/shapefunction.h"
 
-// Functions to test
-// [x] LinearShapeFunction
-// [ ] QuadraticShapeFunction (to be fixed)
-// [x] CubicShapeFunction
-
-using namespace pyroclastmpm;
-
 TEST(ShapeFunctions, LinearShapeFunction) {
-  set_global_shapefunction(LinearShapeFunction);
+  pyroclastmpm::set_global_shapefunction("linear");
 #if DIM == 3
   std::vector<Vectorr> pos = {Vectorr({0.45, 0.21, 0.1})};
 #elif DIM == 2
@@ -46,12 +39,11 @@ TEST(ShapeFunctions, LinearShapeFunction) {
   Vectorr max = Vectorr::Ones();
   Real nodal_spacing = 0.1;
 
-  NodesContainer nodes = NodesContainer(min, max, nodal_spacing);
+  auto nodes = pyroclastmpm::NodesContainer(min, max, nodal_spacing);
 
-  ParticlesContainer particles = ParticlesContainer(pos);
+  auto particles = pyroclastmpm::ParticlesContainer(pos);
 
-  particles.set_spatialpartition(nodes.node_start, nodes.node_end,
-                                 nodes.node_spacing);
+  particles.set_spatialpartition(nodes.grid);
 
   calculate_shape_function(nodes, particles);
 
@@ -122,7 +114,7 @@ TEST(ShapeFunctions, LinearShapeFunction) {
 }
 
 TEST(ShapeFunctions, CubicShapeFunction) {
-  set_global_shapefunction(CubicShapeFunction);
+  pyroclastmpm::set_global_shapefunction("cubic");
 #if DIM == 3
   std::vector<Vectorr> pos = {Vectorr({0.45, 0.21, 0.1})};
 #elif DIM == 2
@@ -135,11 +127,10 @@ TEST(ShapeFunctions, CubicShapeFunction) {
   Vectorr max = Vectorr::Ones();
   Real nodal_spacing = 0.1;
 
-  NodesContainer nodes = NodesContainer(min, max, nodal_spacing);
-  ParticlesContainer particles = ParticlesContainer(pos);
+  auto nodes = pyroclastmpm::NodesContainer(min, max, nodal_spacing);
+  auto particles = pyroclastmpm::ParticlesContainer(pos);
 
-  particles.set_spatialpartition(nodes.node_start, nodes.node_end,
-                                 nodes.node_spacing);
+  particles.set_spatialpartition(nodes.grid);
 
   calculate_shape_function(nodes, particles);
 

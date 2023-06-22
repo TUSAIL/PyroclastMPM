@@ -26,8 +26,9 @@
 /**
  * @file output.cpp
  * @author Retief Lubbe (r.lubbe@utwente.nl)
- * @brief This file contains functions for outputting
- * data to different formats
+ * @brief VTK is primarily used for outputting data
+ * @details Functions included here are mainly used to
+ * configure a VTK polydata object and write it to file.
  * @version 0.1
  * @date 2023-06-15
  *
@@ -39,25 +40,18 @@
 
 namespace pyroclastmpm {
 
-/**
- * @brief Load global variables (defined in global_settings.cpp)
- *
- */
 extern const char output_directory_cpu[256];
 
 extern const int global_step_cpu;
 
 extern const Real dt_cpu;
 
-/**
- * @brief Set the vtk points object from the input array
- *
- * @param input input array of points
- * @param polydata VTK polydata object
- * @param mask mask array, should be same size as input (optional)
- * @param use_mask if true, only points where mask is true are added, defaults
- * to false
- */
+//// @brief Set the vtk points object from the input array
+//// @param input input array of points
+//// @param polydata VTK polydata object
+//// @param mask mask array, should be same size as input (optional)
+//// @param use_mask if true, only points where mask is true are added, defaults
+/// to false
 void set_vtk_points(cpu_array<Vectorr> input,
                     const vtkSmartPointer<vtkPolyData> &polydata,
                     cpu_array<bool> mask, bool use_mask)
@@ -80,20 +74,17 @@ void set_vtk_points(cpu_array<Vectorr> input,
   polydata->SetPoints(points);
 }
 
-/**
- * @brief Set the values for vtk pointdata object from the input array
- *
- * @tparam T data type (float,double, int, Matrixr, etc.)
- * @param input input array of values
- * @param polydata VTK polydata object
- * @param pointdata_name name variables being set (e.g. "velocity")
- * @param mask mask array, should be same size as input (optional)
- * @param use_mask if true, only points where mask is true are added, defaults
- * to false
- */
+/// @brief Set the values for vtk pointdata object from the input array
+/// @tparam T data type (float,double, int, Matrixr, etc.)
+/// @param input Input array of values
+/// @param polydata VTK polydata object
+/// @param pointdata_name Name variables being set (e.g. "velocity")
+/// @param mask Mask array, should be same size as input (optional)
+/// @param use_mask If true, only points where mask is true are added, defaults
+/// to false
 template <typename T>
 void set_vtk_pointdata(cpu_array<T> input,
-                       vtkSmartPointer<vtkPolyData> &polydata,
+                       const vtkSmartPointer<vtkPolyData> &polydata,
                        const std::string &pointdata_name, cpu_array<bool> mask,
                        bool use_mask) {
 
@@ -116,7 +107,7 @@ void set_vtk_pointdata(cpu_array<T> input,
     }
     if constexpr (std::is_same_v<T, Matrixr> || std::is_same_v<T, Vectorr> ||
                   std::is_same_v<T, Matrix3r>) {
-      Real *data = input[0].data();
+      const Real *data = input[0].data();
       pointdata->InsertNextTuple(data + id * input[0].size());
     } else {
       pointdata->InsertNextValue(input[id]);
@@ -126,16 +117,13 @@ void set_vtk_pointdata(cpu_array<T> input,
   polydata->GetPointData()->AddArray(pointdata);
 }
 
-/**
- * @brief write output to different formats
- *
- * @param polydata output polydata
- * @param filestem filestem for output file (e.g. "particles")
- * @param output_type output type (VTK, GTFL, OBJ, CSV, HDF5)
- */
+///@brief write output to different formats
+///@param polydata Output vtk polydata
+///@param filestem Filestem for output file (e.g. "particles")
+///@param output_type Output type  ("vtk", "gtfl", "obj", "csv")
 void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
                         const std::string &filestem,
-                        const std::string &output_type)
+                        const std::string_view &output_type)
 
 {
 
@@ -195,41 +183,35 @@ void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
 }
 
 // Explicit template instantiation
-template void set_vtk_pointdata<bool>(cpu_array<bool> input,
-                                      vtkSmartPointer<vtkPolyData> &polydata,
-                                      const std::string &pointdata_name,
-                                      cpu_array<bool> mask, bool use_mask);
+template void set_vtk_pointdata<bool>(
+    cpu_array<bool> input, const vtkSmartPointer<vtkPolyData> &polydata,
+    const std::string &pointdata_name, cpu_array<bool> mask, bool use_mask);
 
-template void set_vtk_pointdata<uint8_t>(cpu_array<uint8_t> input,
-                                         vtkSmartPointer<vtkPolyData> &polydata,
-                                         const std::string &pointdata_name,
-                                         cpu_array<bool> mask, bool use_mask);
+template void set_vtk_pointdata<uint8_t>(
+    cpu_array<uint8_t> input, const vtkSmartPointer<vtkPolyData> &polydata,
+    const std::string &pointdata_name, cpu_array<bool> mask, bool use_mask);
 
-template void set_vtk_pointdata<int>(cpu_array<int> input,
-                                     vtkSmartPointer<vtkPolyData> &polydata,
-                                     const std::string &pointdata_name,
-                                     cpu_array<bool> mask, bool use_mask);
+template void set_vtk_pointdata<int>(
+    cpu_array<int> input, const vtkSmartPointer<vtkPolyData> &polydata,
+    const std::string &pointdata_name, cpu_array<bool> mask, bool use_mask);
 
-template void set_vtk_pointdata<Real>(cpu_array<Real> input,
-                                      vtkSmartPointer<vtkPolyData> &polydata,
-                                      const std::string &pointdata_name,
-                                      cpu_array<bool> mask, bool use_mask);
+template void set_vtk_pointdata<Real>(
+    cpu_array<Real> input, const vtkSmartPointer<vtkPolyData> &polydata,
+    const std::string &pointdata_name, cpu_array<bool> mask, bool use_mask);
 
-template void set_vtk_pointdata<Vectorr>(cpu_array<Vectorr> input,
-                                         vtkSmartPointer<vtkPolyData> &polydata,
-                                         const std::string &pointdata_name,
-                                         cpu_array<bool> mask, bool use_mask);
+template void set_vtk_pointdata<Vectorr>(
+    cpu_array<Vectorr> input, const vtkSmartPointer<vtkPolyData> &polydata,
+    const std::string &pointdata_name, cpu_array<bool> mask, bool use_mask);
 #if DIM != 1
-template void set_vtk_pointdata<Matrixr>(cpu_array<Matrixr> input,
-                                         vtkSmartPointer<vtkPolyData> &polydata,
-                                         const std::string &pointdata_name,
-                                         cpu_array<bool> mask, bool use_mask);
+template void set_vtk_pointdata<Matrixr>(
+    cpu_array<Matrixr> input, const vtkSmartPointer<vtkPolyData> &polydata,
+    const std::string &pointdata_name, cpu_array<bool> mask, bool use_mask);
 
 #endif
 
 #if DIM != 3
 template void set_vtk_pointdata<Matrix3r>(
-    cpu_array<Matrix3r> input, vtkSmartPointer<vtkPolyData> &polydata,
+    cpu_array<Matrix3r> input, const vtkSmartPointer<vtkPolyData> &polydata,
     const std::string &pointdata_name, cpu_array<bool> mask, bool use_mask);
 #endif
 

@@ -22,6 +22,11 @@ lint:
     - clang-tidy@15.0.6
     - codespell@2.2.4
     - markdownlint@0.28.1
+  ignore:
+    - linters: [ALL]
+      paths:
+        - docs/doxygen/**
+        - docs/sphinx/_build/**
 
 runtimes:
   enabled:

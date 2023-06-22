@@ -25,6 +25,18 @@
 
 #pragma once
 
+/**
+ * @file nodes.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief MPM background grid nodes class
+ * @details The background grid is implemented here by the NodesContainer class
+ * which solves the governing equations.
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ */
+
 #include "pyroclastmpm/common/helper.h"
 #include "pyroclastmpm/common/output.h"
 #include "pyroclastmpm/common/types_common.h"
@@ -32,94 +44,106 @@
 namespace pyroclastmpm {
 
 /**
- * @brief The nodes container contains information on the background nodes
+ * @brief Background grid nodes
+ * @details A background grid is implemented here which serves
+ * as the main data structure to store nodal quantities (mass, forces etc)
+ * and solve the governing equations.
+ * \verbatim embed:rst:leading-asterisk
+ *     Example usage
+ *
+ *     .. code-block:: cpp
+ *
+ *        #include "pyroclastmpm/nodes/nodes.h"
+ *
+ *        Vectorr min = Vectorr::Zero();
+
+ *        Vectorr max = Vectorr::Ones();
+ *
+ *        Real nodal_spacing = 0.5;
+ *
+ *        NodesContainer nodes = NodesContainer(min, max, nodal_spacing);
+ *
+ *        Vectorr node_coords = nodes.give_node_coords();
+ *
+ *
+ * \endverbatim
  *
  */
 class NodesContainer {
+
+private:
+  /// @brief Calculates the node ids
+  void calculate_bin_ids();
+
+  /// @brief Calculates the node types (i.e boundary or interior)
+  void calculate_bin_types();
+
 public:
-  // Tell the compiler to do what it would have if we didn't define a ctor:
+  /// @brief Construct a new Nodes Container object (default constructor)
   NodesContainer() = default;
 
-  /**
-   * @brief Construct a new Nodes Container object
-   *
-   * @param _node_start origin of where nodes will be generated
-   * @param _node_end  end where nodes will be generated
-   * @param _node_spacing cell size of the background grid
-   */
+  ///@brief Construct a new Nodes Container object
+  ///@param _node_start Origin of where nodes will be generated
+  ///@param _node_end  End where nodes will be generated
+  ///@param _node_spacing Cell size of the background grid
   NodesContainer(const Vectorr _node_start, const Vectorr _node_end,
                  const Real _node_spacing);
 
+  /// @brief Destroy the NodesContainer object
   ~NodesContainer() = default;
 
-  /** @brief Resets the background grid */
+  /// @brief Resets arrays of the background grid
   void reset();
 
-  /** @brief Calls CUDA kernel to calculate the nodal coordinates from the hash
-   * table */
+  /// @brief Give the coordinates of the nodes as a flattened array
   gpu_array<Vectorr> give_node_coords() const;
 
-  // TODO is this function needed?
-  /** @brief Calls CUDA kernel to calculate the nodal coordinates from the hash
-   * table. Given as an STL output */
+  /// @brief Give the coordinates of the nodes as a flattened array (as stl)
   std::vector<Vectorr> give_node_coords_stl() const;
 
-  /** @brief integrate the nodal forces to the momentum */
+  /// @brief Integrate the nodal forces to the momentu
   void integrate();
 
-  /** @brief integrate the nodal forces to the momentum */
+  /// @brief Output particle data ("vtk", "csv", "obj")
+  /// @details Requires that `set_output_formats` is called first
   void output_vtk() const;
 
+  /// @brief Set output format of the nodal quantities
   void set_output_formats(const std::vector<std::string> &_output_formats);
 
-  // VARIABLES
-
-  /** @brief current moment of the nodes */
+  /// @brief Current moment of the nodes
   gpu_array<Vectorr> moments_gpu;
 
-  /** @brief Forward moment of the nodes (related to the USL integration) */
+  /// @brief Forward moment of the nodes (related to the USL integration)
   gpu_array<Vectorr> moments_nt_gpu;
 
-  /** @brief External forces of the nodes (i.e external loads or gravity) */
+  /// @brief External forces of the nodes (i.e external loads or gravity)
   gpu_array<Vectorr> forces_external_gpu;
 
-  /** @brief Internal forces of the nodes (from particle stresses) */
+  /// @brief Internal forces of the nodes (from particle stresses)
   gpu_array<Vectorr> forces_internal_gpu;
 
-  /** @brief Total force of the nodes (F_INT + F_EXT)   */
+  /// @brief Total forces of the nodes (F_INT + F_EXT)
   gpu_array<Vectorr> forces_total_gpu;
 
-  /** @brief Masses of the nodes */
+  /// @brief Masses of the nodes
   gpu_array<Real> masses_gpu;
 
-  /** @brief Masses of the nodes */
+  /// @brief Ids of the nodes at a bin level (i,j,k)
   gpu_array<Vectori> node_ids_gpu;
 
-  /** @brief Masses of the nodes */
+  /// @brief Types of the nodes (boundary or interior)
   gpu_array<Vectori> node_types_gpu;
 
-  /** @brief Simulation start domain */
-  Vectorr node_start;
-
-  /** @brief Simulation end domain */
-  Vectorr node_end;
-
-  /** @brief Grid size of the background grid */
-  Real node_spacing;
-
-  /** @brief Number of nodes in the background grid Mx*My*Mz */
-  int num_nodes_total = 1;
-
-  /** @brief Number of nodes on each axis */
-  Vectori num_nodes;
-
-  /** @brief Inverse grid size of the background grid */
-  Real inv_node_spacing;
+  /// @brief Information about the grid (number of cells, cell size etc)
+  Grid grid = Grid();
 
 #ifdef CUDA_ENABLED
+  /// @brief CUDA GPU launch configuration
   GPULaunchConfig launch_config;
 #endif
 
+  /// @brief Output formats for the nodes
   std::vector<std::string> output_formats;
 };
 

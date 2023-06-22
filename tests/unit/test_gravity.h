@@ -28,14 +28,6 @@
 #include "pyroclastmpm/boundaryconditions/gravity.h"
 #include "pyroclastmpm/nodes/nodes.h"
 
-// Functions to test
-// [x] Gravity::Gravity, no ramp (implicitly tested in apply_on_nodes_f_ext, no
-// ramp) [x] Gravity::Gravity, with ramp (implicitly tested in
-// apply_on_nodes_f_ext, with ramp) [x] Gravity::apply_on_nodes_f_ext, no ramp
-// [ ] Gravity::apply_on_nodes_f_ext, with ramp
-
-using namespace pyroclastmpm;
-
 /**
  * @brief Construct a new TEST object for testing the gravity boundary condition
  *
@@ -45,7 +37,7 @@ TEST(Gravity, APPLY_GRAVITY_NO_RAMP) {
   Vectorr gravity = Vectorr::Ones();
   gravity *= -9.81;
 
-  Gravity boundarycond = Gravity(gravity);
+  auto boundarycond = pyroclastmpm::Gravity(gravity);
 
   EXPECT_EQ(boundarycond.is_ramp, false);
 
@@ -53,7 +45,7 @@ TEST(Gravity, APPLY_GRAVITY_NO_RAMP) {
   Vectorr max = Vectorr::Ones();
   Real nodal_spacing = 0.5;
 
-  NodesContainer nodes = NodesContainer(min, max, nodal_spacing);
+  auto nodes = pyroclastmpm::NodesContainer(min, max, nodal_spacing);
 
   // this might be needed if we add particles to the apply_on_nodes_f_ext
   // argument later ParticlesContainer particles =
@@ -86,7 +78,7 @@ TEST(Gravity, APPLY_GRAVITY_WITH_RAMP) {
   gravity *= -9.81;
 
   // give 2 steps to ramp up to full gravity (gravity start at 0. m.s^-2)
-  Gravity boundarycond = Gravity(Vectorr::Zero(), true, 2, gravity);
+  auto boundarycond = pyroclastmpm::Gravity(Vectorr::Zero(), true, 2, gravity);
 
   EXPECT_EQ(boundarycond.is_ramp, true);
 
@@ -94,7 +86,7 @@ TEST(Gravity, APPLY_GRAVITY_WITH_RAMP) {
   Vectorr max = Vectorr::Ones();
   Real nodal_spacing = 0.5;
 
-  NodesContainer nodes = NodesContainer(min, max, nodal_spacing);
+  auto nodes = pyroclastmpm::NodesContainer(min, max, nodal_spacing);
 
   // this might be needed if we add particles to the apply_on_nodes_f_ext
   // argument later (for NGF?) ParticlesContainer particles =

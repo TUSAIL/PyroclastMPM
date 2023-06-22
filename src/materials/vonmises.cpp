@@ -25,36 +25,27 @@
 
 #include "pyroclastmpm/materials/vonmises.h"
 
-namespace pyroclastmpm {
-
-#ifdef CUDA_ENABLED
-extern Real __constant__ dt_gpu;
-#else
-extern Real dt_cpu;
-#endif
-
 #include "vonmises_inline.h"
 
-/**
- * @brief Construct a new Linear Elastic:: Linear Elastic object
- *
- * @param _density density of the material
- * @param _E young's modulus
- * @param _pois poissons ratio
- */
+namespace pyroclastmpm {
+
+/// @brief Construct a new Von Mises object
+/// @param _density material density (original)
+/// @param _E Young's modulus
+/// @param _pois Poisson's ratio
+/// @param _yield_stress initial yield stress
+/// @param _H hardening coefficient
 VonMises::VonMises(const Real _density, const Real _E, const Real _pois,
-                   const Real _yield_stress, const Real _H) {
-  E = _E;
-  pois = _pois;
-  bulk_modulus = (1. / 3.) * (E / (1. - 2. * pois));         // K
-  shear_modulus = (1. / 2.) * E / (1 + pois);                // G
-  lame_modulus = (pois * E) / ((1 + pois) * (1 - 2 * pois)); // lambda
+                   const Real _yield_stress, const Real _H)
+    : yield_stress(_yield_stress), H(_H), E(_E), pois(_pois) {
+
+  bulk_modulus =
+      ((Real)1. / (Real)3.) * (E / ((Real)1. - (Real)2. * pois)); // K
+  shear_modulus = ((Real)1. / (Real)2.) * E / ((Real)1 + pois);   // G
+  lame_modulus = (pois * E) /
+                 (((Real)1.0 + pois) * ((Real)1 - (Real)2.0 * pois)); // lambda
+
   density = _density;
-
-  yield_stress = _yield_stress;
-  H = _H;
-
-  name = "VonMises";
 
 #if DIM != 3
   printf("VonMises material only implemented for 3D\n");
@@ -62,19 +53,19 @@ VonMises::VonMises(const Real _density, const Real _E, const Real _pois,
 #endif
 }
 
-void VonMises::initialize(ParticlesContainer &particles_ref, int mat_id) {
-  // printf("thus runs inside associativevonmises\n");
+/// @brief Initialize material (allocate memory for history variables)
+/// @param particles_ref ParticleContainer reference
+/// @param mat_id material id
+void VonMises::initialize(const ParticlesContainer &particles_ref,
+                          [[maybe_unused]] int mat_id) {
   set_default_device<Real>(particles_ref.num_particles, {}, acc_eps_p_gpu, 0.0);
   set_default_device<Matrixr>(particles_ref.num_particles, {}, eps_e_gpu,
                               Matrixr::Zero());
 }
 
-/**
- * @brief Compute the stress tensor for the material
- *
- * @param particles_ref particles container reference
- * @param mat_id material id
- */
+/// @brief Perform stress update
+/// @param particles_ptr ParticlesContainer class
+/// @param mat_id material id
 void VonMises::stress_update(ParticlesContainer &particles_ref, int mat_id) {
 
 #ifdef CUDA_ENABLED
@@ -100,23 +91,18 @@ void VonMises::stress_update(ParticlesContainer &particles_ref, int mat_id) {
 #endif
 }
 
-/**
- * @brief Calculate the time step for the material
- *
- * @param cell_size grid cell size
- * @param factor factor to multiply the time step by
- * @return Real
- */
+/// @brief Calculate time step wave propagation speed
+/// @param cell_size Fell size of the background grid
+/// @param factor Scaling factor for speed
+/// @return Real a timestep
 Real VonMises::calculate_timestep(Real cell_size, Real factor) {
   // https://www.sciencedirect.com/science/article/pii/S0045782520306885
-  const Real c = sqrt((bulk_modulus + 4. * shear_modulus / 3.) / density);
+  const auto c = (Real)sqrt((bulk_modulus + 4. * shear_modulus / 3.) / density);
 
   const Real delta_t = factor * (cell_size / c);
 
   printf("VonMises::calculate_timestep: %f", delta_t);
   return delta_t;
 }
-
-VonMises::~VonMises() {}
 
 } // namespace pyroclastmpm

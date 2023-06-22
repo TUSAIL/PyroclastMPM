@@ -23,105 +23,141 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file nodes.cpp
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief Implementation of background grid in MPM
+ * @details Main purpose of the background grid is to solve
+ * governing equations of the MPM method, and temporarily store
+ * nodal quantities (mass, forces etc).
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ */
 #include "pyroclastmpm/nodes/nodes.h"
+
 #include "nodes_inline.h"
 
 namespace pyroclastmpm {
 
+/// @brief Shape function used to calculate node type
+extern const SFType shape_function_cpu;
+
+///@brief Construct a new Nodes Container object
+///@param _node_start Origin of where nodes will be generated
+///@param _node_end  End where nodes will be generated
+///@param _node_spacing Cell size of the background grid
 NodesContainer::NodesContainer(const Vectorr _node_start,
                                const Vectorr _node_end,
                                const Real _node_spacing)
-    : node_start(_node_start), node_end(_node_end),
-      node_spacing(_node_spacing) {
-  inv_node_spacing = ((Real)1.0) / node_spacing;
-  num_nodes = Vectori::Ones();
+    : grid(_node_start, _node_end, _node_spacing) {
 
-  for (int axis = 0; axis < DIM; axis++) {
-    num_nodes[axis] =
-        (int)((node_end[axis] - node_start[axis]) / node_spacing) + 1;
-    num_nodes_total *= num_nodes[axis];
-  }
-  set_default_device<Vectorr>(num_nodes_total, {}, moments_gpu,
+  set_default_device<Vectorr>(grid.num_cells_total, {}, moments_gpu,
                               Vectorr::Zero());
-  set_default_device<Vectorr>(num_nodes_total, {}, moments_nt_gpu,
+  set_default_device<Vectorr>(grid.num_cells_total, {}, moments_nt_gpu,
                               Vectorr::Zero());
-  set_default_device<Vectorr>(num_nodes_total, {}, forces_external_gpu,
+  set_default_device<Vectorr>(grid.num_cells_total, {}, forces_external_gpu,
                               Vectorr::Zero());
-  set_default_device<Vectorr>(num_nodes_total, {}, forces_internal_gpu,
+  set_default_device<Vectorr>(grid.num_cells_total, {}, forces_internal_gpu,
                               Vectorr::Zero());
-  set_default_device<Vectorr>(num_nodes_total, {}, forces_total_gpu,
+  set_default_device<Vectorr>(grid.num_cells_total, {}, forces_total_gpu,
                               Vectorr::Zero());
-  set_default_device<Real>(num_nodes_total, {}, masses_gpu, 0.);
-  set_default_device<Vectori>(num_nodes_total, {}, node_ids_gpu,
+  set_default_device<Real>(grid.num_cells_total, {}, masses_gpu, 0.);
+  set_default_device<Vectori>(grid.num_cells_total, {}, node_ids_gpu,
                               Vectori::Zero());
-  set_default_device<Vectori>(num_nodes_total, {}, node_types_gpu,
+  set_default_device<Vectori>(grid.num_cells_total, {}, node_types_gpu,
                               Vectori::Zero());
   reset();
 
-  // Calculate integer placement of nodes (x,y,z) along the grid
+  calculate_bin_ids();
+
+  calculate_bin_types();
+
+#ifdef CUDA_ENABLED
+  launch_config = GPULaunchConfig(grid.num_cells_total);
+#endif
+}
+
+///@brief Calculate the cartesian hash of the nodes (idx,idy,idz)
+///@details the cartesian hash is calculated using a similar hashmap
+/// as done in the SpatialPartition class. This can be done on the CPU
+/// as it is only done once at the start of the simulation.
+void NodesContainer::calculate_bin_ids() {
+
   cpu_array<Vectori> node_ids_cpu = node_ids_gpu;
-  cpu_array<Vectori> node_types_cpu = node_types_gpu;
+
+  // TODO replace with macro and make less verbose
 #if DIM == 1
-  for (int xi = 0; xi < num_nodes(0); xi++) {
+  for (int xi = 0; xi < grid.num_cells(0); xi++) {
     int index = xi;
     node_ids_cpu[index] = Vectori(xi);
   }
 #endif
 
 #if DIM == 2
-  for (int xi = 0; xi < num_nodes(0); xi++) {
-    for (int yi = 0; yi < num_nodes(1); yi++) {
-      int index = xi + yi * num_nodes(0);
+  for (int xi = 0; xi < grid.num_cells(0); xi++) {
+    for (int yi = 0; yi < grid.num_cells(1); yi++) {
+      int index = xi + yi * grid.num_cells(0);
       node_ids_cpu[index] = Vectori({xi, yi});
     }
   }
 #endif
 
 #if DIM == 3
-  for (int xi = 0; xi < num_nodes(0); xi++) {
-    for (int yi = 0; yi < num_nodes(1); yi++) {
-      for (int zi = 0; zi < num_nodes(2); zi++) {
-        int index = xi + yi * num_nodes(0) + zi * num_nodes(0) * num_nodes(1);
+  for (int xi = 0; xi < grid.num_cells(0); xi++) {
+    for (int yi = 0; yi < grid.num_cells(1); yi++) {
+      for (int zi = 0; zi < grid.num_cells(2); zi++) {
+        int index = xi + yi * grid.num_cells(0) +
+                    zi * grid.num_cells(0) * grid.num_cells(1);
         node_ids_cpu[index] = Vectori({xi, yi, zi});
       }
     }
   }
 #endif
-
-  for (int index = 0; index < num_nodes_total; index++) {
-    for (int axis = 0; axis < DIM; axis++) {
-      if (shape_function_cpu == CubicShapeFunction) {
-        if ((node_ids_cpu[index][axis] == 0) |
-            (node_ids_cpu[index][axis] == num_nodes[axis] - 1)) {
-          // Cell at boundary
-          node_types_cpu[index][axis] = 1;
-        } else if (node_ids_cpu[index][axis] == 1) {
-          // Cell right of boundary
-          node_types_cpu[index][axis] = 2;
-        } else if (node_ids_cpu[index][axis] == node_ids_cpu[index][axis] - 2) {
-          // Cell left of boundary
-          node_types_cpu[index][axis] = 4;
-        } else {
-          node_types_cpu[index][axis] = 3;
-        }
-      }
-    }
-  }
-  node_types_gpu = node_types_cpu;
   node_ids_gpu = node_ids_cpu;
-
-#ifdef CUDA_ENABLED
-  launch_config.tpb = dim3(int((num_nodes_total) / BLOCKSIZE) + 1, 1, 1);
-  launch_config.bpg = dim3(BLOCKSIZE, 1, 1);
-  gpuErrchk(cudaDeviceSynchronize());
-#endif
 }
 
+/// @brief Calculate the node types (boundary, right, left, middle)
+/// @details The node type is important for boundary conditions and
+/// for the calculation of the shape function.This function is only
+/// necessary for higher order shape functions
+void NodesContainer::calculate_bin_types() {
+  cpu_array<Vectori> node_ids_cpu = node_ids_gpu;
+  cpu_array<Vectori> node_types_cpu = node_types_gpu;
+
+  if (shape_function_cpu != CubicShapeFunction) {
+    return;
+  }
+  // TODO implement for other higher order shape functions (quadratic)
+  for (int index = 0; index < grid.num_cells_total; index++) {
+    for (int axis = 0; axis < DIM; axis++) {
+      if ((node_ids_cpu[index][axis] == 0) ||
+          (node_ids_cpu[index][axis] == grid.num_cells[axis] - 1)) {
+        // Cell at boundary
+        node_types_cpu[index][axis] = 1;
+      } else if (node_ids_cpu[index][axis] == 1) {
+        // Cell right of boundary
+        node_types_cpu[index][axis] = 2;
+      } else if (node_ids_cpu[index][axis] == node_ids_cpu[index][axis] - 2) {
+        // Cell left of boundary
+        node_types_cpu[index][axis] = 4;
+      } else {
+        node_types_cpu[index][axis] = 3;
+      }
+    }
+
+    node_types_gpu = node_types_cpu;
+  }
+}
+
+/// @brief Set the output formats ("vtk", "csv", "obj")
 void NodesContainer::set_output_formats(
     const std::vector<std::string> &_output_formats) {
   output_formats = _output_formats;
 }
 
+/// @brief Resets arrays of the background grid
 void NodesContainer::reset() {
   thrust::fill(moments_gpu.begin(), moments_gpu.end(), Vectorr::Zero());
   thrust::fill(moments_nt_gpu.begin(), moments_nt_gpu.end(), Vectorr::Zero());
@@ -134,27 +170,8 @@ void NodesContainer::reset() {
   thrust::fill(masses_gpu.begin(), masses_gpu.end(), 0.);
 }
 
-struct IntegrateFunctor {
-  template <typename Tuple>
-  __host__ __device__ void operator()(Tuple tuple) const {
-    Vectorr &moments_nt = thrust::get<0>(tuple);
-    Vectorr &forces_total = thrust::get<1>(tuple);
-    const Vectorr &forces_external = thrust::get<2>(tuple);
-    const Vectorr &forces_internal = thrust::get<3>(tuple);
-    const Vectorr &moments = thrust::get<4>(tuple);
-    if (const Real &mass = thrust::get<5>(tuple); mass <= 0.000000001) {
-      return;
-    }
-    const Vectorr ftotal = forces_internal + forces_external;
-    forces_total = ftotal;
-#ifdef CUDA_ENABLED
-    moments_nt = moments + ftotal * dt_gpu;
-#else
-    moments_nt = moments + ftotal * dt_cpu;
-#endif
-  }
-};
-
+/// @brief Integrate the nodes using Euler integration
+/// @details calls integrate_nodes in the nodes_inline file
 void NodesContainer::integrate() {
 
 #ifdef CUDA_ENABLED
@@ -164,10 +181,10 @@ void NodesContainer::integrate() {
       thrust::raw_pointer_cast(forces_external_gpu.data()),
       thrust::raw_pointer_cast(forces_internal_gpu.data()),
       thrust::raw_pointer_cast(moments_gpu.data()),
-      thrust::raw_pointer_cast(masses_gpu.data()), num_nodes_total);
+      thrust::raw_pointer_cast(masses_gpu.data()), grid.num_cells_total);
   gpuErrchk(cudaDeviceSynchronize());
 #else
-  for (int nid = 0; nid < num_nodes_total; nid++) {
+  for (int nid = 0; nid < grid.num_cells_total; nid++) {
     integrate_nodes(moments_nt_gpu.data(), forces_total_gpu.data(),
                     forces_external_gpu.data(), forces_internal_gpu.data(),
                     moments_gpu.data(), masses_gpu.data(), nid);
@@ -175,23 +192,27 @@ void NodesContainer::integrate() {
 #endif
 }
 
+/// @brief Get the node coordinates as a gpu array
 gpu_array<Vectorr> NodesContainer::give_node_coords() const {
   gpu_array<Vectorr> node_coords_cpu;
-  node_coords_cpu.resize(num_nodes_total);
+  node_coords_cpu.resize(grid.num_cells_total);
   cpu_array<Vectori> node_ids_cpu = node_ids_gpu;
-  for (size_t i = 0; i < num_nodes_total; i++) {
+  for (size_t i = 0; i < grid.num_cells_total; i++) {
     node_coords_cpu[i] =
-        node_start + node_ids_cpu[i].cast<Real>() * node_spacing;
+        grid.origin + node_ids_cpu[i].cast<Real>() * grid.cell_size;
   }
   gpu_array<Vectorr> node_coords_gpu = node_coords_cpu;
   return node_coords_gpu;
 }
 
+/// @brief Get the node coordinates as a stl vector
 std::vector<Vectorr> NodesContainer::give_node_coords_stl() const {
   gpu_array<Vectorr> node_coords_gpu = give_node_coords();
   return std::vector<Vectorr>(node_coords_gpu.begin(), node_coords_gpu.end());
 }
 
+/// @brief Output node data
+/// @details Requires that `set_output_formats` is called first
 void NodesContainer::output_vtk() const {
 
   vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
@@ -213,7 +234,7 @@ void NodesContainer::output_vtk() const {
   set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass");
 
   // loop over output_formats
-  for (auto format : output_formats) {
+  for (const auto &format : output_formats) {
     write_vtk_polydata(polydata, "nodes", format);
   }
 }

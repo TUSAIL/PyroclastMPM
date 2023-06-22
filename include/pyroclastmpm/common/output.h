@@ -58,13 +58,33 @@
 namespace pyroclastmpm {
 
 /**
- * @brief Set the vtk points locations
+ * @brief Set the vtk points locations to input polydata
+ * @details This function is used to populate a polydata
+ * with points
+ * \verbatim embed:rst:leading-asterisk
+ *     Example usage
  *
- * @param input input array of points
- * @param polydata polydata vtk object to set the points
- * @param mask mask to use for which points to set (input size and mask size
+ *     .. code-block:: cpp
+ *
+ *        #include <vtkPolyData.h>
+ *        #include "pyroclastmpm/common/output.h"
+ *
+ *        vtkSmartPointer<vtkPolyData> polydata =
+ * vtkSmartPointer<vtkPolyData>::New();
+ *
+ *        std::vector<Vectorr> points = {Vectorr({0., 0.25, 0.}),...};
+ *
+ *        set_vtk_points(positions_cpu, polydata);
+ *
+ *
+ * \endverbatim
+ *
+ *
+ * @param input Input array of points
+ * @param polydata Polydata vtk object to set the points
+ * @param mask <ask to use for which points to set (input size and mask size
  * should be the same)
- * @param use_mask if true, use the mask to set the points, otherwise set all
+ * @param use_mask If true, use the mask to set the points, otherwise set all
  */
 void set_vtk_points(cpu_array<Vectorr> input,
                     const vtkSmartPointer<vtkPolyData> &polydata,
@@ -72,30 +92,77 @@ void set_vtk_points(cpu_array<Vectorr> input,
 
 /**
  * @brief Set the vtk pointdata to input polydata
+ * @details This function is used to populate a polydata with scalar,
+ * vector, or tensor pointdata.
+ * \verbatim embed:rst:leading-asterisk
+ *     Example usage
+ *
+ *     .. code-block:: cpp
+ *
+ *        #include <vtkPolyData.h>
+ *        #include "pyroclastmpm/common/output.h"
+ *
+ *        ...
+ *        set_vtk_points(positions_cpu, polydata);
+ *
+ *        // Uses no mask by default
+ *        set_vtk_pointdata<Vectorr>(moments_cpu, polydata, "Moments");
+ *
+ *        // With mask {true, false, true, ...}
+ *        set_vtk_pointdata<Vectorr>(moments_cpu, polydata, "Moments", mask,
+ * true);
+ *
+ *
+ *
+ * \endverbatim
  *
  * @tparam T data type (float,double, int, Matrixr, etc.)
- * @param input input array of data
- * @param polydata polydata vtk object to set the pointdata
- * @param pointdata_name name of the pointdata
- * @param mask mask to use for which points to set (input size and mask size
+ * @param input Input array of data
+ * @param polydata Polydata vtk object to set the pointdata
+ * @param pointdata_name Name of the pointdata
+ * @param mask Mask to use for which points to set (input size and mask size
  * should be the same)
- * @param use_mask if true, use the mask to set the points, otherwise set all
+ * @param use_mask If true, use the mask to set the points, otherwise set all
  */
 template <typename T>
 void set_vtk_pointdata(cpu_array<T> input,
-                       vtkSmartPointer<vtkPolyData> &polydata,
+                       const vtkSmartPointer<vtkPolyData> &polydata,
                        const std::string &pointdata_name,
                        cpu_array<bool> mask = {}, bool use_mask = false);
 
 /**
- * @brief Set the vtk pointdata to input polydata
+ * @brief write an output file
+ * @details Outputs a vtkpolydata object to a file
+ * can be used to write to vtk, obj, and csv formats.
+ * It is very important that output directory is set
+ * before calling this function.
+ * \verbatim embed:rst:leading-asterisk
+ *     Example usage
  *
- * @param polydata polydata vtk object to set the pointdata
- * @param filename filename to write to
- * @param output_type output type (VTK, OBJ, GLTF,etc.)
+ *     .. code-block:: cpp
+ *
+ *        #include <vtkPolyData.h>
+ *        #include "pyroclastmpm/common/output.h"
+ *
+ *        ...
+ *        set_vtk_points(positions_cpu, polydata);
+ *
+ *        // Uses no mask by default
+ *        set_vtk_pointdata<Vectorr>(moments_cpu, polydata, "Moments");
+ *
+ *       ...
+ *       set_global_output_directory("./output/") // NB: this is very important
+ *
+ *       write_vtk_polydata(polydata, "data.vtk", "csv");
+ *
+ * \endverbatim
+ *
+ * @param polydata Polydata vtk object to set the pointdata
+ * @param filename Filename to write to
+ * @param output_type Output type ("vtk", "obj", "csv" etc.)
  */
 void write_vtk_polydata(vtkSmartPointer<vtkPolyData> polydata,
                         const std::string &filename,
-                        const std::string &output_type = "vtk");
+                        const std::string_view &output_type = "vtk");
 
 } // namespace pyroclastmpm

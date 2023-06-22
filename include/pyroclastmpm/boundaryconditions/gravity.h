@@ -26,7 +26,8 @@
 /**
  * @file gravity.h
  * @author Retief Lubbe (r.lubbe@utwente.nl)
- * @brief This header file contains the gravity boundary condition
+ * @brief Gravity boundary conditions are applied to the background grid
+ * via external forces on the nodes.
  *
  * @version 0.1
  * @date 2023-06-16
@@ -42,50 +43,64 @@
 
 namespace pyroclastmpm {
 
-class NodesContainer;
-
-struct Gravity : BoundaryCondition {
-
-  /**
-   * @brief Gravity boundary condition, either constant or linear ramping
-   *
-   * @param _gravity initial gravity vector
-   * @param _is_ramp whether the gravity is linear ramping or not
-   * @param _ramp_step time when full gravity is reached
-   * @param __gravity_end gravity value at end of ramp
-   */
+/**
+ * @brief Gravity boundary conditions
+ * @details Gravity can either be constant
+ * or have linear ramping to a final value.
+ * \verbatim embed:rst:leading-asterisk
+ *     Example usage (constant)
+ *
+ *     .. code-block:: cpp
+ *
+ *        #include "pyroclastmpm/boundaryconditions/gravity.h"
+ *        #include "pyroclastmpm/nodes/nodes.h"
+ *
+ *        // set globals
+ *
+ *        // Create NodesContainer
+ *
+ *        auto gravity = Gravity(Vectorr(0.0, -9.81, 0.0));
+ *
+ *        // Add gravity to Solver class
+ *
+ * \endverbatim
+ *
+ * \verbatim embed:rst:leading-asterisk
+ *    Example usage (ramping)
+ *
+ *   .. code-block:: cpp
+ *
+ *      auto gravity = Gravity(Vectorr(0.0, 0.0, 0.0),true,100,Vectorr(0.0,
+ * -9.81, 0.0));
+ *
+ * \endverbatim
+ *
+ *
+ */
+class Gravity : public BoundaryCondition {
+public:
+  /// @brief Construct a new Gravity object
+  /// @param _gravity gravity vector
+  /// @param _is_ramp flag whether gravity is ramping linearly or not
+  /// @param _ramp_step the amount of steps to ramp gravity to full value
+  /// @param _gravity_end gravity value at end of ramp
   Gravity(Vectorr _gravity, bool _is_ramp = false, int _ramp_step = 0,
           Vectorr _gravity_end = Vectorr::Zero());
 
-  /**
-   * @brief Update the external forces of the background grid
-   *
-   * @param nodes_ptr NodesContainer reference
-   */
+  /// @brief Apply graivity to external node forces
+  /// @param nodes_ref reference to NodesContainer
   void apply_on_nodes_f_ext(NodesContainer &nodes_ptr) override;
 
-  /**
-   * @brief Initial gravity vector
-   *
-   */
+  /// @brief Initial gravity vector
   Vectorr gravity;
 
-  /**
-   * @brief flag whether gravity is ramping linearly or not
-   *
-   */
+  /// @brief flag whether gravity is ramping linearly or not
   bool is_ramp;
 
-  /**
-   * @brief the amount of steps to ramp gravity to full value
-   *
-   */
+  /// @brief the amount of steps to ramp gravity to full value
   int ramp_step;
 
-  /**
-   * @brief gravity value at end of ramp
-   *
-   */
+  /// @brief gravity value at end of ramp
   Vectorr gravity_end;
 };
 

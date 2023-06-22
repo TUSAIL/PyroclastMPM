@@ -40,6 +40,16 @@ also return mapping on edge
 
 */
 
+#include "pyroclastmpm/materials/mohrcoulomb.h"
+
+namespace pyroclastmpm {
+
+#ifdef CUDA_ENABLED
+extern const Real __constant__ dt_gpu;
+#else
+extern const Real dt_cpu;
+#endif
+
 using Matrix2hp = Eigen::Matrix<double, 2, 2>;
 using Vector2hp = Eigen::Matrix<double, 2, 1>;
 using Vector3hp = Eigen::Matrix<double, 3, 1>;
@@ -200,7 +210,6 @@ return_mapping_edge(Matrix3r &stresses, Matrixr &eps_e, Real &acc_eps_p,
         pstress_tr(2) +
         (2. * G * (1. - (1. / 3.) * sda) - 2. * K * sda) * dgamma(0) +
         ((4. / 3.) * G - 2. * K) * sda * dgamma(1);
-
   } else {
 
     // note there is a mistake in the book
@@ -432,3 +441,4 @@ __device__ __host__ inline void update_mohrcoulomb(
                       particles_acc_eps_p_gpu[tid], Phi_tr, acc_eps_p_tr, p_tr,
                       K, G, sda, sfa, cda, cfa, H, cohesion);
 }
+} // namespace pyroclastmpm

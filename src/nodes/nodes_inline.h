@@ -22,7 +22,16 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-
+#pragma once
+/**
+ * @file nodes_inline.cpp
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief Contains main kernels for nodal integration
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ */
 #include "pyroclastmpm/common/types_common.h"
 
 namespace pyroclastmpm {
@@ -33,8 +42,17 @@ extern Real __constant__ dt_gpu;
 extern const Real dt_cpu;
 #endif
 
-extern const SFType shape_function_cpu;
-
+/** @brief Integrate nodal arrays to get moments
+ *
+ * @param nodes_moments_nt_gpu Forwards nodal moments
+ * @param nodes_forces_total_gpu Total nodal forces
+ * @param nodes_forces_external_gpu External nodal forces
+ * @param nodes_forces_internal_gpu Internal nodal forces
+ * @param nodes_moments_gpu Nodal moments
+ * @param nodes_masses_gpu Nodal masses
+ * @param node_mem_index Index of node in memory
+ * @return __device__
+ */
 __device__ __host__ inline void
 integrate_nodes(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
                 const Vectorr *nodes_forces_external_gpu,
@@ -42,7 +60,7 @@ integrate_nodes(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
                 const Vectorr *nodes_moments_gpu, const Real *nodes_masses_gpu,
                 const int node_mem_index) {
 
-  if (nodes_masses_gpu[node_mem_index] <= 0.000000001) {
+  if (nodes_masses_gpu[node_mem_index] <= (Real)0.000000001) {
     return;
   }
   const Vectorr ftotal = nodes_forces_internal_gpu[node_mem_index] +

@@ -26,8 +26,14 @@
 /**
  * @file global_settings.cpp
  * @author Retief Lubbe (r.lubbe@utwente.nl)
- * @brief This file contains global variables and functions that set the global
- * variables.
+ * @brief Contains global variables used throughout the code.
+ * Normally, it is not good practice to use global variables, but in this case
+ * it is necessary for performance reasons. CUDA __constant__ memory is stored
+ * in the constant cache which is much faster than global memory.
+ *
+ * Important that global variables are only modified by the host, and set
+ * in this file.
+ *
  *
  * @version 0.1
  * @date 2023-06-15
@@ -41,134 +47,107 @@ namespace pyroclastmpm {
 
 #ifdef CUDA_ENABLED
 
-/**
- * @brief Shape function type (GPU)
- *
- */
+/// @brief Shape function type (DEVICE)
 __constant__ SFType shape_function_gpu = LinearShapeFunction;
 
-/**
- * @brief number of surrounding nodes for grid/particle interpolation (GPU)
- *
- */
+/// @brief number of surrounding nodes for grid/particle interpolation (DEVICE)
 __constant__ int num_surround_nodes_gpu;
 
-/**
- * @brief Time step (GPU)
- *
- */
+/// @brief Time step (DEVICE)
 __constant__ Real dt_gpu;
 
-/**
- * @brief Global step counter (GPU)
- *
- */
+/// @brief Global step counter (DEVICE)
 __constant__ int global_step_gpu = 0;
 
-/**
- * @brief Initial number of particles per cell (GPU)
- *
- */
+/// @brief Initial number of particles per cell (DEVICE)
 __constant__ int particles_per_cell_gpu;
 
-/**
- * @brief Connectivity window for grid to particle interpolation (GPU)
- *
- */
+/// @brief Connectivity window for grid to particle interpolation (DEVICE)
 __constant__ int g2p_window_gpu[64][3];
 
-/**
- * @brief Connectivity window for particle to grid interpolation (GPU)
- *
- */
+/// @brief Connectivity window for particle to grid interpolation (DEVICE)
 __constant__ int p2g_window_gpu[64][3];
 #endif
 
-// Global variables
-/**
- * @brief Global output directory string
- *
- */
+/// @brief Global output directory string
 char output_directory_cpu[256];
 
-/**
- * @brief Connectivity window for grid to particle interpolation
- *
- */
+/// @brief Connectivity window for grid to particle interpolation
 int g2p_window_cpu[64][3];
 
-/**
- * @brief Connectivity window for particle to grid interpolation
- *
- */
+/// @brief Connectivity window for particle to grid interpolation
 int p2g_window_cpu[64][3];
 
-/**
- * @brief Shape function type (CPU)
- *
- */
+/// @brief Shape function type (HOST)
 SFType shape_function_cpu = LinearShapeFunction;
 
-/**
- * @brief Number of surrounding nodes for grid/particle interpolation (CPU)
- *
- */
-int num_surround_nodes_cpu;
+/// @brief Number of surrounding nodes for grid/particle interpolation (HOST)
+int num_surround_nodes_cpu = 1;
 
-/**
- * @brief Time step (CPU)
- *
- */
-Real dt_cpu;
+/// @brief Time step (HOST)
+Real dt_cpu = 0.0;
 
-/**
- * @brief Inverse cell size (CPU)
- *
- */
-Real inv_cell_size_cpu;
+/// @brief Inverse cell size (HOST)
+Real inv_cell_size_cpu = 0.0;
 
-/**
- * @brief Global step counter (CPU)
- *
- */
+/// @brief Global step counter (HOST)
 int global_step_cpu = 0;
 
-/**
- * @brief Initial particles per cell (CPU)
- *
- */
+/// @brief Initial particles per cell (HOST)
 int particles_per_cell_cpu;
 
-// Connectivity windows for grid to particle and particle to grid interpolation
-// These are run-time constants, and may be different for different shape or
-// dimension
+/// Connectivity windows for grid to particle and particle to grid interpolation
+/// These are run-time constants, and may be different for different shape or
+/// dimension
 #if DIM == 1
+/// @brief Connectivity window for linear grid to particle interpolation
+/// (Grid-To-Particle)
 const int linear_g2p_window[64][3] = {{0, 0, 0}, {1, 0, 0}};
+/// @brief Connectivity window for linear particle to grid interpolation
+/// (Particle-To-Grid)
 const int linear_p2g_window[64][3] = {{0, 0, 0}, {-1, 0, 0}};
+/// @brief Connectivity window for quadratic grid to particle interpolation
+/// (Grid-To-Particle)
 const int quadratic_g2p_window[64][3] = {
     {-1, 0, 0}, {0, 0, 0}, {1, 0, 0}, {2, 0, 0}};
+/// @brief Connectivity window for quadratic particle to grid interpolation
+/// (Particle-To-Grid)
 const int quadratic_p2g_window[64][3] = {
     {1, 0, 0}, {0, 0, 0}, {-1, 0, 0}, {-2, 0, 0}};
 #elif DIM == 2
+/// @brief Connectivity window for linear grid to particle interpolation
+/// (Grid-To-Particle)
 const int linear_g2p_window[64][3] = {
     {0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {1, 1, 0}};
+/// @brief Connectivity window for linear particle to grid interpolation
+/// (Particle-To-Grid)
 const int linear_p2g_window[64][3] = {
     {0, 0, 0}, {-1, 0, 0}, {0, -1, 0}, {-1, -1, 0}};
+/// @brief Connectivity window for quadratic grid to particle interpolation
+/// (Grid-To-Particle)
 const int quadratic_g2p_window[64][3] = {
     {-1, -1, 0}, {0, -1, 0}, {1, -1, 0}, {2, -1, 0}, {-1, 0, 0}, {0, 0, 0},
     {1, 0, 0},   {2, 0, 0},  {-1, 1, 0}, {0, 1, 0},  {1, 1, 0},  {2, 1, 0},
     {-1, 2, 0},  {0, 2, 0},  {1, 2, 0},  {2, 2, 0}};
+/// @brief Connectivity window for quadratic particle to grid interpolation
+/// (Particle-To-Grid)
 const int quadratic_p2g_window[64][3] = {
     {1, 1, 0},  {0, 1, 0},  {-1, 1, 0},  {-2, 1, 0}, {1, 0, 0},   {0, 0, 0},
     {-1, 0, 0}, {-2, 0, 0}, {1, -1, 0},  {0, -1, 0}, {-1, -1, 0}, {-2, -1, 0},
     {1, -2, 0}, {0, -2, 0}, {-1, -2, 0}, {-2, -2, 0}};
 #else
+/// @brief Connectivity window for linear grid to particle interpolation
+/// (Grid-To-Particle)
 const int linear_g2p_window[64][3] = {{0, 0, 0}, {0, 0, 1}, {1, 0, 0},
                                       {1, 0, 1}, {0, 1, 0}, {0, 1, 1},
                                       {1, 1, 0}, {1, 1, 1}};
+/// @brief Connectivity window for linear particle to grid interpolation
+/// (Particle-To-Grid)
 const int linear_p2g_window[64][3] = {{0, 0, 0},   {0, 0, -1},  {-1, 0, 0},
                                       {-1, 0, -1}, {0, -1, 0},  {0, -1, -1},
                                       {-1, -1, 0}, {-1, -1, -1}};
+/// @brief Connectivity window for quadratic grid to particle interpolation
+/// (Grid-To-Particle)
 const int quadratic_g2p_window[64][3] = {
     {-1, -1, -1}, {-1, -1, 0}, {-1, -1, 1}, {-1, -1, 2}, {0, -1, -1},
     {0, -1, 0},   {0, -1, 1},  {0, -1, 2},  {1, -1, -1}, {1, -1, 0},
@@ -183,6 +162,8 @@ const int quadratic_g2p_window[64][3] = {
     {-1, 2, 1},   {-1, 2, 2},  {0, 2, -1},  {0, 2, 0},   {0, 2, 1},
     {0, 2, 2},    {1, 2, -1},  {1, 2, 0},   {1, 2, 1},   {1, 2, 2},
     {2, 2, -1},   {2, 2, 0},   {2, 2, 1},   {2, 2, 2}};
+/// @brief Connectivity window for quadratic particle to grid interpolation
+/// (Particle-To-Grid)
 const int quadratic_p2g_window[64][3] = {
     {1, 1, 1},   {1, 1, 0},    {1, 1, -1},   {1, 1, -2},   {0, 1, 1},
     {0, 1, 0},   {0, 1, -1},   {0, 1, -2},   {-1, 1, 1},   {-1, 1, 0},
@@ -200,24 +181,23 @@ const int quadratic_p2g_window[64][3] = {
 #endif
 
 /**
- * @brief Set the global shapefunction type. This is a master function that
- * calls other functions to set the global variables
- *
- * @param _dimension simulation dimension
+ * @brief Set the globals object
+ * @param _dt time step
+ * @param particles_per_cell number of particles per cell
+ * @param _shapefunction shape function type ("linear" or "cubic"")
+ * @param _output_dir output directory string
  */
 void set_globals(const Real _dt, const int particles_per_cell,
-                 SFType _shapefunction, const std::string _output_dir) {
+                 const std::string_view &_shapefunction,
+                 const std::string &_output_dir) {
   set_global_dt(_dt);
   set_global_shapefunction(_shapefunction);
   set_global_output_directory(_output_dir);
   set_global_particles_per_cell(particles_per_cell);
 }
 
-/**
- * @brief Set the global initial particles per cell.
- *
- * @param _particles_per_cell initial particles per cell
- */
+/// @brief Set the global initial particles per cell.
+/// @param _particles_per_cell initial particles per cell
 void set_global_particles_per_cell(const int _particles_per_cell) {
   particles_per_cell_cpu = _particles_per_cell;
 #ifdef CUDA_ENABLED
@@ -226,20 +206,14 @@ void set_global_particles_per_cell(const int _particles_per_cell) {
 #endif
 }
 
-/**
- * @brief Set the global output directory object
- *
- * @param _output_dir output directory string
- */
-void set_global_output_directory(const std::string _output_dir) {
+/// @brief Set the global output directory object
+/// @param _output_dir output directory string
+void set_global_output_directory(const std::string_view &_output_dir) {
   std::copy(_output_dir.begin(), _output_dir.end(), output_directory_cpu);
 };
 
-/**
- * @brief Set the global timestep
- *
- * @param _dt timestep
- */
+/// @brief Set the global timestep
+/// @param _dt timestep
 void set_global_dt(const Real _dt) {
   dt_cpu = _dt;
 #ifdef CUDA_ENABLED
@@ -247,11 +221,8 @@ void set_global_dt(const Real _dt) {
 #endif
 };
 
-/**
- * @brief Set the global step object
- *
- * @param _step global step counter
- */
+/// @brief Set the global step object
+/// @param _step global step counter
 void set_global_step(const int _step) {
   global_step_cpu = _step;
 #ifdef CUDA_ENABLED
@@ -259,20 +230,25 @@ void set_global_step(const int _step) {
 #endif
 };
 
-/**
- * @brief Set the global shapefunction enum type
- *
- * @param _shapefunction
- */
-void set_global_shapefunction(SFType _shapefunction) {
-  shape_function_cpu = _shapefunction;
+/// @brief Increment the global step counter
+void increment_global() {
+  global_step_cpu += 1;
 #ifdef CUDA_ENABLED
-  cudaMemcpyToSymbol(shape_function_gpu, &(shape_function_cpu), sizeof(int), 0);
+  cudaMemcpyToSymbol(global_step_gpu, &(global_step_cpu), sizeof(int), 0);
 #endif
+}
+
+/// @brief Set the global shapefunction enum type
+/// @details sets a window_size and num_surround_nodes as well
+/// which is important for traversing the connectivity windows
+/// @param _shapefunction ("linear" or "cubic")
+void set_global_shapefunction(const std::string_view &_shapefunction) {
+
   int window_size_cpu;
-  if (_shapefunction == LinearShapeFunction) {
+  if (_shapefunction == "linear") {
+    shape_function_cpu = LinearShapeFunction;
     window_size_cpu = 2;
-    num_surround_nodes_cpu = pow(window_size_cpu, DIM);
+    num_surround_nodes_cpu = (int)pow((double)window_size_cpu, (double)DIM);
 #ifdef CUDA_ENABLED
     cudaMemcpyToSymbol(g2p_window_gpu, linear_g2p_window, 64 * 3 * sizeof(int));
     cudaMemcpyToSymbol(p2g_window_gpu, linear_p2g_window, 64 * 3 * sizeof(int));
@@ -282,11 +258,11 @@ void set_global_shapefunction(SFType _shapefunction) {
     std::copy(&linear_p2g_window[0][0], &linear_p2g_window[0][0] + 64 * 3,
               &p2g_window_cpu[0][0]);
 #endif
-  } else if ((_shapefunction == QuadraticShapeFunction) ||
-             (_shapefunction == CubicShapeFunction)) {
+  } else if (_shapefunction == "cubic") {
 
+    shape_function_cpu = CubicShapeFunction;
     window_size_cpu = 4;
-    num_surround_nodes_cpu = pow(window_size_cpu, DIM);
+    num_surround_nodes_cpu = (int)pow((double)window_size_cpu, (double)DIM);
 #ifdef CUDA_ENABLED
     cudaMemcpyToSymbol(g2p_window_gpu, quadratic_g2p_window,
                        64 * 3 * sizeof(int));
@@ -298,11 +274,13 @@ void set_global_shapefunction(SFType _shapefunction) {
     std::copy(&quadratic_p2g_window[0][0], &quadratic_p2g_window[0][0] + 64 * 3,
               &p2g_window_cpu[0][0]);
 #endif
+  } else {
+    std::cout << "Shape function not recognized, exiting." << std::endl;
+    exit(1);
   }
 
 #ifdef CUDA_ENABLED
-  cudaMemcpyToSymbol(window_size_gpu, &(window_size_cpu), sizeof(int), 0);
-
+  cudaMemcpyToSymbol(shape_function_gpu, &(shape_function_cpu), sizeof(int), 0);
   cudaMemcpyToSymbol(num_surround_nodes_gpu, &(num_surround_nodes_cpu),
                      sizeof(int), 0);
 #endif

@@ -28,13 +28,6 @@
 #include "pyroclastmpm/particles/particles.h"
 #include "pyroclastmpm/solver/musl/musl.h"
 
-// Features to be tested
-// [x] MUSL::USL (implicitly through solver, inherits)
-// [x] MUSL::solve (implicitly through all other tests)
-// [x] MUSL::G2P_doublemapping
-// [x] MUSL::P2G_doublemapping
-// [x] MUSL::G2P
-
 using namespace pyroclastmpm;
 
 /**

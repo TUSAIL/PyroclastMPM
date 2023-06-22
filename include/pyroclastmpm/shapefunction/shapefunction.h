@@ -23,6 +23,18 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file shapefunction.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief Shape functions kernels
+ * @details these functions are not meant to be called directly, but are called
+ * by the solver classes.
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ */
+
 #pragma once
 
 #include "../common/types_common.h"
@@ -31,7 +43,17 @@
 
 namespace pyroclastmpm {
 
+/**
+ * @brief Calculate the shape function for a given particle
+ * @details This function calculates the shape function for a given particle
+ * and stores the shape function values in the particle object.
+ *
+ * This function is called internally by the Solver classes.
+ *
+ * @param nodes_ref Reference to the NodesContainer object
+ * @param particles_ref Reference to the ParticlesContainer object
+ */
 void calculate_shape_function(NodesContainer &nodes_ref,
                               ParticlesContainer &particles_ref);
 
-}
+} // namespace pyroclastmpm

@@ -1,120 +1,112 @@
-"""_summary_
-
-This example shows two spheres impacting each other [1].
-
-
-How to run:
-    - Run `make` in this folder
-    - Alternatively, run `python3 run.py` but make sure the output dictory is created.
-
-Requirements:
-    - pyroclastmpm (2D compiled), PyVista, numpy, toml, circles
-
-Notes:
- - The spheres are created using the `circles` module
- - Data is stored in CSV and VTK format in the `output` folder
- - Simulation parameters are loaded from a TOML file called `config.toml`
- - Postprocessing is done using PyVista in `postprocess.py`.
+"""This example shows two spheres impacting each other [1].
 
 [1] Sulsky, Deborah, Zhen Chen, and Howard L. Schreyer.
 "A particle method for history-dependent materials."
 Computer methods in applied mechanics and engineering 118.1-2 (1994): 179-196.
 """
 
-import tomllib
 
 import numpy as np
-from circles import create_circle
-from pyroclastmpm import (
-    USL,
-    LinearElastic,
-    NodesContainer,
-    ParticlesContainer,
-    check_dimension,
-    set_globals,
-)
+import pyroclastmpm as pm
 
 # 1. Load config file and set global variables
-with open("./config.toml", "rb") as f:
-    config = tomllib.load(f)
 
-check_dimension(config["global"]["dimension"])
+# global
+dt = 0.001
+particles_per_cell = 4
+shape_function = "linear"
+output_directory = "output"
+total_steps, output_steps, output_start = 3000, 100, 0
 
-set_globals(
-    dt=config["global"]["dt"],
-    particles_per_cell=config["global"]["particles_per_cell"],
-    shape_function=config["global"]["shape_function"],
-    output_directory=config["global"]["output_directory"],
+
+# nodes
+origin, end = [0.0, 0.0], [1.0, 1.0]
+cell_size = 0.05
+output_formats = ["vtk"]
+
+# particles
+circle1_center = np.array([0.255, 0.255])
+circle2_center = np.array([0.745, 0.745])
+circle_radius = 0.2
+output_formats = ["vtk"]
+
+# material
+density = 1000
+E = 1000
+pois = 0.3
+
+# solver
+alpha = 1.0  # pure flip
+
+pm.set_globals(
+    dt,
+    particles_per_cell,
+    shape_function,
+    output_directory,
 )
+
+
+def create_circle(
+    center: np.array, radius: float, cell_size: float, ppc: int = 2
+):
+    """Generate a circle of particles.
+
+    Args:
+        center (np.array): center of the circle
+        radius (float): radius of the circle
+        cell_size (float): size of the background grid cells
+        ppc (int, optional): particles per cell. Defaults to 2.
+
+    Returns:
+        np.array: coordinates of the particles
+    """
+    start, end = center - radius, center + radius
+    spacing = cell_size / (ppc / 2)
+    tol = +0.00005  # Add a tolerance to avoid numerical issues
+    x = np.arange(start[0], end[0] + spacing, spacing) + 0.5 * spacing
+    y = np.arange(start[1], end[1] + spacing, spacing) + 0.5 * spacing
+    xv, yv = np.meshgrid(x, y)
+    grid_coords = np.array(list(zip(xv.flatten(), yv.flatten()))).astype(
+        np.float64
+    )
+    circle_mask = (grid_coords[:, 0] - center[0]) ** 2 + (
+        grid_coords[:, 1] - center[1]
+    ) ** 2 < radius**2 + tol
+    return grid_coords[circle_mask]
 
 
 # 2. Create background grid
-nodes = NodesContainer(
-    node_start=config["nodes"]["node_start"],
-    node_end=config["nodes"]["node_end"],
-    node_spacing=config["nodes"]["node_spacing"],
-)
+nodes = pm.NodesContainer(origin, end, cell_size)
 
-nodes.set_output_formats(config["nodes"]["output_formats"])
+nodes.set_output_formats(output_formats)
 
 # 3. Create particles using the circles module (in same folder)
-circle_centers = np.array(
-    [
-        np.array(config["particles"]["circle1_center"]),
-        np.array(config["particles"]["circle2_center"]),
-    ]
-)
+circle_centers = np.array([circle1_center, circle2_center])
 
 # list of two circles
 circles = np.array(
     [
-        create_circle(
-            center=center,
-            radius=config["particles"]["circle_radius"],
-            cell_size=config["nodes"]["node_spacing"],
-            ppc=config["global"]["particles_per_cell"],
-        )
+        create_circle(center, circle_radius, cell_size, particles_per_cell)
         for center in circle_centers
     ]
 )
 
 
 # concatenate the two circles into a single array
-positions = np.vstack(circles)
-print(positions.shape)
+pos = np.vstack(circles)
+
 # the spheres are moving towards each other
-velocities1 = np.ones(circles[0].shape) * 0.1
-velocities2 = np.ones(circles[1].shape) * -0.1
-velocities = np.vstack((velocities1, velocities2))
+vel1 = np.ones(circles[0].shape) * 0.1
+vel2 = np.ones(circles[1].shape) * -0.1
+vels = np.vstack((vel1, vel2))
 
-# for convenience, we assign a color to each sphere
-# (this is only used for visualization)
-# material remains the same
-color1 = np.zeros(len(circles[0]))
-color2 = np.ones(len(circles[1]))
-colors = np.concatenate([color1, color2]).astype(int)
-
-particles = ParticlesContainer(
-    positions=positions, velocities=velocities, colors=colors
-)
-particles.set_output_formats(config["particles"]["output_formats"])
+particles = pm.ParticlesContainer(pos, vels)
+particles.set_output_formats(output_formats)
 
 # 4. Create material
-material = LinearElastic(
-    density=config["material"]["density"],
-    E=config["material"]["E"],
-    pois=config["material"]["pois"],
-)
+material = pm.LinearElastic(density, E, pois)
 
-# 5. Create solver and run
-MPM = USL(
-    particles=particles,
-    nodes=nodes,
-    materials=[material, material],
-    alpha=config["solver"]["alpha"],
-    total_steps=config["global"]["total_steps"],
-    output_steps=config["global"]["output_steps"],
-    output_start=config["global"]["output_start"],
-)
+# # # 5. Create solver and run
+MPM = pm.USL(particles, nodes, [material], alpha=alpha)
 
-MPM.run()
+MPM.run(total_steps, output_steps)

@@ -27,36 +27,62 @@
 
 #include "pyroclastmpm/boundaryconditions/boundaryconditions.h"
 
-// #include "pyroclastmpm/nodes/nodes.cuh"
-
 namespace pyroclastmpm {
 
 /**
- * @brief Apply a domain to the simulation
+ * @brief Plane boundary condition on the nodes
+ * @details DEM style boundary condition where contact between particles and
+ * the plane is modelled with a frictional contact model.
+ *
+ * The walls are defined by faces face0 =(x0, y0, z0) and face1 =(x1, y1, z1)
+ *
+ * \verbatim
+ * In Two dimensions:
+ *        x1
+ *      +-----+
+ *      |     |
+ * y0   |     |  y1
+ *      +-----+
+ *        x0
+ * \endverbatim
+ *
+ *
+ * Friction is applied to walls with face0_friction and face1_friction in
+ * degrees
+ *
+ * \verbatim embed:rst:leading-asterisk
+ *     Example usage
+ *
+ *     .. code-block:: cpp
+ *
+ *        #include "pyroclastmpm/boundaryconditions/planardomain.h"
+ *
+ *        // set globals
+ *
+ *        // floor with friction of 15 and rest no friction
+ *        auto walls = PlanarDomain(Vectori(0, 15, 0), Vectori(0.0, 0, 0));
+ *
+ *        // Add wall to Solver class
+ *
+ *  \endverbatim
  *
  */
-struct PlanarDomain : BoundaryCondition {
+class PlanarDomain : public BoundaryCondition {
+public:
+  /// @brief Construct a new object
+  /// @param face0_friction Friction angle (degrees) for cube face x0,y0,z0
+  /// @param face1_friction Friction angle (degrees)for cube face x1,y1,z1
+  PlanarDomain(Vectorr _face0_friction = Vectorr::Zero(),
+               Vectorr _face1_friction = Vectorr::Zero());
 
-  // FUNCTIONS
-  /**
-   * @brief Construct a new Pinball domain object
-   *
-   * @param axis0_friction friction of the x0,y0,z0 axes
-   * @param axis1_friction friction of the x1,y1,z1 axes
-   */
-  PlanarDomain(Vectorr _axis0_friction = Vectorr::Zero(),
-               Vectorr _axis1_friction = Vectorr::Zero());
+  /// @brief face0_friction Friction angle (degrees) for cube face x0,y0,z0
+  Vectorr face0_friction;
 
-  ~PlanarDomain(){};
+  /// @brief face1_friction Friction angle degrees for cube face x0,y0,z0
+  Vectorr face1_friction;
 
-  Vectorr axis0_friction;
-
-  Vectorr axis1_friction;
-  /**
-   * @brief Apply boundary conditions on node moments
-   *
-   * @param nodes_ptr NodesContainer object
-   */
+  /// @brief apply contact on particles
+  /// @param particles_ref ParticlesContainer reference
   void apply_on_particles(ParticlesContainer &particles_ref) override;
 };
 

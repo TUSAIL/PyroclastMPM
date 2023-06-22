@@ -23,31 +23,41 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @file newtonfluid.h
+ * @author Retief Lubbe (r.lubbe@utwente.nl)
+ * @brief Implementation of Newton fluid material
+ * @version 0.1
+ * @date 2023-06-15
+ *
+ * @copyright Copyright (c) 2023
+ */
+
 #include "pyroclastmpm/materials/newtonfluid.h"
-
-namespace pyroclastmpm {
-
-#ifdef CUDA_ENABLED
-extern Real __constant__ dt_gpu;
-#else
-extern Real dt_cpu;
-#endif
 
 #include "newtonfluid_inline.h"
 
+namespace pyroclastmpm {
+/// @brief Construct a new Newton Fluid object
+/// @details The implementation is based on the paper
+/// de Vaucorbeil, Alban, et al. "Material point method after 25 years: Theory,
+/// implementation, and applications." Advances in applied mechanics 53 (2020):
+/// 185-398. (Page 80)
+/// It is important that global variables are set before the solver is
+/// called. This can be done by calling the set_globals() function.
+/// @param _density material density
+/// @param _viscocity material viscocity
+/// @param _bulk_modulus bulk modulus
+/// @param gamma gamma (7 for water and 1.4 for air)
 NewtonFluid::NewtonFluid(const Real _density, const Real _viscosity,
-                         const Real _bulk_modulus, const Real _gamma) {
-  viscosity = _viscosity;
-  bulk_modulus = _bulk_modulus;
-  gamma = _gamma;
-  printf("viscosity: %f\n", viscosity);
-  printf("gamma: %f\n", gamma);
-  printf("bulk_modulus: %f\n", bulk_modulus);
+                         const Real _bulk_modulus, const Real _gamma)
+    : viscosity(_viscosity), bulk_modulus(_bulk_modulus), gamma(_gamma) {
   density = _density;
-  name = "NewtonFluid";
-  printf("density: %f\n", density);
 }
 
+/// @brief Perform stress update
+/// @param particles_ptr ParticlesContainer class
+/// @param mat_id material id
 void NewtonFluid::stress_update(ParticlesContainer &particles_ref, int mat_id) {
 #ifdef CUDA_ENABLED
   KERNEL_STRESS_UPDATE_NEWTONFLUID<<<particles_ref.launch_config.tpb,
@@ -76,7 +86,5 @@ void NewtonFluid::stress_update(ParticlesContainer &particles_ref, int mat_id) {
 
 #endif
 }
-
-NewtonFluid::~NewtonFluid() {}
 
 } // namespace pyroclastmpm
