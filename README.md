@@ -4,7 +4,7 @@
 ![header](https://capsule-render.vercel.app/api?type=waving&color=0:EA5455,50:F07B3F,100:FFD460&height=350&section=header&text=PyroclastMPM&fontSize=90&fontColor=2D4059)
 
 <p align="center" style="margin-bottom: 0px !important;  padding-left: 100px">
-  <img width="400" src="./doc/assets/scoop_no_boundary.gif" alt="PyroclastMPM logo" align="center">
+  <img width="400" src="./docs/assets/scoop_no_boundary.gif" alt="PyroclastMPM logo" align="center">
 </p>
 
 <p align="center"> A modular GPU based Material Point Method (MPM) solver. </p>
