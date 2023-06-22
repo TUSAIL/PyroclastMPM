@@ -83,16 +83,16 @@ Will look something like this) `pip install <wheel>`
 
 <div style="display:inline">
 <a >
-  <img height="50" src="./doc/assets/docker.png" />
+  <img height="50" src="./docs/assets/docker.png" />
 </a>
 <a >
-  <img height="50" src="./doc/assets/python.png" />
+  <img height="50" src="./docs/assets/python.png" />
 </a>
 <a >
-  <img height="50" src="./doc/assets/cpp.png" />
+  <img height="50" src="./docs/assets/cpp.png" />
 </a>
 <a >
-  <img height="50" src="./doc/assets/nvidia.png" />
+  <img height="50" src="./docs/assets/nvidia.png" />
 </a>
 </div>
 
