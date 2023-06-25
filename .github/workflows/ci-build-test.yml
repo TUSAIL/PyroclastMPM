@@ -52,12 +52,15 @@ jobs:
 
       - name: Test
         run: |
-          ./build/tests/tests
+          ./build/tests/tests_2D
 
       - name: Run Integration Tests
         run: |
           cd examples/two_disc_impact/
-          poetry run make
+          mkdir -p output
+          mkdir -p plots
+          poetry run python run.py
+          poetry run python postprocess.py
 
       - uses: actions/upload-artifact@v3
         with:

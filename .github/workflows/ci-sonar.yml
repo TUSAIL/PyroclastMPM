@@ -45,9 +45,12 @@ jobs:
       - name: Run build-wrapper
         run: |
           mkdir build
-          cmake -B ./build/ -S .
-
+          cmake -B ./build/ -S . -DBUILD_COVERAGE=ON
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make -j4 -C ./build
+          cd build
+          tests/tests_2D
+          poetry run gcovr --filter '\.\./src/' -r ../ --no-exclude-noncode-lines --sonarqube coverage.xml
+
       - name: Run sonar-scanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
