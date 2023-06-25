@@ -49,11 +49,13 @@ jobs:
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make -j4 -C ./build
           cd build
           tests/tests_2D
-          poetry run gcovr --filter '\.\./src/' -r ../ --no-exclude-noncode-lines --sonarqube coverage.xml
+          poetry run gcovr --filter '\.\./src/' -r ../ --no-exclude-noncode-lines --sonarqube > coverage.xml
 
       - name: Run sonar-scanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
+          sonar-scanner \
+          --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
+          --define sonar.coverageReportPaths=/build/coverage.xml
