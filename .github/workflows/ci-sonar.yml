@@ -47,9 +47,8 @@ jobs:
           mkdir build
           cmake -B ./build/ -S . -DBUILD_COVERAGE=ON
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make -j4 -C ./build
-          cd build
-          tests/tests_2D
-          poetry run gcovr --filter '\.\./src/' -r ../ --no-exclude-noncode-lines --sonarqube > coverage.xml
+          ./build/tests/tests_2D
+          poetry run gcovr --filter '\.\./src/' -r . --no-exclude-noncode-lines --sonarqube > coverage.xml
 
       - name: Run sonar-scanner
         env:
@@ -58,4 +57,4 @@ jobs:
         run: |
           sonar-scanner \
           --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
-          --define sonar.coverageReportPaths=/build/coverage.xml
+          --define sonar.coverageReportPaths=coverage.xml
