@@ -1,3 +1,5 @@
+# trunk-ignore-all(ruff/F401)
+
 import logging
 
 failed_imports = []
