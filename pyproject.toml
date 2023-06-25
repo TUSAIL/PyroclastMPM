@@ -28,6 +28,7 @@ sphinx-autodoc-typehints = "^1.23.2"
 furo = "^2023.5.20"
 pydata-sphinx-theme = "^0.13.3"
 sphinx-copybutton = "^0.5.2"
+gcovr = "^6.0"
 
 [tool.poetry.group.plot.dependencies]
 jupyter = "^1.0.0"

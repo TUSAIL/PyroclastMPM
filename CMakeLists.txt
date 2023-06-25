@@ -36,8 +36,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 set(DIM 2 CACHE INTERNAL "")
-# SET(DIM 3 CACHE INTERNAL "Dimension of the simulation (plane strain)")
-# set(DIMENSION 3 CACHE INTERNAL "")
 
 message(DIM='${DIM}')
 
@@ -47,9 +45,17 @@ option(BUILD_PYTHON "Enable building of Python bindings" ON)
 option(BUILD_DOCS "Enable building of documentation" OFF)
 option(BUILD_TESTING "Enable testing" ON)
 option (DOUBLE_PRECISION "Use double precision" OFF)
+option(BUILD_COVERAGE "Enable coverage reporting" OFF)
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 add_definitions(-DDIM=${DIM})
 
+
+if(BUILD_COVERAGE)
+SET(CMAKE_CXX_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
+SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
+endif()
 
 
 if (DOUBLE_PRECISION)
@@ -106,6 +112,7 @@ add_subdirectory(src)
 
 # compile the tests
 if(BUILD_TESTING)
+
     include(FetchContent)
     FetchContent_Declare(
         googletest
@@ -122,17 +129,19 @@ if(BUILD_DOCS)
     add_subdirectory(docs)
 endif()
 
+if (NOT BUILD_COVERAGE)
 if(BUILD_PYTHON)
     add_subdirectory(ext/pybind11)
     add_subdirectory(python/pybind)
 endif()
+endif()
 
 # Add an alias target for use if this project is included as a subproject in another project
-add_library(pyroclastmpm::pyroclastmpm ALIAS pyroclastmpm)
+add_library(pyroclastmpm::pyroclastmpm ALIAS pyroclastmpm_${DIM}D)
 
 # Install targets and configuration
 install(
-    TARGETS pyroclastmpm
+    TARGETS pyroclastmpm_${DIM}D
     EXPORT pyroclastmpm-config
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

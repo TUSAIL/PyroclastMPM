@@ -116,8 +116,8 @@ void boundaryconditions_module(const py::module &m) {
                 Gravity at the end of ramp, by default None.
 
             )",
-            py::arg("gravity"), py::arg("is_ramp"), py::arg("ramp_step"),
-            py::arg("gravity_end"));
+            py::arg("gravity"), py::arg("is_ramp") = false,
+            py::arg("ramp_step") = 0, py::arg("gravity_end") = Vectorr::Zero());
 
   G_cls.def_readwrite("gravity", &Gravity::gravity, "Gravity vector.");
 

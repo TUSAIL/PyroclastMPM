@@ -29,6 +29,16 @@
 
 namespace py = pybind11;
 
+#if DIM == 2
+#define PYBIND_MODULE_NAME MPM2D
+#elif DIM == 1
+#define PYBIND_MODULE_NAME MPM1D
+#elif DIM == 3
+#define PYBIND_MODULE_NAME MPM3D
+#else
+#error "Unsupported value for DDIM"
+#endif
+
 namespace pyroclastmpm {
 
 void particles_module(const py::module &);
@@ -39,7 +49,7 @@ void solver_module(const py::module &);
 void global_settings_module(py::module &);
 void tools_module(py::module &);
 
-PYBIND11_MODULE(pyroclastmpm_pybind, m) {
+PYBIND11_MODULE(PYBIND_MODULE_NAME, m) {
 
   m.attr("global_dimension") = DIM;
   particles_module(m);

@@ -29,7 +29,7 @@
 #include "pyroclastmpm/solver/usl/usl.h"
 
 ///  @brief Construct a new TEST object for ParticlesContainer G2P transfer
-TEST(USL, Solve) {
+TEST(USL, Solve_StepWise) {
   cpu_array<Matrix3r> stresses = std::vector({Matrix3r::Ones()});
 #if DIM == 3
   cpu_array<Vectorr> pos =
@@ -174,4 +174,44 @@ TEST(USL, Solve) {
   EXPECT_NEAR(F_cpu[0][0], expected_F[0], 0.000001);
 
 #endif
+}
+
+TEST(USL, Solve) {
+  // Check if full solve() works
+#if DIM == 3
+  cpu_array<Vectorr> pos =
+      std::vector({Vectorr({0.1, 0.25, 0.3}), Vectorr({0.1, 0.25, 0.3})});
+#elif DIM == 2
+  cpu_array<Vectorr> pos =
+      std::vector({Vectorr({0.1, 0.25}), Vectorr({0.1, 0.25})});
+#else
+  cpu_array<Vectorr> pos = std::vector({Vectorr(0.1), Vectorr(0.1)});
+#endif
+
+  cpu_array<Vectorr> vels = std::vector({Vectorr::Ones(), Vectorr::Ones()});
+
+  set_globals((Real)0.1, 1, "linear", "output");
+
+  auto particles = pyroclastmpm::ParticlesContainer(pos, vels);
+
+  auto nodes =
+      pyroclastmpm::NodesContainer(Vectorr::Zero(), Vectorr::Ones(), 1.0);
+
+  auto usl_solver = pyroclastmpm::USL(particles, nodes);
+
+  auto mat = pyroclastmpm::LinearElastic(1000, (Real)0.1, (Real)0.1);
+
+  auto bc = pyroclastmpm::BoundaryCondition();
+
+  usl_solver.materials.push_back(mat);
+
+  usl_solver.boundaryconditions.push_back(bc);
+
+  // internal functions are tested individually
+  usl_solver.reset();
+
+  // internal functions are tested individually
+  usl_solver.solve();
+
+  // check if it runs without errors
 }

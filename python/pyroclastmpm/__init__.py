@@ -1,9 +1,26 @@
 import logging
 
+failed_imports = []
+errors = []
 try:
-    # trunk-ignore-all(ruff/F403)
-    from .pyroclastmpm_pybind import *
-
+    from . import MPM1D
 except ImportError as e:
-    logging.exception("error while importing pyroclastmpm_pybind")
-    raise e
+    failed_imports.append("MPM1D")
+    errors.append(e)
+
+try:
+    from . import MPM2D
+except ImportError as e:
+    failed_imports.append("MPM2D")
+    errors.append(e)
+
+try:
+    from . import MPM3D
+except ImportError as e:
+    failed_imports.append("MPM3D")
+    errors.append(e)
+
+if len(failed_imports) > 0:
+    logging.warning(
+        "failed to import the following modules: {}".format(failed_imports)
+    )

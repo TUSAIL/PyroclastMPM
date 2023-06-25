@@ -65,15 +65,15 @@ set(
   # "solver/musl/musl.cu"
   # "solver/tlmpm/tlmpm.cu"
 
-add_library(pyroclastmpm ${PyroclastSrc})
+add_library(pyroclastmpm_${DIM}D ${PyroclastSrc})
 
 
-target_link_libraries(pyroclastmpm PRIVATE Eigen3::Eigen ${VTK_LIBRARIES} )
+target_link_libraries(pyroclastmpm_${DIM}D PRIVATE Eigen3::Eigen ${VTK_LIBRARIES} )
 
 
 if(BUILD_CUDA)
-  target_link_libraries(pyroclastmpm PRIVATE CUDA::cudart CUDA::cuda_driver)
-  target_compile_options(pyroclastmpm PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+  target_link_libraries(pyroclastmpm_${DIM}D PRIVATE CUDA::cudart CUDA::cuda_driver)
+  target_compile_options(pyroclastmpm_${DIM}D PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
     --use_fast_math
     --relocatable-device-code=true
     -O3
@@ -82,14 +82,13 @@ if(BUILD_CUDA)
   )
 
   set_source_files_properties(${PyroclastSrc} PROPERTIES LANGUAGE CUDA)
-  set_target_properties(pyroclastmpm PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  set_target_properties(pyroclastmpm_${DIM}D PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 else()
-#let g++ compile cuda files
 set_source_files_properties(${PyroclastSrc} PROPERTIES LANGUAGE CXX)
 endif()
 
 vtk_module_autoinit(
-TARGETS pyroclastmpm
+TARGETS pyroclastmpm_${DIM}D
 MODULES ${VTK_LIBRARIES}
 )

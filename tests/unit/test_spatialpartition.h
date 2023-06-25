@@ -280,14 +280,14 @@ TEST(SpatialPartition, BIN_PARTICLES) {
 #else // DIM == 1
   for (int nid = 0; nid < 3; nid++) {
     if (nid == 0) {
-      EXPECT_EQ(cell_range[nid], 0);
-      EXPECT_EQ(cell_range[nid], 2);
+      EXPECT_EQ(cell_start[nid], 0);
+      EXPECT_EQ(cell_end[nid], 2);
     } else if (nid == 1) {
-      EXPECT_EQ(cell_range[nid], 2);
-      EXPECT_EQ(cell_range[nid], 3);
+      EXPECT_EQ(cell_start[nid], 2);
+      EXPECT_EQ(cell_end[nid], 3);
     } else if (nid == 2) {
-      EXPECT_EQ(cell_range[nid], -1);
-      EXPECT_EQ(cell_range[nid], -1);
+      EXPECT_EQ(cell_start[nid], -1);
+      EXPECT_EQ(cell_end[nid], -1);
     }
   }
 #endif

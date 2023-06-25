@@ -29,20 +29,20 @@ set(
 )
 enable_testing()
 
-add_executable(tests ${PyroclastSrc_test})
+add_executable(tests_${DIM}D ${PyroclastSrc_test})
 
-target_link_libraries(tests PRIVATE pyroclastmpm GTest::gtest_main Eigen3::Eigen ${VTK_LIBRARIES})
+target_link_libraries(tests_${DIM}D PRIVATE pyroclastmpm_${DIM}D GTest::gtest_main Eigen3::Eigen ${VTK_LIBRARIES})
 
 if(BUILD_CUDA)
-  target_link_libraries(tests PRIVATE CUDA::cudart CUDA::cuda_driver)
-  target_compile_options(tests PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+  target_link_libraries(tests_${DIM}D PRIVATE CUDA::cudart CUDA::cuda_driver)
+  target_compile_options(tests_${DIM}D PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
     --use_fast_math
     --relocatable-device-code=true
     -O3
     --expt-relaxed-constexpr
     >
   )
-  set_target_properties(tests PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  set_target_properties(tests_${DIM}D PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
   set_source_files_properties(${PyroclastSrc_test} PROPERTIES LANGUAGE CUDA)
 else()
@@ -51,7 +51,7 @@ else()
 endif()
 
 vtk_module_autoinit(
-  FORCE_STATIC TARGETS tests
+  FORCE_STATIC TARGETS tests_${DIM}D
   MODULES ${VTK_LIBRARIES}
 )
 
@@ -61,4 +61,4 @@ vtk_module_autoinit(
 # )
 
 include(GoogleTest)
-gtest_discover_tests(tests)
+gtest_discover_tests(tests_${DIM}D)

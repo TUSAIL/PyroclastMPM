@@ -38,14 +38,12 @@ TEST(LinearElastic, StressUpdateLinearElastic) {
 #endif
   Real dt = 0.1;
   set_global_dt(dt);
-  const auto velgrad = Matrixr::Identity() * 0.1;
+  const std::vector<Matrixr> velgrad = {Matrixr::Identity() * 0.1};
   ParticlesContainer particles = ParticlesContainer(pos);
 
   LinearElastic mat = LinearElastic(1000, 0.1, 0.1);
 
-  const std::vector<Matrixr> F = {(Matrixr::Identity() + velgrad * dt) *
-                                  Matrixr::Identity()};
-  particles.F_gpu = F;
+  particles.velocity_gradient_gpu = velgrad;
 
   mat.stress_update(particles, 0);
 
@@ -53,18 +51,20 @@ TEST(LinearElastic, StressUpdateLinearElastic) {
 
 #if DIM == 3
   Matrix3r expected_stress;
-  expected_stress << 0.001023, 0, 0, 0, 0.001023, 0, 0, 0, 0.001023;
+  expected_stress << 0.011363636702299118, 0, 0, 0, 0.011363636702299118, 0, 0,
+      0, 0.011363636702299118;
   EXPECT_NEAR(stresses[0](0), expected_stress(0), 0.0001);
   EXPECT_NEAR(stresses[0](4), expected_stress(4), 0.0001);
   EXPECT_NEAR(stresses[0](8), expected_stress(8), 0.0001);
 #elif DIM == 2
   Matrix3r expected_stress;
-  expected_stress << 0.001023, 0, 0, 0, 0.001023, 0, 0, 0, 0;
+  expected_stress << 0.011363636702299118, 0, 0, 0, 0.011363636702299118, 0, 0,
+      0, 0;
   EXPECT_NEAR(stresses[0](0), expected_stress(0), 0.0001);
   EXPECT_NEAR(stresses[0](4), expected_stress(4), 0.0001);
 #else
   Matrix3r expected_stress;
-  expected_stress << 0.001023, 0, 0, 0, 0, 0, 0, 0, 0;
+  expected_stress << 0.011363636702299118, 0, 0, 0, 0, 0, 0, 0, 0;
   EXPECT_NEAR(stresses[0](0), expected_stress(0), 0.0001);
 #endif
 }

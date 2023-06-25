@@ -45,29 +45,30 @@ find_package(Python COMPONENTS Interpreter Development)
 
 find_package(pybind11 CONFIG)
 
-pybind11_add_module(pyroclastmpm_pybind SHARED ${PyroclastPyBind})
+pybind11_add_module(MPM${DIM}D SHARED ${PyroclastPyBind})
 
-set_target_properties(pyroclastmpm_pybind
+set_target_properties(MPM${DIM}D
   PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../pyroclastmpm/"
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../pyroclastmpm/"
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../pyroclastmpm/"
 )
 
-target_link_libraries(pyroclastmpm_pybind PRIVATE pyroclastmpm)
 
-target_link_libraries(pyroclastmpm_pybind PRIVATE GTest::gtest_main Eigen3::Eigen ${VTK_LIBRARIES})
+target_link_libraries(MPM${DIM}D PRIVATE pyroclastmpm_${DIM}D)
+
+target_link_libraries(MPM${DIM}D PRIVATE GTest::gtest_main Eigen3::Eigen ${VTK_LIBRARIES})
 
 if(BUILD_CUDA)
-  target_link_libraries(pyroclastmpm_pybind PRIVATE CUDA::cudart CUDA::cuda_driver)
-  target_compile_options(pyroclastmpm_pybind PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+  target_link_libraries(MPM${DIM}D PRIVATE CUDA::cudart CUDA::cuda_driver)
+  target_compile_options(MPM${DIM}D PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
     --use_fast_math
     --relocatable-device-code=true
     -O3
     --expt-relaxed-constexpr
     >
   )
-  set_target_properties(pyroclastmpm_pybind PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  set_target_properties(MPM${DIM}D PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
   set_source_files_properties(${PyroclastPyBind} PROPERTIES LANGUAGE CUDA)
 else()
   # let g++ compile cuda files
@@ -75,6 +76,6 @@ else()
 endif()
 
 vtk_module_autoinit(
-  FORCE_STATIC TARGETS pyroclastmpm_pybind
+  FORCE_STATIC TARGETS MPM${DIM}D
   MODULES ${VTK_LIBRARIES}
 )

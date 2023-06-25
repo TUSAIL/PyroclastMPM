@@ -7,7 +7,7 @@ Computer methods in applied mechanics and engineering 118.1-2 (1994): 179-196.
 
 
 import numpy as np
-import pyroclastmpm as pm
+import pyroclastmpm.MPM2D as pm
 
 # 1. Load config file and set global variables
 

@@ -31,12 +31,13 @@
 
 namespace pyroclastmpm {
 
-__device__ __host__ inline void update_linearelastic(
-    Matrix3r *particles_stresses_gpu,
-    const Matrixr *particles_velocity_gradient_gpu,
-    const Matrixr *particles_F_gpu, const uint8_t *particles_colors_gpu,
-    const bool *particles_is_active_gpu, const Real shear_modulus,
-    const Real bulk_modulus, const int mat_id, const int tid) {
+__device__ __host__ inline void
+update_linearelastic(Matrix3r *particles_stresses_gpu,
+                     const Matrixr *particles_velocity_gradient_gpu,
+                     const uint8_t *particles_colors_gpu,
+                     const bool *particles_is_active_gpu,
+                     const Real shear_modulus, const Real bulk_modulus,
+                     const int mat_id, const int tid) {
 
   const int particle_color = particles_colors_gpu[tid];
   if (!particles_is_active_gpu[tid]) {
@@ -48,9 +49,8 @@ __device__ __host__ inline void update_linearelastic(
   }
 
   const Matrixr vel_grad = particles_velocity_gradient_gpu[tid];
-  Matrixr F = particles_F_gpu[tid]; // deformation gradient
 
-  const Matrixr eps_curr = 0.5 * (F.transpose() + F) - Matrixr::Identity();
+  const Matrixr eps_curr = 0.5 * (vel_grad + vel_grad.transpose());
 
   // hydrostatic stress and volumetric strain
   const Real eps_v_trail = eps_curr.trace();
@@ -59,13 +59,14 @@ __device__ __host__ inline void update_linearelastic(
 
   // deviatoric stress (7.82) and strain eq (3.114) [2]
   const Matrixr eps_dev_trail =
-      eps_curr - (1 / 3.) * eps_v_trail * Matrixr::Identity();
+      eps_curr - (1. / 3.) * eps_v_trail * Matrixr::Identity();
 
   const Matrixr dev_s = 2. * shear_modulus * eps_dev_trail;
 
   Matrix3r sigma = Matrix3r::Zero();
   sigma.block(0, 0, DIM, DIM) += dev_s;
 
+  // Plane strain condition
   sigma += p * Matrix3r::Identity();
 
   particles_stresses_gpu[tid] = sigma;
