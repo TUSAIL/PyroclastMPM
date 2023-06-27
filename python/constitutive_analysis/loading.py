@@ -146,6 +146,7 @@ def strain_controlled(
     material,
     loading_rate,
     total_steps,
+    dt,
     callback=None,
     dim=3,
 ):
@@ -167,15 +168,18 @@ def strain_controlled(
     Returns:
         tuple: particles,material
     """
-    particles.velocity_gradient = [loading_rate]
+    velgrad = np.array(loading_rate).astype(np.float32)
+
+    particles.velocity_gradient = [velgrad]
 
     for step in range(total_steps):
         particles.F = [
-            (np.identity(dim) + np.array(particles.velocity_gradient[0]))
+            (np.identity(3) + np.array(particles.velocity_gradient[0]) * dt)
             @ np.array(particles.F[0])
         ]
         particles, _ = material.stress_update(particles, 0)
 
         if callback is not None:
             callback(particles, material, step)
+
     return particles, material

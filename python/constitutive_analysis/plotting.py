@@ -91,9 +91,10 @@ def give_implicit3D(fn, bbox=(-2.5, 2.5), res=100):
     return fig, ax
 
 
-def plot_stress_subplot(stresses, steps, file, title):
+def plot_stress_subplot(stresses, file, title):
     fig, axs = plt.subplots(3, 3, sharex=True, sharey=False)
     fig.suptitle(title)
+    steps = np.arange(len(stresses))
     for i in range(3):
         for j in range(3):
             axs[i, j].scatter(steps, stresses[:, i, j], color="red")

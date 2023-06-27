@@ -59,7 +59,6 @@ __device__ __host__ inline void
 update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
                 Real *particles_acc_eps_p_gpu,
                 const Matrixr *particles_velocity_gradient_gpu,
-                const Matrixr *particles_F_gpu,
                 const uint8_t *particle_colors_gpu, const Real bulk_modulus,
                 const Real shear_modulus, const Real yield_stress, const Real H,
                 const int mat_id, const int tid) {
@@ -75,12 +74,10 @@ update_vonmises(Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
 #endif
 
   const Matrixr vel_grad = particles_velocity_gradient_gpu[tid];
-  Matrixr F = particles_F_gpu[tid]; // deformation gradient
 
   // (total strain current step) infinitesimal strain assumptions [1]
   const Matrixr deps_curr =
       0.5 * (vel_grad + vel_grad.transpose()) * dt; // pseudo strain rate
-  const Matrixr eps_curr = 0.5 * (F.transpose() + F) - Matrixr::Identity();
 
   // elastic strain (previous step)
   const Matrixr eps_e_prev = particles_eps_e_gpu[tid];
@@ -175,9 +172,9 @@ __global__ void KERNEL_STRESS_UPDATE_VONMISES(
     Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
     Real *particles_acc_eps_p_gpu,
     const Matrixr *particles_velocity_gradient_gpu,
-    const Matrixr *particles_F_gpu, const uint8_t *particle_colors_gpu,
-    const Real bulk_modulus, const Real shear_modulus, const Real yield_stress,
-    const Real H, const int mat_id, const int num_particles) {
+    const uint8_t *particle_colors_gpu, const Real bulk_modulus,
+    const Real shear_modulus, const Real yield_stress, const Real H,
+    const int mat_id, const int num_particles) {
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
   if (tid >= num_particles) {
 
@@ -186,8 +183,8 @@ __global__ void KERNEL_STRESS_UPDATE_VONMISES(
 
   update_vonmises(particles_stresses_gpu, particles_eps_e_gpu,
                   particles_acc_eps_p_gpu, particles_velocity_gradient_gpu,
-                  particles_F_gpu, particle_colors_gpu, bulk_modulus,
-                  shear_modulus, yield_stress, H, mat_id, tid);
+                  particle_colors_gpu, bulk_modulus, shear_modulus,
+                  yield_stress, H, mat_id, tid);
 }
 #endif
 

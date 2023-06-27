@@ -75,7 +75,6 @@ void VonMises::stress_update(ParticlesContainer &particles_ref, int mat_id) {
       thrust::raw_pointer_cast(eps_e_gpu.data()),
       thrust::raw_pointer_cast(acc_eps_p_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
-      thrust::raw_pointer_cast(particles_ref.F_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.colors_gpu.data()), bulk_modulus,
       shear_modulus, yield_stress, H, mat_id, particles_ref.num_particles);
   gpuErrchk(cudaDeviceSynchronize());
@@ -85,8 +84,8 @@ void VonMises::stress_update(ParticlesContainer &particles_ref, int mat_id) {
     update_vonmises(particles_ref.stresses_gpu.data(), eps_e_gpu.data(),
                     acc_eps_p_gpu.data(),
                     particles_ref.velocity_gradient_gpu.data(),
-                    particles_ref.F_gpu.data(), particles_ref.colors_gpu.data(),
-                    bulk_modulus, shear_modulus, yield_stress, H, mat_id, pid);
+                    particles_ref.colors_gpu.data(), bulk_modulus,
+                    shear_modulus, yield_stress, H, mat_id, pid);
   }
 #endif
 }

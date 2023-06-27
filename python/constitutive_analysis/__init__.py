@@ -25,4 +25,5 @@
 
 # trunk-ignore-all(ruff/F401)
 
-from .loading import isotropic_compression, servo_control
+from .loading import servo_control, strain_controlled
+from .plotting import plot_stress_subplot
