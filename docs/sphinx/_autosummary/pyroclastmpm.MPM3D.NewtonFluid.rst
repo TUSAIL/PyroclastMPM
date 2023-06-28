@@ -1,9 +1,9 @@
-pyroclastmpm\_pybind.Gravity
-============================
+pyroclastmpm.MPM3D.NewtonFluid
+==============================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
-.. autoclass:: Gravity
+.. autoclass:: NewtonFluid
    :members:                                    
    :show-inheritance:                           
    :inherited-members:                          
@@ -15,7 +15,7 @@ pyroclastmpm\_pybind.Gravity
 
    .. autosummary::
    
-      ~Gravity.__init__
+      ~NewtonFluid.__init__
    
    
 
@@ -25,6 +25,9 @@ pyroclastmpm\_pybind.Gravity
 
    .. autosummary::
    
-      ~Gravity.gravity
+      ~NewtonFluid.bulk_modulus
+      ~NewtonFluid.density
+      ~NewtonFluid.gamma
+      ~NewtonFluid.viscosity
    
    

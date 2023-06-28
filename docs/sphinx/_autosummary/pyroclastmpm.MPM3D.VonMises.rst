@@ -1,7 +1,7 @@
-pyroclastmpm\_pybind.VonMises
-=============================
+pyroclastmpm.MPM3D.VonMises
+===========================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
 .. autoclass:: VonMises
    :members:                                    

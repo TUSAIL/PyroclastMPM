@@ -152,37 +152,37 @@ void ParticlesContainer::output_vtk() const {
 
   cpu_array<int> colors_cpu = colors_gpu;
 
-  cpu_array<int> is_rigid_cpu = is_rigid_gpu;
-
+  cpu_array<bool> is_rigid_cpu = is_rigid_gpu;
+  cpu_array<bool> do_output_cpu = is_rigid_gpu;
   for (int pi = 0; pi < num_particles; pi++) {
 
-    is_rigid_cpu[pi] =
+    do_output_cpu[pi] =
         !is_rigid_cpu[pi]; // flip to make sure we don't output rigid particles
   }
 
   bool exclude_rigid_from_output = false; // TODO make this an option?
-  set_vtk_points(positions_cpu, polydata, is_rigid_cpu,
+  set_vtk_points(positions_cpu, polydata, do_output_cpu,
                  exclude_rigid_from_output);
-  set_vtk_pointdata<int>(is_rigid_cpu, polydata, "isRigid", is_rigid_cpu,
+  set_vtk_pointdata<int>(is_rigid_cpu, polydata, "isRigid", do_output_cpu,
                          exclude_rigid_from_output);
-  set_vtk_pointdata<Vectorr>(positions_cpu, polydata, "Positions", is_rigid_cpu,
-                             exclude_rigid_from_output);
-  set_vtk_pointdata<Vectorr>(velocities_cpu, polydata, "Velocity", is_rigid_cpu,
-                             exclude_rigid_from_output);
-  set_vtk_pointdata<Matrix3r>(stresses_cpu, polydata, "Stress", is_rigid_cpu,
+  set_vtk_pointdata<Vectorr>(positions_cpu, polydata, "Positions",
+                             do_output_cpu, exclude_rigid_from_output);
+  set_vtk_pointdata<Vectorr>(velocities_cpu, polydata, "Velocity",
+                             do_output_cpu, exclude_rigid_from_output);
+  set_vtk_pointdata<Matrix3r>(stresses_cpu, polydata, "Stress", do_output_cpu,
                               exclude_rigid_from_output);
   set_vtk_pointdata<Matrixr>(velocity_gradient_cpu, polydata,
-                             "VelocityGradient", is_rigid_cpu,
+                             "VelocityGradient", do_output_cpu,
                              exclude_rigid_from_output);
-  set_vtk_pointdata<Matrixr>(F_cpu, polydata, "DeformationMatrix", is_rigid_cpu,
-                             exclude_rigid_from_output);
-  set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass", is_rigid_cpu,
+  set_vtk_pointdata<Matrixr>(F_cpu, polydata, "DeformationMatrix",
+                             do_output_cpu, exclude_rigid_from_output);
+  set_vtk_pointdata<Real>(masses_cpu, polydata, "Mass", do_output_cpu,
                           exclude_rigid_from_output);
-  set_vtk_pointdata<Real>(volumes_cpu, polydata, "Volume", is_rigid_cpu,
+  set_vtk_pointdata<Real>(volumes_cpu, polydata, "Volume", do_output_cpu,
                           exclude_rigid_from_output);
   set_vtk_pointdata<Real>(volumes_original_cpu, polydata, "VolumeOriginal",
-                          is_rigid_cpu, exclude_rigid_from_output);
-  set_vtk_pointdata<uint8_t>(colors_cpu, polydata, "Color", is_rigid_cpu,
+                          do_output_cpu, exclude_rigid_from_output);
+  set_vtk_pointdata<uint8_t>(colors_cpu, polydata, "Color", do_output_cpu,
                              exclude_rigid_from_output);
 
   // loop over output_formats

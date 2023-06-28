@@ -1,7 +1,7 @@
-pyroclastmpm\_pybind.RigidBodyLevelSet
-======================================
+pyroclastmpm.MPM3D.RigidBodyLevelSet
+====================================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
 .. autoclass:: RigidBodyLevelSet
    :members:                                    

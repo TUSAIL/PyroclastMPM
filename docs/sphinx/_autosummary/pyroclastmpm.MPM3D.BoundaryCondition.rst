@@ -1,9 +1,9 @@
-pyroclastmpm\_pybind.Material
-=============================
+pyroclastmpm.MPM3D.BoundaryCondition
+====================================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
-.. autoclass:: Material
+.. autoclass:: BoundaryCondition
    :members:                                    
    :show-inheritance:                           
    :inherited-members:                          
@@ -15,16 +15,10 @@ pyroclastmpm\_pybind.Material
 
    .. autosummary::
    
-      ~Material.__init__
+      ~BoundaryCondition.__init__
    
    
 
    
-   
-   .. rubric:: Attributes
-
-   .. autosummary::
-   
-      ~Material.density
    
    

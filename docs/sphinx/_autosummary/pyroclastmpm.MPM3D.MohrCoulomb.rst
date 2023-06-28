@@ -1,7 +1,7 @@
-pyroclastmpm\_pybind.MohrCoulomb
-================================
+pyroclastmpm.MPM3D.MohrCoulomb
+==============================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
 .. autoclass:: MohrCoulomb
    :members:                                    

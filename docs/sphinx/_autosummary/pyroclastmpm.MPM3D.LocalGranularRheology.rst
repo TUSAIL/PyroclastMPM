@@ -1,7 +1,7 @@
-﻿pyroclastmpm\_pybind.LocalGranularRheology
-==========================================
+pyroclastmpm.MPM3D.LocalGranularRheology
+========================================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
 .. autoclass:: LocalGranularRheology
    :members:                                    

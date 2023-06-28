@@ -76,9 +76,9 @@ update_linearelastic(Matrix3r *particles_stresses_gpu,
 __global__ void KERNEL_STRESS_UPDATE_LINEARELASTIC(
     Matrix3r *particles_stresses_gpu,
     const Matrixr *particles_velocity_gradient_gpu,
-    const Matrixr *particles_F_gpu, const uint8_t *particles_colors_gpu,
-    const bool *particles_is_active_gpu, const int num_particles,
-    const Real bulk_modulus, const Real lame_modulus, const int mat_id) {
+    const uint8_t *particles_colors_gpu, const bool *particles_is_active_gpu,
+    const int num_particles, const Real shear_modulus, const Real bulk_modulus,
+    const int mat_id) {
   const int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
   if (tid >= num_particles) {
@@ -86,9 +86,8 @@ __global__ void KERNEL_STRESS_UPDATE_LINEARELASTIC(
   } // block access threads
 
   update_linearelastic(particles_stresses_gpu, particles_velocity_gradient_gpu,
-                       particles_F_gpu, particles_colors_gpu,
-                       particles_is_active_gpu, shear_modulus, bulk_modulus,
-                       mat_id, tid);
+                       particles_colors_gpu, particles_is_active_gpu,
+                       shear_modulus, bulk_modulus, mat_id, tid);
 }
 #endif
 

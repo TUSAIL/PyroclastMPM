@@ -296,8 +296,7 @@ __global__ void KERNELS_GRID_NORMALS_AND_NN_RIGID(
     const Vectorr *particles_dpsi_gpu, const Real *particles_masses_gpu,
     const int *particles_cells_start_gpu, const int *particles_cells_end_gpu,
     const int *particles_sorted_indices_gpu, const bool *particle_is_rigid_gpu,
-    const Vectorr *particles_positions_gpu, const Vectorr origin,
-    const Grid grid) {
+    const Vectorr *particles_positions_gpu, const Grid grid) {
   const int node_mem_index = blockIdx.x * blockDim.x + threadIdx.x;
 
   if (node_mem_index >= grid.num_cells_total) {
@@ -379,7 +378,7 @@ __device__ __host__ inline void get_overlapping_rigid_body_grid(
 __global__ void KERNEL_GET_OVERLAPPING_RIGID_BODY_GRID(
     bool *is_overlapping_gpu, const Vectori *node_ids_gpu,
     const Vectorr *particles_positions_gpu, const Vectori *particles_bins_gpu,
-    const bool *particle_is_rigid_gpu, const Vectori num_nodes, const Grid grid,
+    const bool *particle_is_rigid_gpu, const Grid grid,
     const int num_particles) {
   const int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -389,7 +388,7 @@ __global__ void KERNEL_GET_OVERLAPPING_RIGID_BODY_GRID(
 
   get_overlapping_rigid_body_grid(is_overlapping_gpu, node_ids_gpu,
                                   particles_positions_gpu, particles_bins_gpu,
-                                  particle_is_rigid_gpu, grid tid);
+                                  particle_is_rigid_gpu, grid, tid);
 }
 
 #endif

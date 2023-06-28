@@ -24,6 +24,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 namespace pyroclastmpm {
 
+#include "pyroclastmpm/common/types_common.h"
+
 #ifdef CUDA_ENABLED
 extern Real __constant__ dt_gpu;
 #else
@@ -154,8 +156,6 @@ __device__ __host__ inline void stress_update_localrheo(
       scale_factor * stress_trail_0 - pressure_trail * Matrix3r::Identity();
 }
 
-} // namespace pyroclastmpm
-
 #ifdef CUDA_ENABLED
 
 __global__ void KERNEL_STRESS_UPDATE_LOCALRHEO(
@@ -180,3 +180,4 @@ __global__ void KERNEL_STRESS_UPDATE_LOCALRHEO(
 }
 
 #endif
+} // namespace pyroclastmpm

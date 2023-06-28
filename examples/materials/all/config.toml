@@ -1,0 +1,31 @@
+[global]
+timestep = 0.001
+
+num_steps = 1000
+output_steps = 100
+
+[von_mises]
+E = 1E5
+pois = 0.2
+density = 1000
+yield_stress = 1000
+H = 2e4
+
+[mohr_coulomb]
+E = 1e6
+pois = 0.2
+density = 1000
+cohesion = 1e4
+friction_angle = 15
+dilatancy_angle = 10
+H = 1e3
+
+
+[uniaxial]
+deps_xx = 0.1
+output_directory = "./output/uniaxial/"
+
+
+[simpleshear]
+deps_xy = 0.1
+output_directory = "./output/simpleshear/"

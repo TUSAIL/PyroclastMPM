@@ -1,9 +1,9 @@
-pyroclastmpm\_pybind.BoundaryCondition
-======================================
+pyroclastmpm.MPM3D.Gravity
+==========================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
-.. autoclass:: BoundaryCondition
+.. autoclass:: Gravity
    :members:                                    
    :show-inheritance:                           
    :inherited-members:                          
@@ -15,10 +15,16 @@ pyroclastmpm\_pybind.BoundaryCondition
 
    .. autosummary::
    
-      ~BoundaryCondition.__init__
+      ~Gravity.__init__
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Gravity.gravity
    
    

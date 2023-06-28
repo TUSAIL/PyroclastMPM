@@ -13,7 +13,8 @@ Welcome to PyroclastMPM's documentation!
    :template: custom-module-template.rst
    :recursive:
 
-   pyroclastmpm_pybind
+   pyroclastmpm
+   cpp_api
 
 
    

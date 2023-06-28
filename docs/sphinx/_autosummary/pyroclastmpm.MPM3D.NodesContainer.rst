@@ -1,7 +1,7 @@
-pyroclastmpm\_pybind.NodesContainer
-===================================
+pyroclastmpm.MPM3D.NodesContainer
+=================================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
 .. autoclass:: NodesContainer
    :members:                                    

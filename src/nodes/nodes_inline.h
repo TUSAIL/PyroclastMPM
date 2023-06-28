@@ -60,7 +60,7 @@ integrate_nodes(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
                 const Vectorr *nodes_moments_gpu, const Real *nodes_masses_gpu,
                 const int node_mem_index) {
 
-  if (nodes_masses_gpu[node_mem_index] <= (Real)0.000000001) {
+  if (nodes_masses_gpu[node_mem_index] <= (Real)0.00001) {
     return;
   }
   const Vectorr ftotal = nodes_forces_internal_gpu[node_mem_index] +

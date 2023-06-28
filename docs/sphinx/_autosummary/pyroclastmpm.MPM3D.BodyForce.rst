@@ -1,9 +1,9 @@
-pyroclastmpm\_pybind.PlanarDomain
-=================================
+pyroclastmpm.MPM3D.BodyForce
+============================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
-.. autoclass:: PlanarDomain
+.. autoclass:: BodyForce
    :members:                                    
    :show-inheritance:                           
    :inherited-members:                          
@@ -15,7 +15,7 @@ pyroclastmpm\_pybind.PlanarDomain
 
    .. autosummary::
    
-      ~PlanarDomain.__init__
+      ~BodyForce.__init__
    
    
 

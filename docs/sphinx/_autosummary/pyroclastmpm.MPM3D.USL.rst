@@ -1,9 +1,9 @@
-pyroclastmpm\_pybind.Solver
-===========================
+pyroclastmpm.MPM3D.USL
+======================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
-.. autoclass:: Solver
+.. autoclass:: USL
    :members:                                    
    :show-inheritance:                           
    :inherited-members:                          
@@ -15,8 +15,8 @@ pyroclastmpm\_pybind.Solver
 
    .. autosummary::
    
-      ~Solver.__init__
-      ~Solver.solve_nsteps
+      ~USL.__init__
+      ~USL.run
    
    
 
@@ -26,9 +26,8 @@ pyroclastmpm\_pybind.Solver
 
    .. autosummary::
    
-      ~Solver.boundaryconditions
-      ~Solver.current_step
-      ~Solver.nodes
-      ~Solver.particles
+      ~USL.boundaryconditions
+      ~USL.nodes
+      ~USL.particles
    
    
