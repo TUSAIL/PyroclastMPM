@@ -3,9 +3,9 @@ import tomllib
 
 import numpy as np
 import plot
+import pyroclastmpm.MPM3D as pm
 import xarray as xr
 from constitutive_analysis.loading import strain_controlled
-from pyroclastmpm.MPM3D import MohrCoulomb, ParticlesContainer, set_global_timestep
 
 # load config file
 with open("./config.toml", "rb") as f:
@@ -13,12 +13,12 @@ with open("./config.toml", "rb") as f:
 
 # Time step for increment of deformation gradient
 dt = cfg["global"]["timestep"]
-set_global_timestep(dt)
+pm.set_global_timestep(dt)
 
 # Create particles and initialize material
-particle = ParticlesContainer([[0.0, 0.0, 0.0]])
+particle = pm.ParticlesContainer([[0.0, 0.0, 0.0]])
 
-material = MohrCoulomb(
+material = pm.MohrCoulomb(
     cfg["mohr_coulomb"]["density"],
     cfg["mohr_coulomb"]["E"],
     cfg["mohr_coulomb"]["pois"],
