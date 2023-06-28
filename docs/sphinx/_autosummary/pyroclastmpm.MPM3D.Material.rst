@@ -1,9 +1,9 @@
-pyroclastmpm\_pybind.BodyForce
-==============================
+pyroclastmpm.MPM3D.Material
+===========================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
-.. autoclass:: BodyForce
+.. autoclass:: Material
    :members:                                    
    :show-inheritance:                           
    :inherited-members:                          
@@ -15,10 +15,16 @@ pyroclastmpm\_pybind.BodyForce
 
    .. autosummary::
    
-      ~BodyForce.__init__
+      ~Material.__init__
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Material.density
    
    

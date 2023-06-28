@@ -1,7 +1,7 @@
-﻿pyroclastmpm\_pybind
-====================
+pyroclastmpm.MPM3D
+==================
 
-.. automodule:: pyroclastmpm_pybind
+.. automodule:: pyroclastmpm.MPM3D
   
    
    

@@ -1,7 +1,7 @@
-pyroclastmpm\_pybind.NodeDomain
-===============================
+pyroclastmpm.MPM3D.NodeDomain
+=============================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
 .. autoclass:: NodeDomain
    :members:                                    

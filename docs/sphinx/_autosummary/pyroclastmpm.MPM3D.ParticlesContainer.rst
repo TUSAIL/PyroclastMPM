@@ -1,7 +1,7 @@
-pyroclastmpm\_pybind.ParticlesContainer
-=======================================
+pyroclastmpm.MPM3D.ParticlesContainer
+=====================================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
 .. autoclass:: ParticlesContainer
    :members:                                    

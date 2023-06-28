@@ -45,7 +45,7 @@ void NodeDomain::apply_on_nodes_moments(NodesContainer &nodes_ref,
       thrust::raw_pointer_cast(nodes_ref.moments_gpu.data()),
       thrust::raw_pointer_cast(nodes_ref.masses_gpu.data()),
       thrust::raw_pointer_cast(nodes_ref.node_ids_gpu.data()),
-      nodes_ref.grid.num_cells, axis0_mode, axis1_mode,
+      nodes_ref.grid.num_cells, face0_mode, face1_mode,
       nodes_ref.grid.num_cells_total);
   gpuErrchk(cudaDeviceSynchronize());
 #else

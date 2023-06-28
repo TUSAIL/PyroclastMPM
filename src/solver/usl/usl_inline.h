@@ -174,7 +174,7 @@ __global__ void KERNELS_USL_P2G(
 
   const int node_mem_index = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if (node_mem_index >= grid.num_cells_) {
+  if (node_mem_index >= grid.num_cells_total) {
     return;
   }
 
@@ -309,7 +309,8 @@ __global__ void KERNEL_USL_G2P(
     const Real *particles_volumes_original_gpu, const Real *particles_psi_gpu,
     const bool *particles_is_rigid_gpu, const bool *particles_is_active_gpu,
     const Vectorr *nodes_moments_gpu, const Vectorr *nodes_moments_nt_gpu,
-    const Real *nodes_masses_gpu, const Grid grid, const Real alpha) {
+    const Real *nodes_masses_gpu, const Grid grid, const Real alpha,
+    const int num_particles) {
   const int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
   if (tid >= num_particles) {

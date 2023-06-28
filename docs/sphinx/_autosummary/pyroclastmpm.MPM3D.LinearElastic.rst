@@ -1,7 +1,7 @@
-pyroclastmpm\_pybind.LinearElastic
-==================================
+pyroclastmpm.MPM3D.LinearElastic
+================================
 
-.. currentmodule:: pyroclastmpm_pybind
+.. currentmodule:: pyroclastmpm.MPM3D
 
 .. autoclass:: LinearElastic
    :members:                                    

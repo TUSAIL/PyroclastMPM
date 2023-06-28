@@ -30,6 +30,7 @@
 namespace pyroclastmpm {
 
 extern const int global_step_cpu;
+extern const Real dt_cpu;
 
 /// @brief Construct a new Rigid Body Level Set object
 /// @param _COM center of mass of rigid body
@@ -217,9 +218,7 @@ void RigidBodyLevelSet::calculate_overlapping_rigidbody(
       thrust::raw_pointer_cast(particles_ref.positions_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.spatial.bins_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.is_rigid_gpu.data()),
-      particles_ref.spatial.num_cells, particles_ref.spatial.grid_start,
-      particles_ref.spatial.inv_cell_size,
-      particles_ref.spatial.num_cells_total, particles_ref.num_particles);
+      nodes_ref.grid, particles_ref.num_particles);
 
   gpuErrchk(cudaDeviceSynchronize());
 #else

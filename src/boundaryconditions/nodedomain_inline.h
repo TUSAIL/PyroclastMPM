@@ -50,7 +50,7 @@ apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
 #endif
 
   if (const Real node_mass = nodes_masses_gpu[node_mem_index];
-      node_mass <= 0.000000001) {
+      node_mass <= 0.00001) {
     return;
   }
   const Vectori node_bin = nodes_bins_gpu[node_mem_index];
@@ -77,8 +77,8 @@ apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
       } else if (face1_mode(i) == 1) {
         // slip
         nodes_moments_gpu[node_mem_index][i] =
-            (Real)max(0., nodes_moments_gpu[node_mem_index].cast<double>()[i]);
-        nodes_moments_nt_gpu[node_mem_index][i] = (Real)max(
+            (Real)min(0., nodes_moments_gpu[node_mem_index].cast<double>()[i]);
+        nodes_moments_nt_gpu[node_mem_index][i] = (Real)min(
             0., nodes_moments_nt_gpu[node_mem_index].cast<double>()[i]);
       }
     }
@@ -86,13 +86,11 @@ apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
 }
 
 #ifdef CUDA_ENABLED
-__global__ void
-KERNEL_APPLY_NODEDOMAIN(Vectorr *nodes_moments_nt_gpu,
-                        Vectorr *nodes_moments_gpu,
-                        const Real *nodes_masses_gpu,
-                        const Vectori *nodes_bins_gpu, const Vectorr node_start,
-                        const Vectori num_nodes, , const Vectori face0_mode,
-                        const Vectori face1_mode, const int num_nodes_total)
+__global__ void KERNEL_APPLY_NODEDOMAIN(
+    Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
+    const Real *nodes_masses_gpu, const Vectori *nodes_bins_gpu,
+    const Vectori num_nodes, const Vectori face0_mode, const Vectori face1_mode,
+    const int num_nodes_total)
 
 {
   const int node_mem_index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -102,8 +100,8 @@ KERNEL_APPLY_NODEDOMAIN(Vectorr *nodes_moments_nt_gpu,
   }
 
   apply_nodedomain(nodes_moments_nt_gpu, nodes_moments_gpu, nodes_masses_gpu,
-                   nodes_bins_gpu, node_start, node_end, num_nodes, face0_mode,
-                   face1_mode, node_mem_index);
+                   nodes_bins_gpu, num_nodes, face0_mode, face1_mode,
+                   node_mem_index);
 }
 
 #endif

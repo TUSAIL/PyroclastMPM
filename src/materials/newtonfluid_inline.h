@@ -52,7 +52,7 @@ __device__ __host__ inline void stress_update_newtonfluid(
     const Real *particles_masses_gpu, const Real *particles_volumes_gpu,
     const Real *particles_volumes_original_gpu,
     const uint8_t *particles_colors_gpu, const bool *particles_is_active_gpu,
-    const Real viscosity, const Real bulk_modulus, const Real gamma,
+    const Real bulk_viscosity, const Real bulk_modulus, const Real gamma,
     const int mat_id, const int tid) {
 
   if (!particles_is_active_gpu[tid]) {
@@ -63,35 +63,36 @@ __device__ __host__ inline void stress_update_newtonfluid(
     return;
   }
 
-#ifdef CUDA_ENABLED
-  const Real dt = dt_gpu;
-#else
-  const Real dt = dt_cpu;
-#endif
-
-  const Matrixr vel_grad = particles_velocity_gradients_gpu[tid];
-  const Matrixr vel_grad_T = vel_grad.transpose();
-  const Matrixr strain_rate = 0.5 * (vel_grad + vel_grad_T) * dt;
-
-  Matrixr deviatoric_part =
-      strain_rate - (1. / 3.) * strain_rate.trace() * Matrixr::Identity();
+  // isotropic stress tensor
 
   const Real density = particles_masses_gpu[tid] / particles_volumes_gpu[tid];
 
   const Real density_original =
       particles_masses_gpu[tid] / particles_volumes_original_gpu[tid];
-  Real mu = density / density_original;
 
-  Real pressure = bulk_modulus * (Real)(pow(mu, gamma) - (Real)1.);
+  const Real pressure =
+      -bulk_modulus *
+      ((Real)pow(density / density_original, gamma) - (Real)1.0);
 
-  Matrixr cauchy_stress =
-      2 * viscosity * deviatoric_part - pressure * Matrixr::Identity();
+  Matrix3r isotropic_part = Matrix3r::Zero();
 
-#if DIM == 3
-  particles_stresses_gpu[tid] = cauchy_stress;
-#else
-  particles_stresses_gpu[tid].block(0, 0, DIM, DIM) = cauchy_stress;
-#endif
+  isotropic_part.block(0, 0, DIM, DIM) = pressure * Matrixr::Identity();
+  // deviatoric stress tensor
+
+  const Matrixr vel_grad = particles_velocity_gradients_gpu[tid];
+
+  const Matrixr strain_rate = 0.5 * (vel_grad + vel_grad.transpose());
+
+  const Real volumetric_strain_rate = strain_rate.trace();
+
+  Matrix3r deviatoric_part = Matrix3r::Zero();
+
+  deviatoric_part.block(0, 0, DIM, DIM) =
+      strain_rate - (1. / 3.) * volumetric_strain_rate * Matrixr::Identity();
+
+  deviatoric_part *= (Real)(2. * bulk_viscosity / 3.);
+
+  particles_stresses_gpu[tid] = isotropic_part + deviatoric_part;
 }
 
 #ifdef CUDA_ENABLED
