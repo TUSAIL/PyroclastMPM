@@ -1,12 +1,8 @@
 import os
 
 import numpy as np
+import pyroclastmpm.MPM3D as pm
 import tomli
-from pyroclastmpm.MPM3D import (
-    ParticlesContainer,
-    VonMises,
-    set_global_timestep,
-)
 from servo import mixed_control
 
 stress_list, strain_list, velgrad_list, mask_list = [], [], [], []
@@ -103,10 +99,10 @@ def create_material(cfg, model_name):
     tuple
         Initialized particles and material
     """
-    particles = ParticlesContainer([[0.0, 0.0, 0.0]])
+    particles = pm.ParticlesContainer([[0.0, 0.0, 0.0]])
     material = None
     if model_name == "von_mises":
-        material = VonMises(
+        material = pm.VonMises(
             cfg[model_name]["density"],
             cfg[model_name]["E"],
             cfg[model_name]["pois"],
@@ -167,7 +163,7 @@ def run_save_model(
     dt = cfg["global"]["timestep"]
     time = cfg["global"]["time"]
 
-    set_global_timestep(dt)
+    pm.set_global_timestep(dt)
 
     particles, material = create_material(cfg, model_name)
 

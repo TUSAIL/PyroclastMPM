@@ -47,12 +47,9 @@ namespace pyroclastmpm {
 LinearElastic::LinearElastic(const Real _density, const Real _E,
                              const Real _pois)
     : E(_E), pois(_pois) {
-  printf("wierd\n");
+
   bulk_modulus = E / ((Real)3.0 * ((Real)1.0 - (Real)2.0 * pois));
   shear_modulus = E / ((Real)2.0 * ((Real)1 + pois));
-
-  printf("LinearElastic::bulk_modulus: %f\n", bulk_modulus);
-  printf("LinearElastic::shear_modulus: %f\n", shear_modulus);
 
   density = _density;
 }
