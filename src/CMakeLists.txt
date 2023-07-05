@@ -35,7 +35,7 @@ set(
   "materials/localrheo.cpp"
   "materials/vonmises.cpp"
   "materials/mohrcoulomb.cpp"
-
+  "materials/modifiedcamclay.cpp"
 
 
   "materials/linearelastic.cpp"

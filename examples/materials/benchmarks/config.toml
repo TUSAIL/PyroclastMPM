@@ -1,0 +1,17 @@
+[global]
+time = 1.0
+timestep = 0.0001
+output_steps = 500
+output_dir = "./output/"
+plot_dir = "./plots/"
+
+[von_mises]
+E = 1E6
+pois = 0.2
+density = 100
+yield_stress = 10000
+H = 0
+
+[mixed_control]
+tolerance = 1e-6
+is_finite = false

@@ -115,6 +115,16 @@ public:
 
   /// @brief Accumulated plastic strain (history) for hardening
   gpu_array<Real> acc_eps_p_gpu;
+
+  /// @brief flag to update history or not
+  /// @details useful for probing stress values during a single point
+  /// integration test
+  bool do_update_history = true;
+
+  /// @brief flag to use velocity gradient instead of strain increment
+  /// @details useful for single point integration test, to have deformation
+  /// formulated as small strain
+  bool is_velgrad_strain_increment = false;
 };
 
 } // namespace pyroclastmpm

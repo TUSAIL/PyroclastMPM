@@ -25,5 +25,5 @@
 
 # trunk-ignore-all(ruff/F401)
 
-from .loading import servo_control, strain_controlled
+from .loading import mixed_control
 from .plotting import plot_stress_subplot

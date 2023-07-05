@@ -76,7 +76,7 @@ void MohrCoulomb::stress_update(ParticlesContainer &particles_ref, int mat_id) {
         acc_eps_p_gpu.data(), particles_ref.velocity_gradient_gpu.data(),
         particles_ref.F_gpu.data(), particles_ref.colors_gpu.data(),
         bulk_modulus, shear_modulus, cohesion, friction_angle, dilatancy_angle,
-        H, mat_id, pid);
+        H, mat_id, do_update_history, is_velgrad_strain_increment, pid);
   }
 #endif
 }

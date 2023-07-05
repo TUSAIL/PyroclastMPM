@@ -222,14 +222,8 @@ void ParticlesContainer::calculate_initial_volumes() {
     if (volumes_cpu[pi] > 0.) {
       continue;
     }
-#if DIM == 3
-    volumes_cpu[pi] = spatial.grid.cell_size * spatial.grid.cell_size *
-                      spatial.grid.cell_size;
-#elif DIM == 2
-    volumes_cpu[pi] = spatial.grid.cell_size * spatial.grid.cell_size;
-#else
-    volumes_cpu[pi] = spatial.grid.cell_size;
-#endif
+
+    volumes_cpu[pi] = (Real)pow(spatial.grid.cell_size, DIM);
     volumes_cpu[pi] /= (Real)particles_per_cell_cpu;
   }
   volumes_gpu = volumes_cpu;

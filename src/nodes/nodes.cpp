@@ -181,13 +181,15 @@ void NodesContainer::integrate() {
       thrust::raw_pointer_cast(forces_external_gpu.data()),
       thrust::raw_pointer_cast(forces_internal_gpu.data()),
       thrust::raw_pointer_cast(moments_gpu.data()),
-      thrust::raw_pointer_cast(masses_gpu.data()), grid.num_cells_total);
+      thrust::raw_pointer_cast(masses_gpu.data()), small_mass_cutoff,
+      grid.num_cells_total);
   gpuErrchk(cudaDeviceSynchronize());
 #else
   for (int nid = 0; nid < grid.num_cells_total; nid++) {
     integrate_nodes(moments_nt_gpu.data(), forces_total_gpu.data(),
                     forces_external_gpu.data(), forces_internal_gpu.data(),
-                    moments_gpu.data(), masses_gpu.data(), nid);
+                    moments_gpu.data(), masses_gpu.data(), small_mass_cutoff,
+                    nid);
   }
 #endif
 }

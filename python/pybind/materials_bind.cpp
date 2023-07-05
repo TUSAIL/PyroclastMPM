@@ -58,7 +58,7 @@ void materials_module(const py::module &m) {
 
   /* Linear Elastic */
   py::class_<LinearElastic> LE_cls(m, "LinearElastic", py::dynamic_attr());
-  LE_cls.def(py::init<Real, Real, Real>(), py::arg("density"),
+  LE_cls.def(py::init<Real, Real, Real>(),
              R"(
              Isotropic linear elastic material (infinitesimal strain)
              
@@ -87,7 +87,7 @@ void materials_module(const py::module &m) {
              pois : float, optional
                   Poisson's ratio, by default 0
             )",
-             py::arg("E"), py::arg("pois") = 0.);
+             py::arg("density"), py::arg("E"), py::arg("pois") = 0.);
   LE_cls.def(
       "stress_update",
       [](LinearElastic &self, ParticlesContainer particles_ref, int mat_id) {
@@ -233,7 +233,12 @@ void materials_module(const py::module &m) {
                        "Bulk modulus K");
   VM_cls.def_readwrite("density", &VonMises::density,
                        "Bulk density of the material");
-
+  VM_cls.def_readwrite("do_update_history", &VonMises::do_update_history,
+                       "Flag if we update the history or not");
+  VM_cls.def_readwrite(
+      "is_velgrad_strain_increment", &VonMises::is_velgrad_strain_increment,
+      R"(Flag if we should use strain increment instead of velocity gradient for constitutive
+                       udpdate)");
   /*Mohr Coulomb*/
   py::class_<MohrCoulomb> MC_cls(m, "MohrCoulomb");
   MC_cls.def(py::init<Real, Real, Real, Real, Real, Real, Real>(),
@@ -337,6 +342,13 @@ void materials_module(const py::module &m) {
                        "Bulk modulus K");
   MC_cls.def_readwrite("density", &MohrCoulomb::density,
                        "Bulk density of the material");
+
+  MC_cls.def_readwrite("do_update_history", &MohrCoulomb::do_update_history,
+                       "Flag if we update the history or not");
+  MC_cls.def_readwrite(
+      "is_velgrad_strain_increment", &MohrCoulomb::is_velgrad_strain_increment,
+      R"(Flag if we should use strain increment instead of velocity gradient for constitutive
+                       udpdate)");
 
   /* Newton Fluid */
   py::class_<NewtonFluid> NF_cls(m, "NewtonFluid", py::dynamic_attr());

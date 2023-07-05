@@ -1,5 +1,6 @@
 [global]
-timestep = 0.001
+time = 1
+timestep = 0.000001
 
 num_steps = 1000
 output_steps = 25

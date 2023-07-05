@@ -63,7 +63,6 @@ TEST(ParticlesContainer, CalcVolumes) {
     EXPECT_NEAR(volumes_cpu[pid], expected_volumes[pid], 0.000001);
   }
 #elif DIM == 2
-
   const std::array<Real, 4> expected_volumes = {0.02, 0.02, 0.02, 0.02};
   for (int pid = 0; pid < pos.size(); pid++) {
     EXPECT_NEAR(volumes_cpu[pid], expected_volumes[pid], 0.000001);
@@ -74,6 +73,34 @@ TEST(ParticlesContainer, CalcVolumes) {
     EXPECT_NEAR(volumes_cpu[pid], expected_volumes[pid], 0.000001);
   }
 #endif
+
+  particles.volumes_gpu = cpu_array<Real>(pos.size(), 100.0);
+
+  particles.calculate_initial_volumes();
+
+  volumes_cpu = particles.volumes_gpu;
+
+  for (int pid = 0; pid < pos.size(); pid++) {
+    EXPECT_NEAR(volumes_cpu[pid], 100.0, 0.000001);
+  }
+}
+
+TEST(ParticlesContainer, set_output_formats_and_output) {
+
+  const std::vector<Vectorr> pos = {Vectorr::Zero()};
+
+  const std::vector<bool> is_rigid = {true}; // prevent output
+  std::vector<std::string> formats;
+
+  formats.emplace_back("vtk");
+
+  auto particles = pyroclastmpm::ParticlesContainer(pos, {}, {}, is_rigid);
+
+  particles.set_output_formats(formats);
+
+  EXPECT_EQ(particles.output_formats[0], "vtk");
+
+  particles.output_vtk();
 }
 
 TEST(ParticlesContainer, CalculateMasses) {
@@ -123,4 +150,16 @@ TEST(ParticlesContainer, CalculateMasses) {
     EXPECT_NEAR(masses_cpu[pid], expected_masses[pid], 0.000001);
   }
 #endif
+}
+
+TEST(ParticlesContainer, ReorderArrays) {
+  // TODO: Test this function
+}
+
+TEST(ParticlesContainer, SetSpawner) {
+  // TODO: Test this function
+}
+
+TEST(ParticlesContainer, SpawnParticles) {
+  // TODO: Test this function
 }

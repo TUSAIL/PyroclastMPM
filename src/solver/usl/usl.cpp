@@ -152,8 +152,8 @@ void USL::G2P() {
       thrust::raw_pointer_cast(particles.is_active_gpu.data()),
       thrust::raw_pointer_cast(nodes.moments_gpu.data()),
       thrust::raw_pointer_cast(nodes.moments_nt_gpu.data()),
-      thrust::raw_pointer_cast(nodes.masses_gpu.data()), nodes.grid, alpha,
-      particles.num_particles);
+      thrust::raw_pointer_cast(nodes.masses_gpu.data()),
+      nodes.small_mass_cutoff, nodes.grid, alpha, particles.num_particles);
   gpuErrchk(cudaDeviceSynchronize());
 #else
   for (int index = 0; index < particles.num_particles; index++) {
@@ -165,7 +165,7 @@ void USL::G2P() {
                    particles.psi_gpu.data(), particles.is_rigid_gpu.data(),
                    particles.is_active_gpu.data(), nodes.moments_gpu.data(),
                    nodes.moments_nt_gpu.data(), nodes.masses_gpu.data(),
-                   nodes.grid, alpha, index);
+                   nodes.small_mass_cutoff, nodes.grid, alpha, index);
   }
 
 #endif
