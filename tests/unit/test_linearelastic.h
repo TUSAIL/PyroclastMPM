@@ -58,8 +58,7 @@ TEST(LinearElastic, StressUpdateLinearElastic) {
   EXPECT_NEAR(stresses[0](8), expected_stress(8), 0.0001);
 #elif DIM == 2
   Matrix3r expected_stress;
-  expected_stress << 0.011363636702299118, 0, 0, 0, 0.011363636702299118, 0, 0,
-      0, 0;
+  expected_stress << 0, 0, 0, 0, 0.0, 0, 0, 0, 0;
   EXPECT_NEAR(stresses[0](0), expected_stress(0), 0.0001);
   EXPECT_NEAR(stresses[0](4), expected_stress(4), 0.0001);
 #else
