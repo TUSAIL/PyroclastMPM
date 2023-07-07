@@ -38,9 +38,9 @@
  */
 #pragma once
 
-#include <indicators/progress_bar.hpp>
-
-#include <indicators/cursor_control.hpp>
+// TODO: remove this if not used
+// #include <indicators/progress_bar.hpp>
+// #include <indicators/cursor_control.hpp>
 
 #include <variant>
 
