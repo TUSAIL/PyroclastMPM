@@ -103,23 +103,11 @@ def create_material(cfg, model_name):
     material = None
     if model_name == "von_mises":
         material = pm.VonMises(
-            cfg["material"]["density"],
+            cfg[model_name]["density"],
             cfg[model_name]["E"],
             cfg[model_name]["pois"],
             cfg[model_name]["yield_stress"],
             cfg[model_name]["H"],
-        )
-    if model_name == "modified_cam_clay":
-        material = pm.ModifiedCamClay(
-            cfg["material"]["density"],
-            cfg[model_name]["E"],
-            cfg[model_name]["pois"],
-            cfg[model_name]["M"],
-            cfg[model_name]["lam"],
-            cfg[model_name]["kap"],
-            cfg[model_name]["Vs"],
-            cfg[model_name]["Pt"],
-            cfg[model_name]["beta"]
         )
 
     if material is not None:
@@ -225,158 +213,138 @@ mask = np.zeros((3, 3)).astype(bool)
 
 run_save_model(
     cfg,
-    "modified_cam_clay",
+    "von_mises",
     "isotropic_compression",
     [target_strain],
     [target_stress],
     [mask],
 )
 
+###### UNIAXIAL COMPRESSION ######
 
-# ##### ISOTROPIC COMPRESSION ######
-# target_strain = np.zeros((3, 3))
-# target_strain[0, 0] = -0.1
-# target_strain[1, 1] = -0.1
-# target_strain[2, 2] = -0.1
+target_strain = np.zeros((3, 3))
+target_strain[0, 0] = -0.1
+target_stress = np.zeros((3, 3))
+mask = np.zeros((3, 3)).astype(bool)
 
-# target_stress = np.zeros((3, 3))
+run_save_model(
+    cfg,
+    "von_mises",
+    "uniaxial_compression",
+    [target_strain],
+    [target_stress],
+    [mask],
+)
 
-# mask = np.zeros((3, 3)).astype(bool)
+###### PURE SHEAR COMPRESSION ######
 
-# run_save_model(
-#     cfg,
-#     "von_mises",
-#     "isotropic_compression",
-#     [target_strain],
-#     [target_stress],
-#     [mask],
-# )
+target_strain = np.zeros((3, 3))
+target_strain[0, 1] = 0.1
+target_strain[1, 0] = 0.1
+target_stress = np.zeros((3, 3))
+mask = np.zeros((3, 3)).astype(bool)
 
-# ###### UNIAXIAL COMPRESSION ######
-
-# target_strain = np.zeros((3, 3))
-# target_strain[0, 0] = -0.1
-# target_stress = np.zeros((3, 3))
-# mask = np.zeros((3, 3)).astype(bool)
-
-# run_save_model(
-#     cfg,
-#     "von_mises",
-#     "uniaxial_compression",
-#     [target_strain],
-#     [target_stress],
-#     [mask],
-# )
-
-# ###### PURE SHEAR COMPRESSION ######
-
-# target_strain = np.zeros((3, 3))
-# target_strain[0, 1] = 0.1
-# target_strain[1, 0] = 0.1
-# target_stress = np.zeros((3, 3))
-# mask = np.zeros((3, 3)).astype(bool)
-
-# run_save_model(
-#     cfg,
-#     "von_mises",
-#     "pure_shear",
-#     [target_strain],
-#     [target_stress],
-#     [mask],
-# )
+run_save_model(
+    cfg,
+    "von_mises",
+    "pure_shear",
+    [target_strain],
+    [target_stress],
+    [mask],
+)
 
 
-# ###### SIMPLE SHEAR COMPRESSION ######
-# target_strain = np.zeros((3, 3))
-# target_strain[0, 1] = 0.1
-# target_strain[1, 0] = 0.1
-# target_stress = np.zeros((3, 3))
-# mask = np.zeros((3, 3)).astype(bool)
+###### SIMPLE SHEAR COMPRESSION ######
+target_strain = np.zeros((3, 3))
+target_strain[0, 1] = 0.1
+target_strain[1, 0] = 0.1
+target_stress = np.zeros((3, 3))
+mask = np.zeros((3, 3)).astype(bool)
 
-# run_save_model(
-#     cfg,
-#     "von_mises",
-#     "simple_shear",
-#     [target_strain],
-#     [target_stress],
-#     [mask],
-# )
-
-
-# ###### TRIAXIAL COMPRESSION ######
-
-# target_strain = np.zeros((3, 3))
-# target_strain[0, 0] = -0.15
-
-# target_stress = np.zeros((3, 3))
-
-# mask = np.zeros((3, 3)).astype(bool)
-# mask[1, 1] = True
-# mask[2, 2] = True
-
-# run_save_model(
-#     cfg,
-#     "von_mises",
-#     "triaxial_compression",
-#     [target_strain],
-#     [target_stress],
-#     [mask],
-# )
-
-# ###### CYCLIC LOADING ########
+run_save_model(
+    cfg,
+    "von_mises",
+    "simple_shear",
+    [target_strain],
+    [target_stress],
+    [mask],
+)
 
 
-# target_stress = np.zeros((3, 3))
-# target_strain_unload = np.zeros((3, 3))
+###### TRIAXIAL COMPRESSION ######
 
-# mask = np.zeros((3, 3)).astype(bool)
-# mask[1, 1] = True
-# mask[2, 2] = True
+target_strain = np.zeros((3, 3))
+target_strain[0, 0] = -0.15
 
-# mask_unload = np.zeros((3, 3)).astype(bool)
-# mask_unload[1, 1] = True
-# mask_unload[2, 2] = True
+target_stress = np.zeros((3, 3))
 
-# target_strain1_load = np.zeros((3, 3))
-# target_strain1_load[0, 0] = -0.1
+mask = np.zeros((3, 3)).astype(bool)
+mask[1, 1] = True
+mask[2, 2] = True
 
-# target_strain2_load = np.zeros((3, 3))
-# target_strain2_load[0, 0] = -0.11
+run_save_model(
+    cfg,
+    "von_mises",
+    "triaxial_compression",
+    [target_strain],
+    [target_stress],
+    [mask],
+)
+
+###### CYCLIC LOADING ########
 
 
-# target_strain3_load = np.zeros((3, 3))
-# target_strain3_load[0, 0] = -0.12
+target_stress = np.zeros((3, 3))
+target_strain_unload = np.zeros((3, 3))
+
+mask = np.zeros((3, 3)).astype(bool)
+mask[1, 1] = True
+mask[2, 2] = True
+
+mask_unload = np.zeros((3, 3)).astype(bool)
+mask_unload[1, 1] = True
+mask_unload[2, 2] = True
+
+target_strain1_load = np.zeros((3, 3))
+target_strain1_load[0, 0] = -0.1
+
+target_strain2_load = np.zeros((3, 3))
+target_strain2_load[0, 0] = -0.11
 
 
-# target_strain4_load = np.zeros((3, 3))
-# target_strain4_load[0, 0] = -0.13
+target_strain3_load = np.zeros((3, 3))
+target_strain3_load[0, 0] = -0.12
 
-# target_strain5_load = np.zeros((3, 3))
-# target_strain5_load[0, 0] = -0.14
 
-# target_strain6_load = np.zeros((3, 3))
-# target_strain6_load[0, 0] = -0.15
+target_strain4_load = np.zeros((3, 3))
+target_strain4_load[0, 0] = -0.13
 
-# strain_control = [
-#     target_strain1_load,
-#     target_strain_unload,
-#     target_strain2_load,
-#     target_strain_unload,
-#     target_strain3_load,
-#     target_strain_unload,
-#     target_strain4_load,
-#     target_strain_unload,
-#     target_strain5_load,
-#     target_strain_unload,
-#     target_strain5_load,
-# ]
+target_strain5_load = np.zeros((3, 3))
+target_strain5_load[0, 0] = -0.14
 
-# run_save_model(
-#     cfg,
-#     "von_mises",
-#     "cyclic_loading",
-#     strain_control,
-#     [target_stress for ts in strain_control],
-#     [mask for ts in strain_control],
-#     cycles=len(strain_control),
-# )
+target_strain6_load = np.zeros((3, 3))
+target_strain6_load[0, 0] = -0.15
+
+strain_control = [
+    target_strain1_load,
+    target_strain_unload,
+    target_strain2_load,
+    target_strain_unload,
+    target_strain3_load,
+    target_strain_unload,
+    target_strain4_load,
+    target_strain_unload,
+    target_strain5_load,
+    target_strain_unload,
+    target_strain5_load,
+]
+
+run_save_model(
+    cfg,
+    "von_mises",
+    "cyclic_loading",
+    strain_control,
+    [target_stress for ts in strain_control],
+    [mask for ts in strain_control],
+    cycles=len(strain_control),
+)
