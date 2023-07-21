@@ -145,6 +145,9 @@ public:
 
   /// @brief Output formats for the nodes
   std::vector<std::string> output_formats;
+
+  /// @brief Small mass value to prevent division by zero
+  Real small_mass_cutoff = (Real)1.0e-6;
 };
 
 } // namespace pyroclastmpm

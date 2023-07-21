@@ -31,13 +31,11 @@
 
 namespace pyroclastmpm {
 
-__device__ __host__ inline void
-update_linearelastic(Matrix3r *particles_stresses_gpu,
-                     const Matrixr *particles_velocity_gradient_gpu,
-                     const uint8_t *particles_colors_gpu,
-                     const bool *particles_is_active_gpu,
-                     const Real shear_modulus, const Real bulk_modulus,
-                     const int mat_id, const int tid) {
+__device__ __host__ inline void update_linearelastic(
+    Matrix3r *particles_stresses_gpu, const Matrixr *particles_F_gpu,
+    const uint8_t *particles_colors_gpu, const bool *particles_is_active_gpu,
+    const Real shear_modulus, const Real bulk_modulus, const int mat_id,
+    const int tid) {
 
   const int particle_color = particles_colors_gpu[tid];
   if (!particles_is_active_gpu[tid]) {
@@ -48,9 +46,9 @@ update_linearelastic(Matrix3r *particles_stresses_gpu,
     return;
   }
 
-  const Matrixr vel_grad = particles_velocity_gradient_gpu[tid];
+  const Matrixr F = particles_F_gpu[tid]; // deformation gradient
 
-  const Matrixr eps_curr = 0.5 * (vel_grad + vel_grad.transpose());
+  const Matrixr eps_curr = 0.5 * (F.transpose() + F) - Matrixr::Identity();
 
   // hydrostatic stress and volumetric strain
   const Real eps_v_trail = eps_curr.trace();
@@ -74,10 +72,9 @@ update_linearelastic(Matrix3r *particles_stresses_gpu,
 
 #ifdef CUDA_ENABLED
 __global__ void KERNEL_STRESS_UPDATE_LINEARELASTIC(
-    Matrix3r *particles_stresses_gpu,
-    const Matrixr *particles_velocity_gradient_gpu,
+    Matrix3r *particles_stresses_gpu, const Matrixr *particles_F_gpu,
     const uint8_t *particles_colors_gpu, const bool *particles_is_active_gpu,
-    const int num_particles, const Real shear_modulus, const Real bulk_modulus,
+    const int num_particles, const Real bulk_modulus, const Real lame_modulus,
     const int mat_id) {
   const int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -85,7 +82,7 @@ __global__ void KERNEL_STRESS_UPDATE_LINEARELASTIC(
     return;
   } // block access threads
 
-  update_linearelastic(particles_stresses_gpu, particles_velocity_gradient_gpu,
+  update_linearelastic(particles_stresses_gpu, particles_F_gpu,
                        particles_colors_gpu, particles_is_active_gpu,
                        shear_modulus, bulk_modulus, mat_id, tid);
 }

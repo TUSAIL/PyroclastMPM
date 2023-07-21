@@ -24,11 +24,11 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 /**
- * @file vonmises.h
+ * @file modifiedcamclay.h
  * @author Retief Lubbe (r.lubbe@utwente.nl)
- * @brief Von Mises material
+ * @brief Modified Cam Clay Material
  * @version 0.1
- * @date 2023-06-15
+ * @date 2023-07-05
  *
  * @copyright Copyright (c) 2023
  */
@@ -40,8 +40,8 @@
 namespace pyroclastmpm {
 
 /**
- * @brief Von Mises material
- * @details Small strain with isotropic linear strain hardening
+ * @brief Modified Cam Clay material
+ * @details Small strain implementation with isotropic linear elasticity
  *
  *
  * Implementation based on
@@ -50,19 +50,26 @@ namespace pyroclastmpm {
  * John Wiley & Sons, 2011.
  *
  */
-class VonMises : public Material {
+class ModifiedCamClay : public Material {
 
 public:
-  /// @brief Construct a new Von Mises object
+  /// @brief Construct a new Modified Cam Clay object
   /// @param _density material density (original)
   /// @param _E Young's modulus
   /// @param _pois Poisson's ratio
-  /// @param _yield_stress initial yield stress
-  /// @param _H hardening coefficient
-  VonMises(const Real _density, const Real _E, const Real _pois,
-           const Real _yield_stress, const Real _H);
+  /// @param _M Slope of critical state line
+  /// @param _lam slope of virgin consolidation line
+  /// @param _kap slope of swelling line
+  /// @param _Vs solid volume
+  /// @param _Pc0 initial preconsolidation pressure
+  /// @param _Pt Tensile yield hydrostatic stress
+  /// @param _beta Parameter related to size of outer diameter of ellipse
+  ModifiedCamClay(const Real _density, const Real _E, const Real _pois,
+                  const Real _M, const Real _lam, const Real _kap,
+                  const Real _Vs, const Real _Pc0, const Real _Pt,
+                  const Real _beta);
 
-  ~VonMises() final = default;
+  ~ModifiedCamClay() final = default;
 
   /// @brief Perform stress update
   /// @param particles_ptr ParticlesContainer class
@@ -80,12 +87,14 @@ public:
   /// @param mat_id material id
   void initialize(const ParticlesContainer &particles_ref, int mat_id);
 
-  /// @brief Initial yield stress sigma y_0
-  Real yield_stress;
+  /// @brief Slope of the critical state line
+  Real M;
 
-  /// @brief hardening coefficient H
-  Real H;
+  /// @brief Tensile yield hydrotatic stress
+  Real Pt;
 
+  /// @brief parameter related to size of outer diameter of ellipse
+  Real beta;
   /// @brief Youngs modulus
   Real E;
 
@@ -101,11 +110,30 @@ public:
   /// @brief Bulk modulus
   Real bulk_modulus;
 
+  /// @brief Slope of virgin consolidation line
+  Real lam;
+
+  /// @brief Slope of swelling line
+  Real kap;
+
+  /// @brief Solid volume
+  Real Vs;
+
+  // initial preconsolidation pressure
+  Real Pc0;
+
+  /// @brief reference stress
+  gpu_array<Matrix3r> stress_ref_gpu;
+
   /// @brief elastic strain (infinitesimal)
   gpu_array<Matrixr> eps_e_gpu;
 
-  /// @brief accumulated plastic strain (history) for hardening
-  gpu_array<Real> acc_eps_p_gpu;
+  /// @brief internal variable related to the compressive ositive volumetric
+  /// plastic strain
+  gpu_array<Real> alpha_gpu;
+
+  /// @brief updated preconsolidation pressure
+  gpu_array<Real> pc_gpu;
 
   /// @brief flag to update history or not
   /// @details useful for probing stress values during a single point

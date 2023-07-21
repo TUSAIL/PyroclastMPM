@@ -58,9 +58,9 @@ integrate_nodes(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
                 const Vectorr *nodes_forces_external_gpu,
                 const Vectorr *nodes_forces_internal_gpu,
                 const Vectorr *nodes_moments_gpu, const Real *nodes_masses_gpu,
-                const int node_mem_index) {
+                const Real small_mass_cutoff, const int node_mem_index) {
 
-  if (nodes_masses_gpu[node_mem_index] <= (Real)0.00001) {
+  if (nodes_masses_gpu[node_mem_index] <= small_mass_cutoff) {
     return;
   }
   const Vectorr ftotal = nodes_forces_internal_gpu[node_mem_index] +
@@ -68,6 +68,8 @@ integrate_nodes(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
 
   nodes_forces_total_gpu[node_mem_index] = ftotal;
 
+  // moments_nt - updated moments
+  // moments - old moments
 #ifdef CUDA_ENABLED
   nodes_moments_nt_gpu[node_mem_index] =
       nodes_moments_gpu[node_mem_index] + ftotal * dt_gpu;
@@ -78,13 +80,12 @@ integrate_nodes(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
 }
 
 #ifdef CUDA_ENABLED
-__global__ void KERNEL_INTEGRATE(Vectorr *nodes_moments_nt_gpu,
-                                 Vectorr *nodes_forces_total_gpu,
-                                 const Vectorr *nodes_forces_external_gpu,
-                                 const Vectorr *nodes_forces_internal_gpu,
-                                 const Vectorr *nodes_moments_gpu,
-                                 const Real *nodes_masses_gpu,
-                                 const int num_nodes_total) {
+__global__ void
+KERNEL_INTEGRATE(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
+                 const Vectorr *nodes_forces_external_gpu,
+                 const Vectorr *nodes_forces_internal_gpu,
+                 const Vectorr *nodes_moments_gpu, const Real *nodes_masses_gpu,
+                 const Real small_mass_cutoff, const int num_nodes_total) {
 
   const int node_mem_index = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -94,7 +95,8 @@ __global__ void KERNEL_INTEGRATE(Vectorr *nodes_moments_nt_gpu,
 
   integrate_nodes(nodes_moments_nt_gpu, nodes_forces_total_gpu,
                   nodes_forces_external_gpu, nodes_forces_internal_gpu,
-                  nodes_moments_gpu, nodes_masses_gpu, node_mem_index);
+                  nodes_moments_gpu, nodes_masses_gpu,
+                  const Real small_mass_cutoff, node_mem_index);
 }
 
 #endif

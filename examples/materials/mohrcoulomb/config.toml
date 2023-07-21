@@ -2,6 +2,7 @@
 timestep = 0.001
 total_steps = 1000
 output_steps = 50
+time = 1.0
 
 [material]
 E = 1e6

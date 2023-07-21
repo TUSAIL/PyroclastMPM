@@ -157,6 +157,10 @@ void nodes_module(const py::module &m) {
         self.masses_gpu = host_val;
       },
       "Masses of the nodes");
+
+  // N_cls.def_readwrite("small_mass_cutoff",
+  // &NodesContainer::small_mass_cutoff,
+  //                     "Cutoff for small masses default 1.0e-6");
 }
 
 } // namespace pyroclastmpm

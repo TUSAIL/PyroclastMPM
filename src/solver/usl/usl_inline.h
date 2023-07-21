@@ -94,6 +94,7 @@ __device__ __host__ void inline usl_p2g_kernel(
   // loops over grid nodes
 
   const Vectori node_bin = node_ids_gpu[node_mem_index];
+
   Vectorr total_node_moment = Vectorr::Zero();
   Vectorr total_node_force_internal = Vectorr::Zero();
   Vectorr total_node_force_external = Vectorr::Zero();
@@ -138,18 +139,24 @@ __device__ __host__ void inline usl_p2g_kernel(
       const Real psi_particle =
           particles_psi_gpu[particle_id * num_surround_nodes + sid];
 
-      Vector3r dpsi_particle = Vector3r::Zero();
-      dpsi_particle.block(0, 0, DIM, DIM) =
+      const Vectorr dpsi_particle =
           particles_dpsi_gpu[particle_id * num_surround_nodes + sid];
 
       const Real scaled_mass = psi_particle * particles_masses_gpu[particle_id];
+
       total_node_mass += scaled_mass;
+
       total_node_moment += scaled_mass * particles_velocities_gpu[particle_id];
+
       total_node_force_external +=
           psi_particle * particles_forces_external_gpu[particle_id];
+
+      Vector3r dpsi_particle_3d;
+      dpsi_particle_3d.block(0, 0, DIM, 1) = dpsi_particle;
+
       total_node_force_internal.block(0, 0, DIM, DIM) +=
           -1. * particles_volumes_gpu[particle_id] *
-          particles_stresses_gpu[particle_id] * dpsi_particle;
+          particles_stresses_gpu[particle_id] * dpsi_particle_3d;
     }
   }
 
@@ -226,8 +233,8 @@ __device__ __host__ inline void usl_g2p_kernel(
     const Real *particles_volumes_original_gpu, const Real *particles_psi_gpu,
     const bool *particles_is_rigid_gpu, const bool *particles_is_active_gpu,
     const Vectorr *nodes_moments_gpu, const Vectorr *nodes_moments_nt_gpu,
-    const Real *nodes_masses_gpu, const Grid &grid, const Real alpha,
-    const int tid) {
+    const Real *nodes_masses_gpu, const Real small_mass_cutoff,
+    const Grid &grid, const Real alpha, const int tid) {
 
   if (particles_is_rigid_gpu[tid] || !particles_is_active_gpu[tid]) {
     return;
@@ -267,7 +274,7 @@ __device__ __host__ inline void usl_g2p_kernel(
     }
 
     const Real node_mass = nodes_masses_gpu[nhash];
-    if (node_mass <= 0.000000001) {
+    if (node_mass <= small_mass_cutoff) {
       continue;
     }
 

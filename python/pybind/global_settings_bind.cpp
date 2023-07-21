@@ -42,7 +42,7 @@ void global_settings_module(py::module &m) {
             Sets the global shape function for the MPM simulation. 
 
             Example usage:
-                  >>> import pyroclastmpm as pm
+                  >>> import pyroclastmpm.MPM3D as pm
                   >>> pm.set_global_shapefunction("linear")
 
             Parameters
@@ -58,7 +58,7 @@ void global_settings_module(py::module &m) {
             Sets the global time step for the MPM simulation. 
 
             Example usage:
-                  >>> import pyroclastmpm as pm
+                  >>> import pyroclastmpm.MPM3D as pm
                   >>> pm.set_global_timestep(0.01)
 
             Parameters
@@ -74,7 +74,7 @@ void global_settings_module(py::module &m) {
             Sets the global step for the MPM simulation. 
 
             Example usage:
-                  >>> import pyroclastmpm as pm
+                  >>> import pyroclastmpm.MPM3D as pm
                   >>> pm.set_global_step(10)
 
             Parameters
@@ -90,7 +90,7 @@ void global_settings_module(py::module &m) {
             the output files will be saved.
 
             Example usage:
-                  >>> import pyroclastmpm as pm
+                  >>> import pyroclastmpm.MPM3D as pm
                   >>> pm.set_global_output_directory("./output/")
 
             Parameters
@@ -105,7 +105,7 @@ void global_settings_module(py::module &m) {
             Sets the global variables for the MPM simulation.
 
             Example usage:
-                  >>> import pyroclastmpm as pm
+                  >>> import pyroclastmpm.MPM3D as pm
                   >>> pm.set_global_step(0.001, 4, "linear", "./output/")
 
             Parameters
@@ -113,7 +113,8 @@ void global_settings_module(py::module &m) {
             timestep: float
                 Input time step.
             particles_per_cell: int
-                Number of particles per cell.
+                Number of particles per cell. Recommended to use at least
+                2 particles per cell for 1D, 4 for 2D and 8 for 3D.
             shapefunction: str
                   Type of shape function to use  "linear" or "cubic".
             directory: str

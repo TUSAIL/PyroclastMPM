@@ -7,6 +7,3 @@
 [submodule "ext/thrust"]
 	path = ext/thrust
 	url = https://github.com/NVIDIA/thrust.git
-[submodule "ext/indicators"]
-	path = ext/indicators
-	url = git@github.com:p-ranav/indicators.git

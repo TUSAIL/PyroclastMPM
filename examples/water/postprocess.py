@@ -2,7 +2,7 @@ import numpy as np
 import pyvista as pv
 
 total_steps = 80000
-output_steps = 50
+output_steps = 1000
 
 # 1. Define global plot settings
 pv.set_plot_theme(pv.themes.DocumentTheme())
@@ -35,7 +35,8 @@ pl.open_gif("./plots/flow.gif")
 
 pl.add_mesh(
     particles,
-    style="points",
+    # style="points",
+    render_points_as_spheres=True,
     point_size=10,
     scalars=scalar_name,
     cmap="kbc",

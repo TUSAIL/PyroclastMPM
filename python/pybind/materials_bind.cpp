@@ -30,6 +30,7 @@
 #include "pyroclastmpm/common/types_common.h"
 #include "pyroclastmpm/materials/linearelastic.h"
 #include "pyroclastmpm/materials/localrheo.h"
+#include "pyroclastmpm/materials/modifiedcamclay.h"
 #include "pyroclastmpm/materials/mohrcoulomb.h"
 #include "pyroclastmpm/materials/newtonfluid.h"
 #include "pyroclastmpm/materials/vonmises.h"
@@ -58,7 +59,7 @@ void materials_module(const py::module &m) {
 
   /* Linear Elastic */
   py::class_<LinearElastic> LE_cls(m, "LinearElastic", py::dynamic_attr());
-  LE_cls.def(py::init<Real, Real, Real>(), py::arg("density"),
+  LE_cls.def(py::init<Real, Real, Real>(),
              R"(
              Isotropic linear elastic material (infinitesimal strain)
              
@@ -87,7 +88,7 @@ void materials_module(const py::module &m) {
              pois : float, optional
                   Poisson's ratio, by default 0
             )",
-             py::arg("E"), py::arg("pois") = 0.);
+             py::arg("density"), py::arg("E"), py::arg("pois") = 0.);
   LE_cls.def(
       "stress_update",
       [](LinearElastic &self, ParticlesContainer particles_ref, int mat_id) {
@@ -136,10 +137,112 @@ void materials_module(const py::module &m) {
                  }),
              "Pickling for LinearElastic");
 
+  /* Modified Cam Clay */
+  py::class_<ModifiedCamClay> MCC_cls(m, "ModifiedCamClay", py::dynamic_attr());
+  MCC_cls.def(
+      py::init<Real, Real, Real, Real, Real, Real, Real, Real, Real, Real>(),
+      R"(
+                Modified Cam Clay
+                (infinitesimal strain)
+                Implementation based on the book:
+                de Souza Neto, Eduardo A., Djordje Peric, and David RJ Owen.
+                Computational methods for plasticity: theory and applications.
+                John Wiley & Sons, 2011.
+
+                Parameters
+                ----------
+                density : float
+                    Material density
+                E : float
+                    Young's modulus
+                pois : float
+                    Poisson's ratio
+                M : float
+                    slope of the critical state line
+                lam: float
+                    slope of the virgin consolidation line
+                kap: float
+                    slope of the swelling line
+                Vs: float
+                    solid volume
+                Pt : float
+                    Tensile yield hydrostatic stress
+                beta: float
+                    Parameter related to size of outer diameter of ellipse
+                    )",
+      py::arg("density"), py::arg("E"), py::arg("pois"), py::arg("M"),
+      py::arg("lam"), py::arg("kap"), py::arg("Vs"), py::arg("Pc0"),
+      py::arg("Pt"), py::arg("beta"));
+
+  MCC_cls.def(
+      "stress_update",
+      [](ModifiedCamClay &self, ParticlesContainer particles_ref, int mat_id) {
+        self.stress_update(particles_ref, mat_id);
+        return std::make_tuple(particles_ref, mat_id);
+      },
+      R"(
+                Perform a stress update step.
+
+                Returns
+                -------
+                ParticlesContainer
+                    Particle container (updated stress)
+              )");
+  MCC_cls.def(
+      "initialize",
+      [](ModifiedCamClay &self, ParticlesContainer particles_ref, int mat_id) {
+        self.initialize(particles_ref, mat_id);
+        return std::make_tuple(particles_ref, mat_id);
+      },
+      R"(
+              Initialize history variables
+
+              Parameters
+              ----------
+              particles : ParticlesContainer
+                  Particle container
+              mat_id : int, optional
+                  Material ID or colour, by default 0
+
+              Returns
+              -------
+              Type[ParticlesContainer]
+                  Particle container (initialized)
+              )");
+  MCC_cls.def_property(
+      "eps_e",
+      [](ModifiedCamClay &self) {
+        return std::vector<Matrixr>(self.eps_e_gpu.begin(),
+                                    self.eps_e_gpu.end());
+      },
+      [](ModifiedCamClay &self, const std::vector<Matrixr> &value) {
+        cpu_array<Matrixr> host_val = value;
+        self.eps_e_gpu = host_val;
+      },
+      "Elastic strain (infinitesimal)");
+  MCC_cls.def_readwrite("E", &ModifiedCamClay::E, "Young's modulus");
+  MCC_cls.def_readwrite("pois", &ModifiedCamClay::pois, "Poisson's ratio");
+  MCC_cls.def_readwrite("shear_modulus", &ModifiedCamClay::shear_modulus,
+                        "Shear modulus G");
+  MCC_cls.def_readwrite("lame_modulus", &ModifiedCamClay::lame_modulus,
+                        "Lame modulus lambda");
+  MCC_cls.def_readwrite("bulk_modulus", &ModifiedCamClay::bulk_modulus,
+                        "Bulk modulus K");
+  MCC_cls.def_readwrite("density", &ModifiedCamClay::density,
+                        "Bulk density of the material");
+  MCC_cls.def_readwrite("do_update_history",
+                        &ModifiedCamClay::do_update_history,
+                        "Flag if we update the history or not");
+  MCC_cls.def_readwrite(
+      "is_velgrad_strain_increment",
+      &ModifiedCamClay::is_velgrad_strain_increment,
+      R"(Flag if we should use strain increment instead of velocity gradient for constitutive
+                               udpdate)");
+
   /* Von Mises */
   py::class_<VonMises> VM_cls(m, "VonMises", py::dynamic_attr());
   VM_cls.def(py::init<Real, Real, Real, Real, Real>(),
-             R"( 
+             R"(
         Associative Von Mises plasticity with linear isotropic strain hardening.
         (infinitesimal strain)
         Implementation based on the book:
@@ -233,7 +336,12 @@ void materials_module(const py::module &m) {
                        "Bulk modulus K");
   VM_cls.def_readwrite("density", &VonMises::density,
                        "Bulk density of the material");
-
+  VM_cls.def_readwrite("do_update_history", &VonMises::do_update_history,
+                       "Flag if we update the history or not");
+  VM_cls.def_readwrite(
+      "is_velgrad_strain_increment", &VonMises::is_velgrad_strain_increment,
+      R"(Flag if we should use strain increment instead of velocity gradient for constitutive
+                       udpdate)");
   /*Mohr Coulomb*/
   py::class_<MohrCoulomb> MC_cls(m, "MohrCoulomb");
   MC_cls.def(py::init<Real, Real, Real, Real, Real, Real, Real>(),
@@ -337,6 +445,20 @@ void materials_module(const py::module &m) {
                        "Bulk modulus K");
   MC_cls.def_readwrite("density", &MohrCoulomb::density,
                        "Bulk density of the material");
+
+  MC_cls.def_readwrite("do_update_history", &MohrCoulomb::do_update_history,
+                       "Flag if we update the history or not");
+  MC_cls.def_readwrite(
+      "is_velgrad_strain_increment", &MohrCoulomb::is_velgrad_strain_increment,
+      R"(Flag if we should use strain increment instead of velocity gradient for constitutive
+                       udpdate)");
+
+  MC_cls.def_readwrite("do_update_history", &MohrCoulomb::do_update_history,
+                       "Flag if we update the history or not");
+  MC_cls.def_readwrite(
+      "is_velgrad_strain_increment", &MohrCoulomb::is_velgrad_strain_increment,
+      R"(Flag if we should use strain increment instead of velocity gradient for constitutive
+                       udpdate)");
 
   /* Newton Fluid */
   py::class_<NewtonFluid> NF_cls(m, "NewtonFluid", py::dynamic_attr());

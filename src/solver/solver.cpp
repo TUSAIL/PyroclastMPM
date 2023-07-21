@@ -116,18 +116,18 @@ void Solver::solve_nsteps(int n_steps) {
 /// @param output_frequency output frequency
 void Solver::run(const int total_steps, const int output_frequency) {
 
-  using namespace indicators;
-  ProgressBar bar{option::BarWidth{50},
-                  option::Start{"⏳️["},
-                  option::Fill{"."},
-                  option::Lead{"■"},
-                  option::Remainder{" "},
-                  option::End{" ]"},
-                  option::ShowElapsedTime{true},
-                  option::ShowRemainingTime{true},
-                  option::PrefixText{"Progress: "},
-                  option::MaxProgress{total_steps + 1},
-                  option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}};
+  // using namespace indicators;
+  // ProgressBar bar{option::BarWidth{50},
+  //                 option::Start{"⏳️["},
+  //                 option::Fill{"."},
+  //                 option::Lead{"■"},
+  //                 option::Remainder{" "},
+  //                 option::End{" ]"},
+  //                 option::ShowElapsedTime{true},
+  //                 option::ShowRemainingTime{true},
+  //                 option::PrefixText{"Progress: "},
+  //                 option::MaxProgress{total_steps + 1},
+  //                 option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}};
   printf("Running simulation...\n");
 
   output();
@@ -142,19 +142,19 @@ void Solver::run(const int total_steps, const int output_frequency) {
 
     if (step % output_frequency == 0) {
       output();
-      // Show iteration as postfix text
-      bar.set_option(option::PostfixText{std::to_string(step) + "/" +
-                                         std::to_string(total_steps)});
+      // // Show iteration as postfix text
+      // bar.set_option(option::PostfixText{std::to_string(step) + "/" +
+      //                                    std::to_string(total_steps)});
 
-      // update progress bar
-      bar.set_progress(step);
+      // // update progress bar
+      // bar.set_progress(step);
     }
 
     // Modifies global memory
     increment_global();
   }
 
-  bar.mark_as_completed();
+  // bar.mark_as_completed();
 
   printf("Done.\n");
 

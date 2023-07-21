@@ -1,0 +1,70 @@
+[[plot_sets]]
+name = "von_mises_principal"
+model_names = ["von_mises"]
+benchmark_names = [
+    "isotropic_compression",
+    "uniaxial_compression",
+    "triaxial"
+    ]
+plot_types = [
+    "q_p",
+    "stress_vs_steps",
+    "strain_vs_steps",
+    "stress_vs_strain",
+    "volume_vs_lnp",
+    "volume_vs_q"
+    ]
+
+[[plot_sets]]
+name = "von_mises_shear"
+model_names = ["von_mises"]
+benchmark_names = [
+    "simple_shear",
+    "pure_shear"]
+plot_types = [
+    "q_p",
+    "stress_vs_steps",
+    "strain_vs_steps",
+    "stress_vs_strain",
+    "volume_vs_lnp",
+    "volume_vs_q"
+    ]
+
+
+[[plot_sets]]
+name = "von_mises_cyclic"
+model_names = ["von_mises"]
+benchmark_names = [
+    "cyclic"
+]
+plot_types = [
+    "q_p",
+    "stress_vs_steps",
+    "strain_vs_steps",
+    "stress_vs_strain",
+    "volume_vs_lnp",
+    "volume_vs_q"
+    ]
+
+[[plot_sets]]
+name = "mcc_develop"
+model_names = [
+    # "von_mises",
+    "modified_cam_clay_vs100",
+    "modified_cam_clay_vs900"
+    ]
+
+benchmark_names = [
+    #"uniaxial_compression",
+    #"simple_shear",
+    #"isotropic_compression",
+    "triaxial"
+]
+plot_types = [
+    "q_p",
+    "stress_vs_steps",
+    "strain_vs_steps",
+    "stress_vs_strain",
+    "volume_vs_lnp",
+    "volume_vs_q"
+    ]
