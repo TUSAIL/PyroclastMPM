@@ -42,8 +42,6 @@ VonMises::VonMises(const Real _density, const Real _E, const Real _pois,
   bulk_modulus = E / ((Real)3.0 * ((Real)1.0 - (Real)2.0 * pois));
   shear_modulus = E / ((Real)2.0 * ((Real)1 + pois));
 
-  printf("VonMises::bulk_modulus: %f\n", bulk_modulus);
-  printf("VonMises::shear_modulus: %f\n", shear_modulus);
   density = _density;
 
 #if DIM != 3
