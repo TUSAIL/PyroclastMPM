@@ -25,6 +25,7 @@
 
 
 import numpy as np
+import pyroclastmpm.MPM3D as pm
 import scipy
 
 
@@ -104,6 +105,7 @@ def mixed_control(
 
     # loop through through loading steps (or time)
     for n in range(N_segments):
+        pm.set_global_step(n)
         target_stress_N = stress_prev + stress_inc  # NOSONAR
         target_strain_N = strain_prev + strain_inc  # NOSONAR
 
@@ -114,6 +116,7 @@ def mixed_control(
         # an optimization algorithm (Krylov) by "dry running" the loading path
         # We turn off the history update so we don't modify the yield surface while
         # probing. This step is not needed for strain control.
+
         if len(x0) != 0:
             res = scipy.optimize.root(
                 loading_path,
@@ -154,6 +157,7 @@ def mixed_control(
         strain_prev = particles.F[0]
         strain_prev[mask] = root_res
         stress_prev = particles.stresses[0]
+        # print(particles.stresses[0])
 
         # save the results
         if (callback is not None) & (n % callback_step == 0):
@@ -222,13 +226,20 @@ def loading_path(
 
     strain_trail[mask] = strain_unknown
 
+    current_volume = particles.volumes[0]
     # use the strain increment instead of velocty gradient
     if is_finite_strain:
         dFdt = (strain_trail - strain_prev) / dt
         velgrad = dFdt @ np.linalg.inv(strain_trail)
+
     else:
         velgrad = strain_trail - strain_prev
+        volume = current_volume * (1 + np.trace(velgrad))
 
+    # print(f"velgrad: {velgrad}")
+    # print(f"volume: {volume}")
+    # exit(0)
+    particles.volumes = [volume]
     particles.velocity_gradient = [velgrad]
 
     particles.F = [strain_trail]

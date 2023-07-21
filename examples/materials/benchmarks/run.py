@@ -1,11 +1,16 @@
 import os
 
+import module_plot
+import module_servo
 import numpy as np
 import pyroclastmpm.MPM3D as pm
 import tomli
-from servo import mixed_control
 
+global stress_list, strain_list, F_list, velgrad_list, mask_list
 stress_list, strain_list, velgrad_list, mask_list = [], [], [], []
+
+work_dir = os.getcwd()
+print(f"Current working directory: {work_dir}")
 
 
 def callback(particles, material, step):
@@ -26,73 +31,18 @@ def callback(particles, material, step):
     strain_list.append(particles.F[0])
     # strain increment / or velocity gradient for finite strain
     velgrad_list.append(particles.velocity_gradient[0])
-    print(f"step: {step}")
+    print(f"step: {step}", end="\r")
 
 
-def save_data(
-    cfg,
-    model_name,
-    benchmark_name,
-    stress_list,
-    strain_list,
-    velgrad_list,
-    mask_list,
-):
-    """Helper function to save data to a file
-
-    Parameters
-    ----------
-    cfg : dict
-        Dictionary containing the configuration parameters
-    model_name : str
-        Name of the material (e.g. von_mises)
-    benchmark_name : str
-        Name of the benchmark (e.g. isotropic_compression)
-    stress_list : list
-        stress tensor data
-    strain_list : list
-        strain tensor / or deformation gradient (finite strain)
-    velgrad_list : list
-        strain increment / or velocity gradient (finite strain)
-    mask_list : list
-        mask to say if boundary is strain or stress control
+def create_material(model):
     """
-    # convert lists to numpy arrays
-    # shape (N, 3, 3)
-    stress_list = np.array(stress_list)
-    strain_list = np.array(strain_list)
-    velgrad_list = np.array(velgrad_list)
-    mask_list = np.array(mask_list)
-
-    # create output directory
-    main_dir = cfg["global"]["output_dir"]
-    sub_dir = model_name + "/"
-    output_dir = main_dir + sub_dir
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    file_pre = output_dir + benchmark_name + "_"
-
-    # save data (e.g. output/von_mises/isotropic_compression_stress.npy)
-    output_dir = output_dir + f"/{model_name}_{benchmark_name}"
-
-    np.save(file_pre + "stress.npy", stress_list)
-    np.save(file_pre + "strain.npy", strain_list)
-    np.save(file_pre + "velgrad.npy", velgrad_list)
-    np.save(file_pre + "mask.npy", mask_list)
-
-
-def create_material(cfg, model_name):
-    """
-
     Helper function to create a material model
 
     Parameters
     ----------
-    cfg : dict
-        Dictionary containing the configuration parameters
-    model_name : str
-        Name of the material (e.g. von_mises)
+    model : dict
+        Dictionary containing the model name and
+        configuration parameters
 
     Returns
     -------
@@ -101,25 +51,40 @@ def create_material(cfg, model_name):
     """
     particles = pm.ParticlesContainer([[0.0, 0.0, 0.0]])
     material = None
-    if model_name == "von_mises":
+
+    particles.volumes = [model["volume"]]
+    particles.volumes_original = [model["volume"]]
+    particles.stresses = [np.array(model["prestress"])]
+    if model["type"] == "von_mises":
         material = pm.VonMises(
-            cfg["material"]["density"],
-            cfg[model_name]["E"],
-            cfg[model_name]["pois"],
-            cfg[model_name]["yield_stress"],
-            cfg[model_name]["H"],
+            model["density"],
+            model["E"],
+            model["pois"],
+            model["yield_stress"],
+            model["H"],
         )
-    if model_name == "modified_cam_clay":
+    elif model["type"] == "mohr_coulomb":
+        material = pm.MohrCoulomb(
+            model["density"],
+            model["E"],
+            model["pois"],
+            model["cohesion"],
+            model["friction_angle"],
+            model["dilation_angle"],
+            model["H"],
+        )
+    elif model["type"] == "modified_cam_clay":
         material = pm.ModifiedCamClay(
-            cfg["material"]["density"],
-            cfg[model_name]["E"],
-            cfg[model_name]["pois"],
-            cfg[model_name]["M"],
-            cfg[model_name]["lam"],
-            cfg[model_name]["kap"],
-            cfg[model_name]["Vs"],
-            cfg[model_name]["Pt"],
-            cfg[model_name]["beta"]
+            model["density"],
+            model["E"],
+            model["pois"],
+            model["M"],
+            model["lam"],
+            model["kap"],
+            model["Vs"],
+            model["Pc0"],
+            model["Pt"],
+            model["beta"],
         )
 
     if material is not None:
@@ -127,256 +92,170 @@ def create_material(cfg, model_name):
     return particles, material
 
 
-def run_save_model(
-    cfg,
-    model_name,
-    benchmark_name,
-    target_strain=None,  # NOSONAR
-    target_stress=None,
-    mask=None,
-    cycles=1,
-    is_finite_strain=False,
-):
-    """Run a model against a servo mix boundary servo control and save the output data
+# 1. Load config file
 
-    Can be either driven by infinite strain or finite strain
+CONFIG = "./modifiedcamclay_config.toml"
+print(f"Loading config file {CONFIG}")
 
-    If infinite strain, the deformation gradient array is used to store the
-    total strain and the velocity gradient is used to store the strain increment.
+with open(CONFIG, "rb") as f:
+    global_cfg = tomli.load(f)
 
-    Parameters
-    ----------
-    cfg : dict
-        Dictionary containing the configuration parameters
-    model_name : str
-        Name of the material (e.g. von_mises)
-    benchmark_name : str
-        Name of the benchmark (e.g. isotropic_compression)
-    target_strain : np.array, optional
-        (3,3) np.array containing the target strain, by default None
-    target_stress : np.array, optional
-        (3,3) np.array containing the target stress, by default None
-    mask : np.array, optional
-        (3,3) np.array booleans if the target is strain or stress
-        control, by default None
-    cycles : int, optional
-        Number of cycles (or targets) to run, by default 1
-    is_finite_strain : bool, optional
-        Flag if finite deformation driven, by default False
-    """
-    global stress_list, strain_list, F_list, velgrad_list, mask_list
-    stress_list, strain_list, velgrad_list, mask_list = (
-        [],
-        [],
-        [],
-        [],
-    )
+output_data = {}
 
-    dt = cfg["global"]["timestep"]
-    time = cfg["global"]["time"]
+# 2. Run models against benchmarks
+for model in global_cfg["models"]:
+    model_name = model["name"]
+    # skip models not in white list
+    if model_name not in global_cfg["white_lists"]["model_names"]:
+        continue
+    print(f"Running model: {model_name}")
 
-    pm.set_global_timestep(dt)
+    output_data[model_name] = {}
+    for benchmark in global_cfg["benchmarks"]:
+        benchmark_name = benchmark["name"]
+        # skip benchmarks not in white list
+        if benchmark_name not in global_cfg["white_lists"]["benchmark_names"]:
+            continue
+        print(f"Running benchmark: {benchmark_name}")
 
-    particles, material = create_material(cfg, model_name)
-
-    # loop through each set of targets
-    for ci in range(cycles):
-        print(f"cycle: {ci}")
-        particles, material = mixed_control(
-            particles,
-            material,
-            time,
-            dt,
-            mask[ci],
-            target_strain[ci],
-            target_stress=target_stress[ci],
-            callback=callback,
-            callback_step=cfg["global"]["output_steps"],
-            is_finite_strain=is_finite_strain,
-            cycle=ci,
-            tolerance=cfg["mixed_control"]["tolerance"],
+        stress_list, strain_list, velgrad_list, mask_list = (
+            [],
+            [],
+            [],
+            [],
         )
 
-    save_data(
-        cfg,
-        model_name,
-        benchmark_name,
-        stress_list,
-        strain_list,
-        velgrad_list,
-        mask_list,
-    )
+        dt = global_cfg["global"]["timestep"]
+        time = global_cfg["global"]["time"]
+
+        pm.set_global_timestep(dt)
+
+        particles, material = create_material(model)
+
+        for ci, cycle in enumerate(benchmark["run"]):
+            particles, material = module_servo.mixed_control(
+                particles,
+                material,
+                time,
+                dt,
+                np.array(cycle["is_stress_control"]),
+                np.array(cycle["target_strain"]),
+                target_stress=np.array(cycle["target_stress"]),
+                callback=callback,
+                callback_step=global_cfg["global"]["output_steps"],
+                is_finite_strain=global_cfg["mixed_control"][
+                    "is_finite_strain"
+                ],
+                cycle=ci,
+                tolerance=global_cfg["mixed_control"]["tolerance"],
+            )
+        output_data[model_name][benchmark_name] = {}
+        output_data[model_name][benchmark_name]["stress"] = np.array(
+            stress_list
+        )
+        output_data[model_name][benchmark_name]["strain"] = np.array(
+            strain_list
+        )
+        output_data[model_name][benchmark_name]["velgrad"] = np.array(
+            velgrad_list
+        )
+        output_data[model_name][benchmark_name]["mask"] = np.array(mask_list)
 
 
-# load config file
-with open("./config.toml", "rb") as f:
-    cfg = tomli.load(f)
+# 3. Plot results
+output_dir = global_cfg["global"]["output_dir"]
 
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
-##### ISOTROPIC COMPRESSION ######
-target_strain = np.zeros((3, 3))
-target_strain[0, 0] = -0.1
-target_strain[1, 1] = -0.1
-target_strain[2, 2] = -0.1
+print(f"Plotting in {output_dir}")
 
-target_stress = np.zeros((3, 3))
+for plot in global_cfg["plot"]:
+    plot_name = plot["name"]
 
-mask = np.zeros((3, 3)).astype(bool)
+    # skip plots not in white list
+    if plot_name not in global_cfg["white_lists"]["plot_names"]:
+        continue
 
-run_save_model(
-    cfg,
-    "modified_cam_clay",
-    "isotropic_compression",
-    [target_strain],
-    [target_stress],
-    [mask],
-)
+    print(f"Plotting: {plot_name}")
 
+    stress_list, strain_list, names_list = ([], [], [])
 
-# ##### ISOTROPIC COMPRESSION ######
-# target_strain = np.zeros((3, 3))
-# target_strain[0, 0] = -0.1
-# target_strain[1, 1] = -0.1
-# target_strain[2, 2] = -0.1
+    color_id_list, marker_id_list = [], []
+    for mi, model_name in enumerate(global_cfg["white_lists"]["model_names"]):
+        for bi, benchmark_name in enumerate(
+            global_cfg["white_lists"]["benchmark_names"]
+        ):
+            color_id_list.append(bi)
+            marker_id_list.append(mi)
+            names_list.append(f"{model_name}_{benchmark_name}")
+            stress_list.append(
+                output_data[model_name][benchmark_name]["stress"]
+            )
+            strain_list.append(
+                output_data[model_name][benchmark_name]["strain"]
+            )
+    style_id_tuples = list(zip(color_id_list, marker_id_list))
 
-# target_stress = np.zeros((3, 3))
+    plot_type = plot["type"]
+    plot_file = output_dir + plot_type + ".png"
+    if plot_type == "q_p":
+        module_plot.q_p_plot(
+            stress_list,
+            names_list,
+            plot_file,
+            f"{plot_name} - q vs p plot",
+        )
+    if plot_type == "stress_vs_steps":
+        module_plot.plot_component_step_subplot(
+            stress_list,
+            names_list,
+            style_id_tuples,
+            plot_file,
+            f"{plot_name} - stress vs steps",
+            ptype="stress",
+        )
 
-# mask = np.zeros((3, 3)).astype(bool)
-
-# run_save_model(
-#     cfg,
-#     "von_mises",
-#     "isotropic_compression",
-#     [target_strain],
-#     [target_stress],
-#     [mask],
-# )
-
-# ###### UNIAXIAL COMPRESSION ######
-
-# target_strain = np.zeros((3, 3))
-# target_strain[0, 0] = -0.1
-# target_stress = np.zeros((3, 3))
-# mask = np.zeros((3, 3)).astype(bool)
-
-# run_save_model(
-#     cfg,
-#     "von_mises",
-#     "uniaxial_compression",
-#     [target_strain],
-#     [target_stress],
-#     [mask],
-# )
-
-# ###### PURE SHEAR COMPRESSION ######
-
-# target_strain = np.zeros((3, 3))
-# target_strain[0, 1] = 0.1
-# target_strain[1, 0] = 0.1
-# target_stress = np.zeros((3, 3))
-# mask = np.zeros((3, 3)).astype(bool)
-
-# run_save_model(
-#     cfg,
-#     "von_mises",
-#     "pure_shear",
-#     [target_strain],
-#     [target_stress],
-#     [mask],
-# )
-
-
-# ###### SIMPLE SHEAR COMPRESSION ######
-# target_strain = np.zeros((3, 3))
-# target_strain[0, 1] = 0.1
-# target_strain[1, 0] = 0.1
-# target_stress = np.zeros((3, 3))
-# mask = np.zeros((3, 3)).astype(bool)
-
-# run_save_model(
-#     cfg,
-#     "von_mises",
-#     "simple_shear",
-#     [target_strain],
-#     [target_stress],
-#     [mask],
-# )
-
-
-# ###### TRIAXIAL COMPRESSION ######
-
-# target_strain = np.zeros((3, 3))
-# target_strain[0, 0] = -0.15
-
-# target_stress = np.zeros((3, 3))
-
-# mask = np.zeros((3, 3)).astype(bool)
-# mask[1, 1] = True
-# mask[2, 2] = True
-
-# run_save_model(
-#     cfg,
-#     "von_mises",
-#     "triaxial_compression",
-#     [target_strain],
-#     [target_stress],
-#     [mask],
-# )
-
-# ###### CYCLIC LOADING ########
-
-
-# target_stress = np.zeros((3, 3))
-# target_strain_unload = np.zeros((3, 3))
-
-# mask = np.zeros((3, 3)).astype(bool)
-# mask[1, 1] = True
-# mask[2, 2] = True
-
-# mask_unload = np.zeros((3, 3)).astype(bool)
-# mask_unload[1, 1] = True
-# mask_unload[2, 2] = True
-
-# target_strain1_load = np.zeros((3, 3))
-# target_strain1_load[0, 0] = -0.1
-
-# target_strain2_load = np.zeros((3, 3))
-# target_strain2_load[0, 0] = -0.11
-
-
-# target_strain3_load = np.zeros((3, 3))
-# target_strain3_load[0, 0] = -0.12
-
-
-# target_strain4_load = np.zeros((3, 3))
-# target_strain4_load[0, 0] = -0.13
-
-# target_strain5_load = np.zeros((3, 3))
-# target_strain5_load[0, 0] = -0.14
-
-# target_strain6_load = np.zeros((3, 3))
-# target_strain6_load[0, 0] = -0.15
-
-# strain_control = [
-#     target_strain1_load,
-#     target_strain_unload,
-#     target_strain2_load,
-#     target_strain_unload,
-#     target_strain3_load,
-#     target_strain_unload,
-#     target_strain4_load,
-#     target_strain_unload,
-#     target_strain5_load,
-#     target_strain_unload,
-#     target_strain5_load,
-# ]
-
-# run_save_model(
-#     cfg,
-#     "von_mises",
-#     "cyclic_loading",
-#     strain_control,
-#     [target_stress for ts in strain_control],
-#     [mask for ts in strain_control],
-#     cycles=len(strain_control),
-# )
+    if plot_type == "strain_vs_steps":
+        module_plot.plot_component_step_subplot(
+            strain_list,
+            names_list,
+            style_id_tuples,
+            plot_file,
+            f"{plot_name} - strain vs steps",
+            ptype="strain",
+        )
+    if plot_type == "stress_vs_strain":
+        module_plot.plot_component_vs(
+            strain_list,
+            stress_list,
+            names_list,
+            style_id_tuples,
+            file=plot_file,
+            title=f"{plot_name} - stress vs strain",
+        )
+    if plot_type == "volume_vs_lnp":
+        module_plot.volume_plot(
+            strain_list,
+            stress_list,
+            names_list,
+            style_id_tuples,
+            file=plot_file,
+            over="p",
+        )
+    if plot_type == "volume_vs_q":
+        module_plot.volume_plot(
+            strain_list,
+            stress_list,
+            names_list,
+            style_id_tuples,
+            file=plot_file,
+            over="q",
+        )
+    if plot_type == "shear_volume_strain":
+        module_plot.shear_volume_strain_plot(
+            strain_list,
+            names_list,
+            plot_file,
+            f"{plot_name} - q vs p plot",
+        )
