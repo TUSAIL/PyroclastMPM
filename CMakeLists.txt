@@ -44,7 +44,7 @@ option(BUILD_CUDA "Enable CUDA Acceleration" OFF)
 option(BUILD_PYTHON "Enable building of Python bindings" ON)
 option(BUILD_DOCS "Enable building of documentation" OFF)
 option(BUILD_TESTING "Enable testing" ON)
-option (DOUBLE_PRECISION "Use double precision" OFF)
+option (DOUBLE_PRECISION "Use double precision" ON)
 option(BUILD_COVERAGE "Enable coverage reporting" OFF)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
