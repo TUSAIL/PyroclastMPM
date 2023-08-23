@@ -285,7 +285,7 @@ __device__ __host__ inline void update_modifiedcamclay(
     conv = R.norm();
 
     counter++;
-  } while (conv > 1e-2);
+  } while (conv > 1e-4);
 
   const Matrixr sigma_next = s_next + p_next * Matrix3r::Identity();
 

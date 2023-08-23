@@ -25,5 +25,4 @@
 
 # trunk-ignore-all(ruff/F401)
 
-from .loading import mixed_control
-from .plotting import plot_stress_subplot
+from .benchmarks import run, run_benchmark
