@@ -47,6 +47,7 @@ if(BUILD_CUDA)
   set_source_files_properties(${PyroclastSrc_test} PROPERTIES LANGUAGE CUDA)
 else()
   # let g++ compile cuda files
+  target_link_libraries(tests_${DIM}D PRIVATE Thrust)
   set_source_files_properties(${PyroclastSrc_test} PROPERTIES LANGUAGE CXX)
 endif()
 

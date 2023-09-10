@@ -85,7 +85,8 @@ if(BUILD_CUDA)
   set_target_properties(pyroclastmpm_${DIM}D PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 else()
-set_source_files_properties(${PyroclastSrc} PROPERTIES LANGUAGE CXX)
+  target_link_libraries(pyroclastmpm_${DIM}D PRIVATE Thrust)
+  set_source_files_properties(${PyroclastSrc} PROPERTIES LANGUAGE CXX)
 endif()
 
 vtk_module_autoinit(
