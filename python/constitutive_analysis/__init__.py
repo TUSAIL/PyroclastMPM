@@ -26,3 +26,9 @@
 # trunk-ignore-all(ruff/F401)
 
 from .benchmarks import run, run_benchmark
+from .plots import (
+    plot_stress_plastic_strain,
+    plot_tensor_components,
+    plot_triax_soilmechanics_set,
+    set_style,
+)

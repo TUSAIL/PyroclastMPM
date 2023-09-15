@@ -87,8 +87,9 @@ void ModifiedCamClay::stress_update(ParticlesContainer &particles_ref,
   for (int pid = 0; pid < particles_ref.num_particles; pid++) {
     update_modifiedcamclay(
         particles_ref.stresses_gpu.data(), eps_e_gpu.data(),
-        particles_ref.volumes_gpu.data(), alpha_gpu.data(), pc_gpu.data(),
-        particles_ref.velocity_gradient_gpu.data(),
+        particles_ref.volumes_gpu.data(),
+        particles_ref.volumes_original_gpu.data(), alpha_gpu.data(),
+        pc_gpu.data(), particles_ref.velocity_gradient_gpu.data(),
         particles_ref.colors_gpu.data(), stress_ref_gpu.data(), bulk_modulus,
         shear_modulus, M, lam, kap, Pc0, Pt, beta, Vs, mat_id,
         do_update_history, is_velgrad_strain_increment, pid);

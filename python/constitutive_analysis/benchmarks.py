@@ -1,7 +1,7 @@
 import numpy as np
 import pyroclastmpm.MPM3D as pm
 
-from ._servocontroller import mixed_control
+from .servo_control import mixed_control
 
 
 def create_material(model):
@@ -11,8 +11,7 @@ def create_material(model):
     Parameters
     ----------
     model : dict
-        Dictionary containing the model name and
-        configuration parameters
+        a dictionary containing the model name and configuration parameters
 
     Returns
     -------
@@ -63,6 +62,27 @@ def create_material(model):
 
 
 def run_benchmark(model_cfg, benchmark_cfg, global_cfg, callback):
+    """Run a single benchmark against a single model.
+
+    Parameters
+    ----------
+    model_cfg : dict
+        a dictionary containing the model configuration parameters
+    benchmark_cfg : dict
+        a dictionary containing the benchmark configuration parameters
+    global_cfg : _type_
+        a dictionary containing the global configuration parameters
+    callback : function
+        a callback function to be called at each step of the simulation
+
+    Returns
+    -------
+    particles : ParticlesContainer
+        a container of particles (material points) with updated stress and strain state
+    material : Material
+        a material model with updated internal state
+
+    """
     # initialize global variables
     dt = global_cfg["timestep"]
     time = global_cfg["time"]
@@ -91,33 +111,41 @@ def run_benchmark(model_cfg, benchmark_cfg, global_cfg, callback):
 
 
 def run(global_cfg, callback):
+    """Run a list of models against a list of benchmarks.
+
+    Parameters
+    ----------
+    global_cfg : dict
+        a dictionary containing the global configuration parameters
+    callback : function
+        a callback function to be called at each step of the simulation
+    """
+
     # 2. Run models against benchmarks
+
     for model in global_cfg["models"]:
         model_name = model["name"]
+
         # skip models not in white list
         if model_name not in global_cfg["white_lists"]["model_names"]:
             continue
+
         print(f"Running model: {model_name}")
 
-        # output_data[model_name] = {}
         for benchmark in global_cfg["benchmarks"]:
             benchmark_name = benchmark["name"]
+
             # skip benchmarks not in white list
             if (
                 benchmark_name
                 not in global_cfg["white_lists"]["benchmark_names"]
             ):
                 continue
+
             print(f"Running benchmark: {benchmark_name}")
 
-            # stress_list, strain_list, velgrad_list, mask_list = (
-            #     [],
-            #     [],
-            #     [],
-            #     [],
-            # )
-
             dt = global_cfg["global"]["timestep"]
+
             time = global_cfg["global"]["time"]
 
             pm.set_global_timestep(dt)
@@ -141,18 +169,3 @@ def run(global_cfg, callback):
                     cycle=ci,
                     tolerance=global_cfg["mixed_control"]["tolerance"],
                 )
-            # output_data[model_name][benchmark_name] = {}
-            # output_data[model_name][benchmark_name]["stress"] = np.array(
-            #     stress_list
-            # )
-            # output_data[model_name][benchmark_name]["strain"] = np.array(
-            #     strain_list
-            # )
-            # output_data[model_name][benchmark_name]["velgrad"] = np.array(
-            #     velgrad_list
-            # )
-            # output_data[model_name][benchmark_name]["mask"] = np.array(
-            #     mask_list
-            # )
-
-    # return output_data

@@ -236,9 +236,6 @@ def loading_path(
         velgrad = strain_trail - strain_prev
         volume = current_volume * (1 + np.trace(velgrad))
 
-    # print(f"velgrad: {velgrad}")
-    # print(f"volume: {volume}")
-    # exit(0)
     particles.volumes = [volume]
     particles.velocity_gradient = [velgrad]
 
