@@ -44,7 +44,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake ../ -DBUILD_CUDA=off
+          cmake ../ -DBUILD_CUDA=off -DIM=3
           make -j4
 
       - name: Trunk Check

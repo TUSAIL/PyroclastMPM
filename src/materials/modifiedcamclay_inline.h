@@ -59,7 +59,8 @@ compute_pc(const Real specific_volume, const Real pc_prev, const Real lam,
 
   const Real C = specific_volume / (lam - kap);
 
-  return pc_prev * (1 + alpha_next * C - alpha_prev * C);
+  return exp(C * (alpha_next - alpha_prev)) * pc_prev;
+  // return pc_prev * (1 + alpha_next * C - alpha_prev * C);
 }
 
 /**
@@ -127,7 +128,8 @@ compute_yield_function(const Real p, const Real Pt, const Real a, const Real q,
  */
 __device__ __host__ inline void update_modifiedcamclay(
     Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
-    const Real *particles_volume_gpu, Real *particles_alpha_gpu, Real *pc_gpu,
+    const Real *particles_volume_gpu, const Real *particles_volume_original_gpu,
+    Real *particles_alpha_gpu, Real *pc_gpu,
     const Matrixr *particles_velocity_gradient_gpu,
     const uint8_t *particle_colors_gpu, const Matrixr *stress_ref_gpu,
     const Real bulk_modulus, const Real shear_modulus, const Real M,
@@ -196,6 +198,8 @@ __device__ __host__ inline void update_modifiedcamclay(
   // specific volume with respect to initial volume
   const Real specific_volume = particles_volume_gpu[tid] / Vs;
 
+  const Real specific_volume_original = particles_volume_original_gpu[tid] / Vs;
+
   // compressive positive plastic volumetric strain (previous step)
   const Real alpha_prev = particles_alpha_gpu[tid];
 
@@ -243,8 +247,8 @@ __device__ __host__ inline void update_modifiedcamclay(
 
     q_next = ((M * M) / (M * M + 6 * shear_modulus * dgamma_next)) * q_trail;
 
-    pc_next =
-        compute_pc(specific_volume, pc_prev, lam, kap, alpha_next, alpha_prev);
+    pc_next = compute_pc(specific_volume_original, pc_prev, lam, kap,
+                         alpha_next, alpha_prev);
 
     const double a_next = compute_a((Real)pc_next, beta, Pt);
 
@@ -259,7 +263,9 @@ __device__ __host__ inline void update_modifiedcamclay(
 
     // 5. compute Jacobian
     // slope of the hardening curve
-    const double dPc = pc_prev * ((specific_volume) / (lam - kap));
+    // const double dPc = pc_prev * ((specific_volume) / (lam - kap));
+
+    const double dPc = pc_next * ((specific_volume_original) / (lam - kap));
 
     const double H = dPc / (1 + beta);
 
@@ -285,7 +291,7 @@ __device__ __host__ inline void update_modifiedcamclay(
     conv = R.norm();
 
     counter++;
-  } while (conv > 1e-2);
+  } while (conv > 1e-4);
 
   const Matrixr sigma_next = s_next + p_next * Matrix3r::Identity();
 

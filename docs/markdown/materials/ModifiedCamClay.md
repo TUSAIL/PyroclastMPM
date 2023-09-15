@@ -204,29 +204,33 @@ $H = \frac{d a (\alpha)}{d \alpha} $
 
 $\frac{d a (\alpha)}{d \alpha} = \frac{1}{1+\beta}\frac{d p_c (\alpha)}{d \alpha}$
 
-$\frac{d p_c (\alpha)}{d \alpha} = \frac{v}{\lambda - \kappa} p_c(\alpha) $
+$\frac{d p_c (\alpha)}{d \alpha} = \frac{v_0}{\lambda - \kappa} p_c(\alpha) $
 
 ---
 
-Hardening rule (Additional derivation)
+Hardening rule
 
-make it $v_0$
+$\alpha = -\varepsilon_v^p$
 
-$ln\frac{ p_c } {p_{c0}} = \frac{v}{\lambda - \kappa} \alpha$
+$ln\frac{ p_c } {p_{c0}} = \frac{v_0}{\lambda - \kappa} \Delta\alpha$
 
 so
 
-$\frac{ p_c } {p_{c0}} = e^{\frac{v}{\lambda - \kappa} \alpha}$
+$\frac{ p_c } {p_{c0}} = e^{\frac{v_0}{\lambda - \kappa} \Delta\alpha}$
 
 or
 
-$p_c  =   e^{\frac{v}{\lambda - \kappa} \alpha} p_{c0}$
+$p_c  =   e^{\frac{v}{\lambda - \kappa} \Delta\alpha} p_{c0}$
 
 $p_c (\alpha) =  (1 +\beta) a(\alpha) - p_t$
 
 $a (\alpha)=\frac{p_c + p_t}{1+\beta}$
 
----
+derivative
+
+$\frac{d p_c }{ d \alpha } = \frac{v_0}{\lambda - \kappa} p_c$
+
+## Out dated
 
 Consider compression positive strain and pressure
 
@@ -249,6 +253,36 @@ since
 we have
 
 $$p_{c \ n+1} = p_{c \ n}[ 1 - \alpha_{n}(\frac{v}{\lambda - \kappa }) +\alpha_{n +1}(\frac{v}{\lambda - \kappa })]$$
+
+Consider compression positive strain and pressure
+
+$\dot p_c = \dot \varepsilon^p_v (\frac{v}{\lambda - \kappa }) p_{c}$
+
+or
+
+$p_{c \ n+1} = p_{c \ n}  + (\varepsilon^p_{v \ n+1} -\varepsilon^p_{v \ n})  (\frac{v}{\lambda - \kappa }) p_{c \ n}$
+
+finally
+
+$p_{c \ n+1} = p_{c \ n}[1  +\varepsilon^p_{v \ n+1}(\frac{v}{\lambda - \kappa }) -\varepsilon^p_{v \ n}(\frac{v}{\lambda - \kappa }) ]$
+
+where $v=1+e$ is the updated specific volume
+
+since
+
+<!-- $\alpha = -\varepsilon^p_v $ -->
+
+we have
+
+$$p_{c \ n+1} = p_{c \ n}[ 1 - \alpha_{n}(\frac{v}{\lambda - \kappa }) +\alpha_{n +1}(\frac{v}{\lambda - \kappa })]$$
+
+$$\frac{\partial p_{c \ n +1}}{\partial \alpha_{n+1}} = p_{c \ n}(\frac{v}{\lambda - \kappa })$$
+
+for $a(\alpha)$ we have
+
+$$a (\alpha)=\frac{p_{c \ n +1} + p_t}{1+\beta}$$
+
+$$H=\frac{d a_{n +1} }{d \alpha_{n+1}} = \frac{1}{1+\beta}\frac{d p_{c \ n+1}}{d \alpha_{n +1}}$$
 
 $$\frac{\partial p_{c \ n +1}}{\partial \alpha_{n+1}} = p_{c \ n}(\frac{v}{\lambda - \kappa })$$
 

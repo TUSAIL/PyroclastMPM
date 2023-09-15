@@ -25,5 +25,10 @@
 
 # trunk-ignore-all(ruff/F401)
 
-from .loading import mixed_control
-from .plotting import plot_stress_subplot
+from .benchmarks import run, run_benchmark
+from .plots import (
+    plot_stress_plastic_strain,
+    plot_tensor_components,
+    plot_triax_soilmechanics_set,
+    set_style,
+)
