@@ -67,11 +67,38 @@ if(BUILD_CUDA)
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX CUDA)
     find_package(CUDAToolkit REQUIRED)
 else()
+
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX)
-    # Thrust
-    add_subdirectory(ext/thrust thrust)
-    #solves https://github.com/NVIDIA/thrust/issues/386
-    add_compile_definitions(THRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
+    
+    message(STATUS "Compiling Thrust without CUDA... ")
+ 
+    find_path(THRUST_INCLUDE_DIR
+    HINTS
+        ext/thrust/cmake
+        ext/thrust/
+        /usr/include/cuda
+        /usr/local/include
+        /usr/local/cuda/include
+        ${CUDA_INCLUDE_DIRS}
+    NAMES thrust/version.h
+    DOC "Thrust headers"
+    )
+
+    find_package(Thrust REQUIRED)
+
+
+    if(THRUST_FOUND)
+        message(STATUS "  Thrust version:     ${THRUST_VERSION}")
+        message(STATUS "  Thrust include dir: ${THRUST_INCLUDE_DIR}")
+        mark_as_advanced(FORCE THRUST_INCLUDE_DIR)
+    else()
+        message(STATUS "  Thrust not found (consider manually setting THRUST_INCLUDE_DIR)")
+        set(THRUST_INCLUDE_DIR "")
+        mark_as_advanced(CLEAR THRUST_INCLUDE_DIR)
+    endif()
+   
+    thrust_create_target(Thrust HOST CPP DEVICE CPP)
+ 
 endif()
 
 # EIGEN3
@@ -98,7 +125,7 @@ find_package(VTK REQUIRED
     IOExport
     IOGeometry
     IOXML
-    IOHDF
+#    IOHDF
 )
 
 include_directories(

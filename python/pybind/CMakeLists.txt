@@ -72,6 +72,7 @@ if(BUILD_CUDA)
   set_source_files_properties(${PyroclastPyBind} PROPERTIES LANGUAGE CUDA)
 else()
   # let g++ compile cuda files
+  target_link_libraries(MPM${DIM}D PRIVATE Thrust)
   set_source_files_properties(${PyroclastPyBind} PROPERTIES LANGUAGE CXX)
 endif()
 
