@@ -129,19 +129,19 @@ void Solver::run(const int total_steps, const int output_frequency) {
   //                 option::MaxProgress{total_steps + 1},
   //                 option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}};
   printf("Running simulation...\n");
-
+  printf("before output\n");
   output();
-
+  printf("after output\n");
   solve();
 
   increment_global();
 
   for (int step = 1; step < total_steps + 1; step++) {
-
     solve();
 
     if (step % output_frequency == 0) {
       output();
+      printf("Step %d/%d\n", step, total_steps);
       // // Show iteration as postfix text
       // bar.set_option(option::PostfixText{std::to_string(step) + "/" +
       //                                    std::to_string(total_steps)});

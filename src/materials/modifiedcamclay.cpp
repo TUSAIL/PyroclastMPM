@@ -52,11 +52,6 @@ ModifiedCamClay::ModifiedCamClay(const Real _density, const Real _E,
   shear_modulus = E / ((Real)2.0 * ((Real)1 + pois));
 
   density = _density;
-
-#if DIM != 3
-  printf("VonMises material only implemented for 3D\n");
-  exit(1);
-#endif
 }
 
 /// @brief Initialize material (allocate memory for history variables)
@@ -70,9 +65,9 @@ void ModifiedCamClay::initialize(const ParticlesContainer &particles_ref,
   set_default_device<Matrixr>(particles_ref.num_particles, {}, eps_e_gpu,
                               Matrixr::Zero());
 
-  set_default_device<Matrixr>(particles_ref.num_particles,
-                              particles_ref.stresses_gpu, stress_ref_gpu,
-                              Matrixr::Zero());
+  set_default_device<Matrix3r>(particles_ref.num_particles,
+                               particles_ref.stresses_gpu, stress_ref_gpu,
+                               Matrix3r::Zero());
 }
 
 /// @brief Perform stress update
@@ -83,6 +78,21 @@ void ModifiedCamClay::stress_update(ParticlesContainer &particles_ref,
 
 #ifdef CUDA_ENABLED
   // TODO ADD KERNEL
+
+  KERNEL_STRESS_UPDATE_MCC<<<particles_ref.launch_config.tpb,
+                             particles_ref.launch_config.bpg>>>(
+      thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
+      thrust::raw_pointer_cast(eps_e_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.volumes_original_gpu.data()),
+      thrust::raw_pointer_cast(alpha_gpu.data()),
+      thrust::raw_pointer_cast(pc_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
+      thrust::raw_pointer_cast(stress_ref_gpu.data()), bulk_modulus,
+      shear_modulus, M, lam, kap, Pc0, Pt, beta, Vs, mat_id, do_update_history,
+      is_velgrad_strain_increment, particles_ref.num_particles);
+
 #else
   for (int pid = 0; pid < particles_ref.num_particles; pid++) {
     update_modifiedcamclay(
@@ -101,7 +111,9 @@ void ModifiedCamClay::stress_update(ParticlesContainer &particles_ref,
 /// @param cell_size Fell size of the background grid
 /// @param factor Scaling factor for speed
 /// @return Real a timestep
-Real ModifiedCamClay::calculate_timestep(Real cell_size, Real factor) {
+Real ModifiedCamClay::calculate_timestep(Real cell_size, Real factor,
+                                         Real bulk_modulus, Real shear_modulus,
+                                         Real density) {
   // https://www.sciencedirect.com/science/article/pii/S0045782520306885
   const auto c = (Real)sqrt((bulk_modulus + 4. * shear_modulus / 3.) / density);
 

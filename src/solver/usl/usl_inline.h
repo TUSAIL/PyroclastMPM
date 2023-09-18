@@ -151,8 +151,11 @@ __device__ __host__ void inline usl_p2g_kernel(
       total_node_force_external +=
           psi_particle * particles_forces_external_gpu[particle_id];
 
-      Vector3r dpsi_particle_3d;
+      Vector3r dpsi_particle_3d; // original
       dpsi_particle_3d.block(0, 0, DIM, 1) = dpsi_particle;
+
+      // Vector3r dpsi_particle_3d;
+      // dpsi_particle_3d.block(0, 0, 1, DIM) = dpsi_particle;
 
       total_node_force_internal.block(0, 0, DIM, DIM) +=
           -1. * particles_volumes_gpu[particle_id] *
@@ -284,15 +287,25 @@ __device__ __host__ inline void usl_g2p_kernel(
 
     const Vectorr node_velocity = nodes_moments_gpu[nhash] / node_mass;
     const Vectorr node_velocity_nt = nodes_moments_nt_gpu[nhash] / node_mass;
-    const Vectorr delta_velocity = node_velocity_nt - node_velocity;
 
+    // flip
+    const Vectorr delta_velocity = node_velocity_nt - node_velocity;
     dvel_inc += psi_particle * delta_velocity;
+
+    // pic
     vel_inc += psi_particle * node_velocity_nt;
+    //
+
+    // Matrixr vel_grad_T
+    // vel_grad += vel_grad_T;
+
     vel_grad += dpsi_particle * node_velocity_nt.transpose();
+    // vel_grad = vel_grad.transposeInPlace();
   }
   particles_velocities_gpu[tid] =
-      alpha * (particles_velocities_gpu[tid] + dvel_inc) +
-      (1. - alpha) * vel_inc;
+      (1. - alpha) * vel_inc +
+      alpha * (particles_velocities_gpu[tid] + dvel_inc);
+
   particles_velocity_gradients_gpu[tid] = vel_grad;
 #ifdef CUDA_ENABLED
   particles_positions_gpu[tid] = particle_coords + dt_gpu * vel_inc;
@@ -316,8 +329,8 @@ __global__ void KERNEL_USL_G2P(
     const Real *particles_volumes_original_gpu, const Real *particles_psi_gpu,
     const bool *particles_is_rigid_gpu, const bool *particles_is_active_gpu,
     const Vectorr *nodes_moments_gpu, const Vectorr *nodes_moments_nt_gpu,
-    const Real *nodes_masses_gpu, const Grid grid, const Real alpha,
-    const int num_particles) {
+    const Real *nodes_masses_gpu, const Real small_mass_cutoff, const Grid grid,
+    const Real alpha, const int num_particles) {
   const int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
   if (tid >= num_particles) {
@@ -330,7 +343,7 @@ __global__ void KERNEL_USL_G2P(
                  particles_volumes_original_gpu, particles_psi_gpu,
                  particles_is_rigid_gpu, particles_is_active_gpu,
                  nodes_moments_gpu, nodes_moments_nt_gpu, nodes_masses_gpu,
-                 grid, alpha, tid);
+                 small_mass_cutoff, grid, alpha, tid);
 }
 #endif
 

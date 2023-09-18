@@ -60,6 +60,7 @@
 #include "pyroclastmpm/materials/linearelastic.h"
 #include "pyroclastmpm/materials/localrheo.h"
 #include "pyroclastmpm/materials/materials.h"
+#include "pyroclastmpm/materials/modifiedcamclay.h"
 #include "pyroclastmpm/materials/newtonfluid.h"
 
 // Particles, Nodes and shapefunctions
@@ -70,8 +71,8 @@
 namespace pyroclastmpm {
 
 /// @brief All the possible materials used in the simulation
-using MaterialType =
-    std::variant<Material, LinearElastic, NewtonFluid, LocalGranularRheology>;
+using MaterialType = std::variant<Material, LinearElastic, NewtonFluid,
+                                  LocalGranularRheology, ModifiedCamClay>;
 
 /// @brief All possible boundary conditions used in the simulation
 using BoundaryConditionType =

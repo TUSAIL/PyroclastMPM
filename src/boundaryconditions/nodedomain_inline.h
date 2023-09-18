@@ -59,10 +59,11 @@ apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
     if (node_bin[i] < 1) {
 
       if (face0_mode(i) == 0) {
+        // fixed
         nodes_moments_gpu[node_mem_index] = Vectorr::Zero();
         nodes_moments_nt_gpu[node_mem_index] = Vectorr::Zero();
       } else if (face0_mode(i) == 1) {
-        // stick
+        // slip
         nodes_moments_gpu[node_mem_index][i] =
             (Real)max(0., nodes_moments_gpu[node_mem_index]
                               .cast<double>()[i]); // cast to double to avoid
@@ -75,7 +76,7 @@ apply_nodedomain(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_moments_gpu,
         nodes_moments_gpu[node_mem_index] = Vectorr::Zero();
         nodes_moments_nt_gpu[node_mem_index] = Vectorr::Zero();
       } else if (face1_mode(i) == 1) {
-        // slip
+
         nodes_moments_gpu[node_mem_index][i] =
             (Real)min(0., nodes_moments_gpu[node_mem_index].cast<double>()[i]);
         nodes_moments_nt_gpu[node_mem_index][i] = (Real)min(

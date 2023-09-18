@@ -147,7 +147,7 @@ public:
   std::vector<std::string> output_formats;
 
   /// @brief Small mass value to prevent division by zero
-  Real small_mass_cutoff = (Real)1.0e-6;
+  Real small_mass_cutoff = (Real)1.0e-7;
 };
 
 } // namespace pyroclastmpm

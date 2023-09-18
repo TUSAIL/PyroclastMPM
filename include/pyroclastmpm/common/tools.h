@@ -142,6 +142,8 @@ grid_points_on_surface(const std::string &stl_filename, const Real cell_size,
  */
 std::tuple<Vector3r, Vector3r> get_bounds(const std::string &stl_filename);
 
+Real calculate_timestep(Real cell_size, Real factor, Real bulk_modulus,
+                        Real shear_modulus, Real density);
 #ifdef CUDA_ENABLED
 /// @brief Set the GPU device id to run on
 void set_device(int device_id);

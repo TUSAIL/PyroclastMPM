@@ -122,7 +122,8 @@ compute_yield_function(const Real p, const Real Pt, const Real a, const Real q,
  * @param Vs volume of the solid
  * @param mat_id material id
  * @param do_update_history  variable if history should be updated
- * @param is_velgrad_strain_increment variable if the velocity gradient is to be
+ * @param is_velgrad_strain_increment variable if the velocity gradient is to
+ be
  * used as a strain increment
  * @param tid thread id (particle id)
  */
@@ -148,20 +149,22 @@ __device__ __host__ inline void update_modifiedcamclay(
   const Real dt = dt_cpu;
 #endif
 
+  // printf("before update velgrad \n");
   // 0. compute strain increment
   Matrixr vel_grad = particles_velocity_gradient_gpu[tid];
 
-  Matrixr deps_curr;
+  Matrixr deps_curr, W;
+
+  Matrixr correction = Matrixr::Zero();
 
   if (is_velgrad_strain_increment) {
     deps_curr = vel_grad;
   } else {
     const Matrixr vel_grad_T = vel_grad.transpose();
     deps_curr = 0.5 * (vel_grad + vel_grad_T) * dt;
-
-    Matrixr W = 0.5 * (vel_grad - vel_grad_T) * dt;
+    W = 0.5 * (vel_grad - vel_grad_T) * dt;
     const Matrixr eps_e_prev_gou = particles_eps_e_gpu[tid];
-    deps_curr += -W * eps_e_prev_gou + eps_e_prev_gou * W;
+    correction = -W * eps_e_prev_gou + eps_e_prev_gou * W;
   }
 
   const Matrix3r stress_ref = stress_ref_gpu[tid];
@@ -173,11 +176,24 @@ __device__ __host__ inline void update_modifiedcamclay(
   // 1. trail elastic step
   // trail elastic strain = previous elastic strain + strain increment
   // eq (7.21) [2]
+
+  // const Matrix3r Gn = -stress_prev * W + W * stress_prev;
+
+  Matrixr deps_e_trail = deps_curr + correction;
+
   const Matrixr eps_e_trail =
-      particles_eps_e_gpu[tid] + deps_curr; // trial elastic strain
+      particles_eps_e_gpu[tid] + deps_e_trail; // trial elastic strain
+
+  // CONST Matrixr eps_e_trail =
+
+  // printf("[%d] eps_e_trail %.16f %.16f %.16f %.16f \n", tid,
+  // eps_e_trail(0, 0),
+  //  eps_e_trail(0, 1), eps_e_trail(1, 0), eps_e_trail(1, 1));
 
   // trail elastic volumetric strain volumetric strain eq (3.90) [2]
   const Real eps_e_v_trail = eps_e_trail.trace();
+
+  // printf("eps_e_v_trail %.16f \n", eps_e_v_trail);
 
   // trail pressure eq (7.82) [2]
   // compression is negative
@@ -185,14 +201,23 @@ __device__ __host__ inline void update_modifiedcamclay(
   const Real p_trail = p_ref + bulk_modulus * eps_e_v_trail;
 
   // deviatoric strain eq (3.114) [2]
-  Matrix3r eps_e_dev_trail;
+  Matrix3r eps_e_dev_trail = Matrix3r::Zero();
 
   // plane strain condition
   eps_e_dev_trail.block(0, 0, DIM, DIM) = eps_e_trail;
-  eps_e_dev_trail -= (1 / (Real)DIM) * eps_e_v_trail * Matrix3r::Identity();
+
+  // isochoric component of the elastic strain (1/dim) tr(eps_e_dev) for plane
+  // strain
+  eps_e_dev_trail -= (1 / DIM) * eps_e_v_trail * Matrix3r::Identity();
 
   // deviatoric stress eq (7.82) [2]
   const Matrix3r s_trail = s_ref + 2. * shear_modulus * eps_e_dev_trail;
+
+  // printf("s_trail %.16f %.16f %.16f | %.16f %.16f %.16f | %.16f %.16f %.16f
+  // \n",
+  //        s_trail(0, 0), s_trail(0, 1), s_trail(0, 2), s_trail(1, 0),
+  //        s_trail(1, 1), s_trail(1, 2), s_trail(2, 0), s_trail(2, 1),
+  //        s_trail(2, 2));
 
   // von mises effective stress
   const Real q_trail =
@@ -225,8 +250,18 @@ __device__ __host__ inline void update_modifiedcamclay(
     if (do_update_history) {
       particles_eps_e_gpu[tid] = eps_e_trail;
     }
+    // printf("do update history \n");
     return;
   }
+
+  // printf("[%d] after yield surface  global_step_cpu %d \n", tid,
+  //        global_step_cpu);
+
+  // printf("[%d] Phi_trail %.16f \n", tid, Phi_trail);
+  // if (global_step_cpu > 20) {
+
+  //   exit(0);
+  // }
 
   Vector2hp R = Vector2hp::Zero();
 
@@ -243,10 +278,7 @@ __device__ __host__ inline void update_modifiedcamclay(
   int counter = 0;
   double conv = 1e10;
 
-  double tol = 1e-4;
-
   do {
-
     const double dgamma_next = OptVariables[0];
     const double alpha_next = OptVariables[1];
 
@@ -298,86 +330,36 @@ __device__ __host__ inline void update_modifiedcamclay(
     conv = R.norm();
 
     counter++;
+
     if (counter > 1000) {
-      printf("counter %d cov %.16f \n increasing tol %.16f \n", counter, conv,
-             tol);
-      tol *= 10;
+      printf("counter %d cov %.16f \n", counter, conv);
     }
-  } while (conv > tol);
+  } while (conv > 1e-3);
+
+  // printf("[%d] Phi_next %.16f \n", tid, R[0]);
 
   const Matrix3r sigma_next = s_next + p_next * Matrix3r::Identity();
 
   const Matrix3r eps_e_curr_3D =
-      (s_next - s_ref) / (2.0 * shear_modulus) +
-      (p_next - p_ref) / (3. * bulk_modulus) * Matrix3r::Identity();
+      ((s_next - s_ref) / (2.0 * shear_modulus) +
+       (p_next - p_ref) / (3. * bulk_modulus) * Matrix3r::Identity());
+
+  // printf(
+  //     "eps__3D %.16f %.16f %.16f | %.16f %.16f %.16f | %.16f %.16f %.16f \n
+  //     ", eps_e_curr_3D(0, 0), eps_e_curr_3D(0, 1), eps_e_curr_3D(0, 2),
+  //     eps_e_curr_3D(1, 0), eps_e_curr_3D(1, 1), eps_e_curr_3D(1, 2),
+  //     eps_e_curr_3D(2, 0), eps_e_curr_3D(2, 1), eps_e_curr_3D(2, 2));
+  Matrixr eps_e_curr;
+  eps_e_curr = eps_e_curr_3D.block(0, 0, DIM, DIM);
 
   particles_stresses_gpu[tid] = sigma_next;
 
   if (do_update_history) {
-    // particles_eps_e_gpu[tid] = eps_e_curr;
-    particles_eps_e_gpu[tid] = eps_e_curr_3D.block(0, 0, DIM, DIM);
+    particles_eps_e_gpu[tid] = eps_e_curr;
 
     particles_alpha_gpu[tid] = OptVariables[1];
     pc_gpu[tid] = pc_next;
   }
-
-  // const Matrixr sigma_next = s_next + p_next * Matrix3r::Identity();
-
-  // const Matrixr eps_e_curr =
-  //     (s_next - s_ref) / (2.0 * shear_modulus) +
-  //     (p_next - p_ref) / (3. * bulk_modulus) * Matrixr::Identity();
-
-  // particles_stresses_gpu[tid] = sigma_next;
-
-  // if (do_update_history) {
-  //   particles_eps_e_gpu[tid] = eps_e_curr;
-
-  //   particles_alpha_gpu[tid] = OptVariables[1];
-  //   pc_gpu[tid] = pc_next;
-  // }
 }
-
-#ifdef CUDA_ENABLED
-__global__ void KERNEL_STRESS_UPDATE_MCC(
-    Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
-    const Real *particles_volume_gpu, const Real *particles_volume_original_gpu,
-    Real *particles_alpha_gpu, Real *pc_gpu,
-    const Matrixr *particles_velocity_gradient_gpu,
-    const uint8_t *particle_colors_gpu, const Matrix3r *stress_ref_gpu,
-    const Real bulk_modulus, const Real shear_modulus, const Real M,
-    const Real lam, const Real kap, const Real Pc0, const Real Pt,
-    const Real beta, const Real Vs, const int mat_id,
-    const bool do_update_history, const bool is_velgrad_strain_increment,
-    const int num_particles) {
-  const int tid = blockDim.x * blockIdx.x + threadIdx.x;
-
-  if (tid >= num_particles) {
-    return;
-  } // block access threads
-
-  update_modifiedcamclay(
-      particles_stresses_gpu, particles_eps_e_gpu, particles_volume_gpu,
-      particles_volume_original_gpu, particles_alpha_gpu, pc_gpu,
-      particles_velocity_gradient_gpu, particle_colors_gpu, stress_ref_gpu,
-      bulk_modulus, shear_modulus, M, lam, kap, Pc0, Pt, beta, Vs, mat_id,
-      do_update_history, is_velgrad_strain_increment, tid);
-
-  // __device__ __host__ inline void update_modifiedcamclay(
-  //     Matrix3r * particles_stresses_gpu, Matrixr * particles_eps_e_gpu,
-  //     const Real *particles_volume_gpu,
-  //     const Real *particles_volume_original_gpu, Real *particles_alpha_gpu,
-  //     Real *pc_gpu, const Matrixr *particles_velocity_gradient_gpu,
-  //     const uint8_t *particle_colors_gpu, const Matrix3r *stress_ref_gpu,
-  //     const Real bulk_modulus, const Real shear_modulus, const Real M,
-  //     const Real lam, const Real kap, const Real Pc0, const Real Pt,
-  //     const Real beta, const Real Vs, const int mat_id,
-  //     const bool do_update_history, const bool is_velgrad_strain_increment,
-  //     const int tid)
-
-  //     update_linearelastic(particles_stresses_gpu, particles_F_gpu,
-  //                          particles_colors_gpu, particles_is_active_gpu,
-  //                          shear_modulus, bulk_modulus, mat_id, tid);
-}
-#endif
 
 } // namespace pyroclastmpm

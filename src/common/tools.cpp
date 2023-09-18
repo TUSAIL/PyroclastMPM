@@ -252,6 +252,15 @@ std::tuple<Vector3r, Vector3r> get_bounds(const std::string &stl_filename) {
   return std::make_tuple(bound_start, bound_end);
 }
 
+Real calculate_timestep(Real cell_size, Real factor, Real bulk_modulus,
+                        Real shear_modulus, Real density) {
+  // https://www.sciencedirect.com/science/article/pii/S0045782520306885
+  const auto c = (Real)sqrt((bulk_modulus + 4. * shear_modulus / 3.) / density);
+
+  const Real delta_t = factor * (cell_size / c);
+  return delta_t;
+}
+
 #ifdef CUDA_ENABLED
 /// @brief Set the GPU device id to run on
 void set_device(int device_id) {

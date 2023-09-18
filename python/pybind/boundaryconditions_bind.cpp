@@ -249,8 +249,7 @@ void boundaryconditions_module(const py::module &m) {
             .. image:: example.png
 
             Modes can be applied to each wall by specifying the friction in
-            face0_mode and face1_mode. mode 0 - roller, mode 1 - fixed
-
+            face0_mode and face1_mode. mode 0 is Fixed, mode 1 - roller
             Parameters
             -----------
             face0_mode : np.array

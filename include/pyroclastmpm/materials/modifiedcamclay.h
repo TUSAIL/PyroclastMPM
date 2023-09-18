@@ -80,7 +80,10 @@ public:
   /// @param cell_size Fell size of the background grid
   /// @param factor Scaling factor for speed
   /// @return Real a timestep
-  Real calculate_timestep(Real cell_size, Real factor = (Real)0.1) override;
+  // Real calculate_timestep(Real cell_size, Real factor = (Real)0.1) override;
+
+  Real calculate_timestep(Real cell_size, Real factor, Real bulk_modulus,
+                          Real shear_modulus, Real density);
 
   /// @brief Initialize material (allocate memory for history variables)
   /// @param particles_ref ParticleContainer reference

@@ -3,7 +3,8 @@ import numpy as np
 
 
 def set_style():
-    plt.style.use(["seaborn-whitegrid"])
+    # print(plt.style.available)
+    plt.style.use(["seaborn-v0_8-poster"])
 
     plt.rcParams.update({"figure.figsize": (8, 6), "figure.dpi": 700})
 
@@ -16,9 +17,9 @@ def plot_tensor_components(tensor_list, *argv, **kwargs):
         _, axes = plt.subplots(nrows=3, ncols=3, sharex=True, sharey=False)
 
     steps = np.arange(len(tensor_list))
-
-    for i in range(3):
-        for j in range(3):
+    dim = kwargs.pop("dim", 3)
+    for i in range(dim):
+        for j in range(dim):
             axes[i, j].plot(steps, tensor_list[:, i, j], *argv, **kwargs)
     return axes
 
@@ -27,6 +28,7 @@ def plot_triax_soilmechanics_set(
     stress_list, strain_list, control_index, *argv, **kwargs
 ):
     axes = kwargs.pop("axes", None)
+
     if axes is None:
         _, axes = plt.subplots(nrows=2, ncols=2)
 

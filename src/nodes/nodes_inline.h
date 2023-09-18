@@ -95,8 +95,8 @@ KERNEL_INTEGRATE(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
 
   integrate_nodes(nodes_moments_nt_gpu, nodes_forces_total_gpu,
                   nodes_forces_external_gpu, nodes_forces_internal_gpu,
-                  nodes_moments_gpu, nodes_masses_gpu,
-                  const Real small_mass_cutoff, node_mem_index);
+                  nodes_moments_gpu, nodes_masses_gpu, small_mass_cutoff,
+                  node_mem_index);
 }
 
 #endif

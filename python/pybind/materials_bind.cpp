@@ -238,6 +238,8 @@ void materials_module(const py::module &m) {
       &ModifiedCamClay::is_velgrad_strain_increment,
       R"(Flag if we should use strain increment instead of velocity gradient for constitutive
                                udpdate)");
+  MCC_cls.def("calculate_timestep", &ModifiedCamClay::calculate_timestep,
+              "calculate_timestep");
 
   /* Von Mises */
   py::class_<VonMises> VM_cls(m, "VonMises", py::dynamic_attr());

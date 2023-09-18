@@ -129,6 +129,11 @@ void tools_module(py::module &m) {
              )",
         py::arg("stl_filename"));
 
+  m.def("calculate_timestep", &calculate_timestep);
+
+  // calculate_timestep(Real cell_size, Real factor, Real bulk_modulus,
+  // Real shear_modulus, Real density)
+
 #ifdef CUDA_ENABLED
   m.def("set_device", &set_device,
         R"(

@@ -161,6 +161,23 @@ void ParticlesContainer::output_vtk() const {
   }
 
   bool exclude_rigid_from_output = false; // TODO make this an option?
+
+  // post process data
+  cpu_array<Real> p_post_cpu = cpu_array<Real>(num_particles, 0.);
+  cpu_array<Real> q_post_cpu = cpu_array<Real>(num_particles, 0.);
+  cpu_array<Real> mu_post_cpu = cpu_array<Real>(num_particles, 0.);
+  cpu_array<Matrix3r> s_post_cpu =
+      cpu_array<Matrix3r>(num_particles, Matrix3r::Zero());
+
+  for (int pi = 0; pi < num_particles; pi++) {
+    p_post_cpu[pi] = -(stresses_cpu[pi].trace() / 3.);
+    s_post_cpu[pi] = stresses_cpu[pi] + Matrix3r::Identity() * p_post_cpu[pi];
+    q_post_cpu[pi] = (Real)sqrt(
+        3 * 0.5 * (s_post_cpu[pi] * s_post_cpu[pi].transpose()).trace());
+
+    mu_post_cpu[pi] = q_post_cpu[pi] / p_post_cpu[pi];
+  }
+
   set_vtk_points(positions_cpu, polydata, do_output_cpu,
                  exclude_rigid_from_output);
   set_vtk_pointdata<int>(is_rigid_cpu, polydata, "isRigid", do_output_cpu,
@@ -182,8 +199,18 @@ void ParticlesContainer::output_vtk() const {
                           exclude_rigid_from_output);
   set_vtk_pointdata<Real>(volumes_original_cpu, polydata, "VolumeOriginal",
                           do_output_cpu, exclude_rigid_from_output);
+
   set_vtk_pointdata<uint8_t>(colors_cpu, polydata, "Color", do_output_cpu,
                              exclude_rigid_from_output);
+
+  set_vtk_pointdata<Real>(p_post_cpu, polydata, "Pressure", do_output_cpu,
+                          exclude_rigid_from_output);
+
+  set_vtk_pointdata<Real>(q_post_cpu, polydata, "VonMissesEffectiveStress",
+                          do_output_cpu, exclude_rigid_from_output);
+
+  set_vtk_pointdata<Real>(mu_post_cpu, polydata, "FricCoef", do_output_cpu,
+                          exclude_rigid_from_output);
 
   // loop over output_formats
   for (const auto &format : output_formats) {
