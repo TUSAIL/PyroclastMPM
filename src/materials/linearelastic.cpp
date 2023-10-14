@@ -51,6 +51,8 @@ LinearElastic::LinearElastic(const Real _density, const Real _E,
   bulk_modulus = E / ((Real)3.0 * ((Real)1.0 - (Real)2.0 * pois));
   shear_modulus = E / ((Real)2.0 * ((Real)1 + pois));
 
+  lame_modulus =
+      E * pois / (((Real)1.0 + pois) * ((Real)1.0 - (Real)2.0 * pois));
   density = _density;
 }
 
@@ -65,17 +67,20 @@ void LinearElastic::stress_update(ParticlesContainer &particles_ref,
                                        particles_ref.launch_config.bpg>>>(
       thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.F_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.is_active_gpu.data()),
-      particles_ref.num_particles, shear_modulus, bulk_modulus, mat_id);
+      particles_ref.num_particles, lame_modulus, shear_modulus, bulk_modulus,
+      mat_id);
 
   gpuErrchk(cudaDeviceSynchronize());
 #else
   for (int pid = 0; pid < particles_ref.num_particles; pid++) {
     update_linearelastic(
         particles_ref.stresses_gpu.data(), particles_ref.F_gpu.data(),
+        particles_ref.velocity_gradient_gpu.data(),
         particles_ref.colors_gpu.data(), particles_ref.is_active_gpu.data(),
-        shear_modulus, bulk_modulus, mat_id, pid);
+        lame_modulus, shear_modulus, bulk_modulus, mat_id, pid);
   }
 #endif
 }

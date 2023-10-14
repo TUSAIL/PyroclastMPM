@@ -136,6 +136,9 @@ public:
   void apply_on_nodes_moments(NodesContainer &nodes_ref,
                               ParticlesContainer &particles_ref) override;
 
+  void output_vtk(NodesContainer &nodes_ref,
+                  ParticlesContainer &particles_ref) override;
+
   /// @brief Number of animation frames for rigid body
   int num_frames;
 

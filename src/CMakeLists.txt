@@ -36,7 +36,8 @@ set(
   "materials/vonmises.cpp"
   "materials/mohrcoulomb.cpp"
   "materials/modifiedcamclay.cpp"
-
+  "materials/muijop.cpp"
+  "materials/mcc_mu_i.cpp"
 
   "materials/linearelastic.cpp"
   "materials/newtonfluid.cpp"

@@ -138,7 +138,9 @@ void ParticlesContainer ::set_spawner(int _rate, int _volume) {
 /// @brief Output particle data
 /// @details Calls VTK helper functions located in `output.h`
 void ParticlesContainer::output_vtk() const {
-
+  if (output_formats.empty()) {
+    return;
+  }
   vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 
   cpu_array<Matrix3r> stresses_cpu = stresses_gpu;
@@ -160,7 +162,7 @@ void ParticlesContainer::output_vtk() const {
         !is_rigid_cpu[pi]; // flip to make sure we don't output rigid particles
   }
 
-  bool exclude_rigid_from_output = false; // TODO make this an option?
+  bool exclude_rigid_from_output = true; // TODO make this an option?
 
   // post process data
   cpu_array<Real> p_post_cpu = cpu_array<Real>(num_particles, 0.);
@@ -169,13 +171,32 @@ void ParticlesContainer::output_vtk() const {
   cpu_array<Matrix3r> s_post_cpu =
       cpu_array<Matrix3r>(num_particles, Matrix3r::Zero());
 
+  cpu_array<Real> dev_strain_cpu = cpu_array<Real>(num_particles, 0.);
+  cpu_array<Real> vol_strain_cpu = cpu_array<Real>(num_particles, 0.);
+
   for (int pi = 0; pi < num_particles; pi++) {
-    p_post_cpu[pi] = -(stresses_cpu[pi].trace() / 3.);
-    s_post_cpu[pi] = stresses_cpu[pi] + Matrix3r::Identity() * p_post_cpu[pi];
+    p_post_cpu[pi] = (stresses_cpu[pi].block(0, 0, DIM, DIM).trace() / 3.);
+
+    // if (p_post_cpu[pi] > 0.) {
+    //   printf("p_post_cpu[pi] > 0. %f\n %f %f %f", p_post_cpu[pi],
+    //          stresses_cpu[pi](0, 0), stresses_cpu[pi](1, 1),
+    //          stresses_cpu[pi](2, 2))
+    // }
+    s_post_cpu[pi] = stresses_cpu[pi] - Matrix3r::Identity() * p_post_cpu[pi];
     q_post_cpu[pi] = (Real)sqrt(
         3 * 0.5 * (s_post_cpu[pi] * s_post_cpu[pi].transpose()).trace());
 
-    mu_post_cpu[pi] = q_post_cpu[pi] / p_post_cpu[pi];
+    mu_post_cpu[pi] = abs(q_post_cpu[pi]) / (-p_post_cpu[pi]);
+
+    Matrixr strain_tensor =
+        0.5 * (F_cpu[pi].transpose() + F_cpu[pi]) - Matrixr::Identity();
+    vol_strain_cpu[pi] = -strain_tensor.trace();
+    Matrixr s_strain_tensor =
+        strain_tensor + (1. / 3) * vol_strain_cpu[pi] * Matrixr::Identity();
+    dev_strain_cpu[pi] = (Real)sqrt(
+        0.5 * (s_strain_tensor * s_strain_tensor.transpose()).trace());
+
+    // dev_strain_cpu[pi] =
   }
 
   set_vtk_points(positions_cpu, polydata, do_output_cpu,
@@ -206,10 +227,16 @@ void ParticlesContainer::output_vtk() const {
   set_vtk_pointdata<Real>(p_post_cpu, polydata, "Pressure", do_output_cpu,
                           exclude_rigid_from_output);
 
-  set_vtk_pointdata<Real>(q_post_cpu, polydata, "VonMissesEffectiveStress",
-                          do_output_cpu, exclude_rigid_from_output);
+  set_vtk_pointdata<Real>(q_post_cpu, polydata, "q", do_output_cpu,
+                          exclude_rigid_from_output);
 
-  set_vtk_pointdata<Real>(mu_post_cpu, polydata, "FricCoef", do_output_cpu,
+  set_vtk_pointdata<Real>(mu_post_cpu, polydata, "|q|/p", do_output_cpu,
+                          exclude_rigid_from_output);
+
+  set_vtk_pointdata<Real>(dev_strain_cpu, polydata, "dev strain", do_output_cpu,
+                          exclude_rigid_from_output);
+
+  set_vtk_pointdata<Real>(vol_strain_cpu, polydata, "vol strain", do_output_cpu,
                           exclude_rigid_from_output);
 
   // loop over output_formats

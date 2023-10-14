@@ -24,9 +24,9 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 /**
- * @file materials.h
+ * @file newtonfluid.h
  * @author Retief Lubbe (r.lubbe@utwente.nl)
- * @brief Material base class
+ * @brief Newtonion fluid material
  * @version 0.1
  * @date 2023-06-15
  *
@@ -35,47 +35,57 @@
 
 #pragma once
 
-#include "pyroclastmpm/common/types_common.h"
-#include "pyroclastmpm/nodes/nodes.h"
-#include "pyroclastmpm/particles/particles.h"
+#include "pyroclastmpm/materials/materials.h"
 
 namespace pyroclastmpm {
 
-/// @brief This is a base class for every Material
-class Material {
+/**
+ * @brief Newtonian fluid material
+ * @details The implementation is based on the paper
+ * de Vaucorbeil, Alban, et al. "Material point method after 25 years: Theory,
+ * implementation, and applications." Advances in applied mechanics 53 (2020):
+ * 185-398. (Page 80)
+ * It is important that global variables are set before the solver is
+ * called.
+ *
+ * This can be done by calling the set_globals() function.
+ *
+ */
+class MuIJop : public Material {
 public:
-  /*!
-   * @brief Default constructor
-   */
-  Material() = default;
+  /// @brief Construct a new Newton Fluid object
+  /// @param _density material density
+  /// @param _viscocity material viscocity
+  /// @param _bulk_modulus bulk modulus
+  /// @param gamma gamma (7 for water and 1.4 for air)
+  MuIJop(const Real _density, const Real _viscosity,
+         const Real _bulk_modulus = 0., const Real _gamma = 7.);
 
-  /// @brief Constructor for restart files
-  explicit Material(Real _density) : density(_density){};
+  /// @brief Default constructor
+  ~MuIJop() final = default;
 
-  /// @brief Default destructor
-  virtual ~Material() = default;
-
-  /// @brief Stress update called from a Solver class
-  /// @param particles_ref Particle references
+  /// @brief Perform stress update
+  /// @param particles_ptr ParticlesContainer class
   /// @param mat_id material id
-  virtual void stress_update(ParticlesContainer &particles_ref, int mat_id){};
+  void stress_update(ParticlesContainer &particles_ptr, int mat_id) override;
 
-  /// @brief Calculate time step wave propagation speed
-  /// @param cell_size Fell size of the background grid
-  /// @param factor Scaling factor for speed
-  /// @return Real a timestep
-  virtual Real calculate_timestep(Real cell_size, Real factor) {
-    return 100000;
-  };
+  /// @brief Initialize material (allocate memory for history variables)
+  /// @param particles_ref ParticleContainer reference
+  /// @param mat_id material id
+  void initialize(const ParticlesContainer &particles_ref, int mat_id);
 
-  /// @brief material densities (per particle)
-  gpu_array<Real> densities_gpu;
+  void output_vtk(NodesContainer &nodes_ref, ParticlesContainer &particles_ref);
 
-  /// @brief material pressure (per particle)
-  gpu_array<Real> pressures_gpu;
+  /// @brief viscocity of the fluid
+  Real viscosity;
 
-  /// @brief Initial bulk density
-  Real density = 0.0;
+  /// @brief bulk modulus of the fluid
+  Real bulk_modulus;
+
+  /// @brief gamma parameter (7 for water and 1.4 for air)
+  Real gamma;
+
+  gpu_array<Real> I_gpu;
 };
 
 } // namespace pyroclastmpm

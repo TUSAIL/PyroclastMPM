@@ -94,6 +94,9 @@ void set_vtk_pointdata(cpu_array<T> input,
   if constexpr (std::is_same_v<T, Matrixr> || std::is_same_v<T, Vectorr> ||
                 std::is_same_v<T, Matrix3r>) {
     pointdata->SetNumberOfComponents(static_cast<int>(input[0].size()));
+
+  } else if constexpr (std::is_same_v<T, Vectori>) {
+    pointdata->SetNumberOfComponents(static_cast<int>(input[0].size()));
   } else {
 
     pointdata->SetNumberOfComponents(1);
@@ -109,6 +112,10 @@ void set_vtk_pointdata(cpu_array<T> input,
                   std::is_same_v<T, Matrix3r>) {
       const Real *data = input[0].data();
       pointdata->InsertNextTuple(data + id * input[0].size());
+    } else if constexpr (std::is_same_v<T, Vectori>) {
+      // TODO: fix this (print node_ids as int)
+      //  const Real *data = input[0].data();
+      //  pointdata->InsertNextTuple(data + id * input[0].size());
     } else {
       pointdata->InsertNextValue(input[id]);
     }
@@ -202,6 +209,11 @@ template void set_vtk_pointdata<Real>(
 template void set_vtk_pointdata<Vectorr>(
     cpu_array<Vectorr> input, const vtkSmartPointer<vtkPolyData> &polydata,
     const std::string &pointdata_name, cpu_array<bool> mask, bool use_mask);
+
+template void set_vtk_pointdata<Vectori>(
+    cpu_array<Vectori> input, const vtkSmartPointer<vtkPolyData> &polydata,
+    const std::string &pointdata_name, cpu_array<bool> mask, bool use_mask);
+
 #if DIM != 1
 template void set_vtk_pointdata<Matrixr>(
     cpu_array<Matrixr> input, const vtkSmartPointer<vtkPolyData> &polydata,

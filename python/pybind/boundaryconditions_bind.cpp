@@ -145,7 +145,7 @@ void boundaryconditions_module(const py::module &m) {
                   import numpy as np
 
                   # make rigid paticles and material particles
-                  rigid_body = np.array([...]) # shape R, D
+                  rigid_body = np.array([...])[0] # shape R, D
                   material = np.array([...]) # shape N, D
 
                   # combine particles and flag rigid particles
@@ -158,6 +158,7 @@ void boundaryconditions_module(const py::module &m) {
                   # initialize RigidBodyLevelSet boundary condition
                   rigidbody_bc = pm.RigidBodyLevelSet()
                   rigidbody_bc.set_output_formats(["vtk","csv"])
+                  rigidbody_bc.initialize(nodes,particles)
 
             Parameters
             ----------
@@ -200,6 +201,8 @@ void boundaryconditions_module(const py::module &m) {
 
             )",
               py::arg("output_formats"));
+
+  RBL_cls.def("initialize", &RigidBodyLevelSet::initialize);
 
   py::class_<PlanarDomain> PD_cls(m, "PlanarDomain", py::dynamic_attr());
   PD_cls.def(py::init<Vectorr, Vectorr>(),

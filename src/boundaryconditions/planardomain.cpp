@@ -50,8 +50,7 @@ void PlanarDomain::apply_on_particles(ParticlesContainer &particles_ref) {
       thrust::raw_pointer_cast(particles_ref.velocities_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.masses_gpu.data()), face0_friction,
-      face1_friction, particles_ref.spatial.grid.origin,
-      particles_ref.spatial.grid.end, particles_ref.num_particles);
+      face1_friction, particles_ref.spatial.grid, particles_ref.num_particles);
 
   gpuErrchk(cudaDeviceSynchronize());
 
@@ -61,8 +60,7 @@ void PlanarDomain::apply_on_particles(ParticlesContainer &particles_ref) {
         particles_ref.forces_external_gpu.data(),
         particles_ref.positions_gpu.data(), particles_ref.velocities_gpu.data(),
         particles_ref.volumes_gpu.data(), particles_ref.masses_gpu.data(),
-        face0_friction, face1_friction, particles_ref.spatial.grid.origin,
-        particles_ref.spatial.grid.end, pid);
+        face0_friction, face1_friction, particles_ref.spatial.grid, pid);
   }
 #endif
 };

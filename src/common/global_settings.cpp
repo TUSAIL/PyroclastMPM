@@ -96,6 +96,8 @@ int global_step_cpu = 0;
 /// @brief Initial particles per cell (HOST)
 int particles_per_cell_cpu;
 
+// TODO: check if these are consistent with old code... found some possible
+// mistakes
 /// Connectivity windows for grid to particle and particle to grid interpolation
 /// These are run-time constants, and may be different for different shape or
 /// dimension
@@ -135,7 +137,7 @@ const int quadratic_p2g_window[64][3] = {
     {1, 1, 0},  {0, 1, 0},  {-1, 1, 0},  {-2, 1, 0}, {1, 0, 0},   {0, 0, 0},
     {-1, 0, 0}, {-2, 0, 0}, {1, -1, 0},  {0, -1, 0}, {-1, -1, 0}, {-2, -1, 0},
     {1, -2, 0}, {0, -2, 0}, {-1, -2, 0}, {-2, -2, 0}};
-#else
+#else // DIM == 3
 /// @brief Connectivity window for linear grid to particle interpolation
 /// (Grid-To-Particle)
 const int linear_g2p_window[64][3] = {{0, 0, 0}, {0, 0, 1}, {1, 0, 0},

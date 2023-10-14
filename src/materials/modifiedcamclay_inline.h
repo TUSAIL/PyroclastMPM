@@ -116,7 +116,6 @@ compute_yield_function(const Real p, const Real Pt, const Real a, const Real q,
  * @param M slope of critical state line
  * @param lam slope of virgin consolidation line
  * @param kap slope of swelling line
- * @param Pc0 initial preconsolidation pressure
  * @param Pt tensile yield hydrostatic stress
  * @param beta parameter related to size of outer diameter of ellipse
  * @param Vs volume of the solid
@@ -133,11 +132,11 @@ __device__ __host__ inline void update_modifiedcamclay(
     const Matrixr *particles_velocity_gradient_gpu,
     const uint8_t *particle_colors_gpu, const Matrix3r *stress_ref_gpu,
     const Real bulk_modulus, const Real shear_modulus, const Real M,
-    const Real lam, const Real kap, const Real Pc0, const Real Pt,
-    const Real beta, const Real Vs, const int mat_id,
-    const bool do_update_history, const bool is_velgrad_strain_increment,
-    const int tid) {
+    const Real lam, const Real kap, const Real Pt, const Real beta,
+    const Real Vs, const int mat_id, const bool do_update_history,
+    const bool is_velgrad_strain_increment, const int tid) {
 
+  // #if DIM > 2 // TODO FIX THIS
   if (particle_colors_gpu[tid] != mat_id) {
     return;
   }
@@ -185,11 +184,25 @@ __device__ __host__ inline void update_modifiedcamclay(
   const Real p_trail = p_ref + bulk_modulus * eps_e_v_trail;
 
   // deviatoric strain eq (3.114) [2]
-  Matrix3r eps_e_dev_trail;
 
+  // *** problem here ** check 3D triax
+  // Matrix3r eps_e_dev_trail = Matrix3r::Zero();
+  // plane strain condition
+  // eps_e_dev_trail.block(0, 0, DIM, DIM) = eps_e_trail; //possible problem
+  // here
+  // eps_e_dev_trail = eps_e_trail;
+  // eps_e_dev_trail -= (1 / 3) * eps_e_v_trail * Matrix3r::Identity();
+
+  //**** work around ***
+  Matrix3r eps_e_dev_trail;
   // plane strain condition
   eps_e_dev_trail.block(0, 0, DIM, DIM) = eps_e_trail;
-  eps_e_dev_trail -= (1 / (Real)DIM) * eps_e_v_trail * Matrix3r::Identity();
+  eps_e_dev_trail -= (1 / 3.) * eps_e_v_trail * Matrix3r::Identity();
+
+#if DIM < 3
+  eps_e_dev_trail(2, 2) = 0;
+#endif
+  // ****
 
   // deviatoric stress eq (7.82) [2]
   const Matrix3r s_trail = s_ref + 2. * shear_modulus * eps_e_dev_trail;
@@ -218,6 +231,10 @@ __device__ __host__ inline void update_modifiedcamclay(
   const Real Phi_trail =
       compute_yield_function(p_trail, Pt, a_trail, q_trail, b_trail, M);
 
+  if (p_trail > 0) {
+    particles_stresses_gpu[tid] = Matrix3r::Zero();
+    return;
+  }
   if (Phi_trail <= (Real)0.0) {
 
     particles_stresses_gpu[tid] = s_trail + p_trail * Matrix3r::Identity();
@@ -243,7 +260,7 @@ __device__ __host__ inline void update_modifiedcamclay(
   int counter = 0;
   double conv = 1e10;
 
-  double tol = 1e-4;
+  double tol = 1e-1;
 
   do {
 
@@ -298,14 +315,20 @@ __device__ __host__ inline void update_modifiedcamclay(
     conv = R.norm();
 
     counter++;
-    if (counter > 1000) {
-      printf("counter %d cov %.16f \n increasing tol %.16f \n", counter, conv,
-             tol);
-      tol *= 10;
-    }
+    // if (counter > 1000) {
+    //   printf("counter %d cov %.16f \n increasing tol %.16f \n", counter,
+    //   conv,
+    //          tol);
+    //   tol *= 10;
+    // }
   } while (conv > tol);
 
-  const Matrix3r sigma_next = s_next + p_next * Matrix3r::Identity();
+  if (p_trail > 0) {
+    particles_stresses_gpu[tid] = Matrix3r::Zero();
+    return;
+  }
+
+  Matrix3r sigma_next = s_next + p_next * Matrix3r::Identity();
 
   const Matrix3r eps_e_curr_3D =
       (s_next - s_ref) / (2.0 * shear_modulus) +
@@ -314,7 +337,7 @@ __device__ __host__ inline void update_modifiedcamclay(
   particles_stresses_gpu[tid] = sigma_next;
 
   if (do_update_history) {
-    // particles_eps_e_gpu[tid] = eps_e_curr;
+    // particles_eps_e_gpu[tid] = eps_e_curr_3D; // oct5
     particles_eps_e_gpu[tid] = eps_e_curr_3D.block(0, 0, DIM, DIM);
 
     particles_alpha_gpu[tid] = OptVariables[1];
@@ -335,6 +358,8 @@ __device__ __host__ inline void update_modifiedcamclay(
   //   particles_alpha_gpu[tid] = OptVariables[1];
   //   pc_gpu[tid] = pc_next;
   // }
+
+  // #endif
 }
 
 #ifdef CUDA_ENABLED
@@ -345,10 +370,9 @@ __global__ void KERNEL_STRESS_UPDATE_MCC(
     const Matrixr *particles_velocity_gradient_gpu,
     const uint8_t *particle_colors_gpu, const Matrix3r *stress_ref_gpu,
     const Real bulk_modulus, const Real shear_modulus, const Real M,
-    const Real lam, const Real kap, const Real Pc0, const Real Pt,
-    const Real beta, const Real Vs, const int mat_id,
-    const bool do_update_history, const bool is_velgrad_strain_increment,
-    const int num_particles) {
+    const Real lam, const Real kap, const Real Pt, const Real beta,
+    const Real Vs, const int mat_id, const bool do_update_history,
+    const bool is_velgrad_strain_increment, const int num_particles) {
   const int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
   if (tid >= num_particles) {
@@ -359,7 +383,7 @@ __global__ void KERNEL_STRESS_UPDATE_MCC(
       particles_stresses_gpu, particles_eps_e_gpu, particles_volume_gpu,
       particles_volume_original_gpu, particles_alpha_gpu, pc_gpu,
       particles_velocity_gradient_gpu, particle_colors_gpu, stress_ref_gpu,
-      bulk_modulus, shear_modulus, M, lam, kap, Pc0, Pt, beta, Vs, mat_id,
+      bulk_modulus, shear_modulus, M, lam, kap, Pt, beta, Vs, mat_id,
       do_update_history, is_velgrad_strain_increment, tid);
 
   // __device__ __host__ inline void update_modifiedcamclay(
@@ -369,7 +393,7 @@ __global__ void KERNEL_STRESS_UPDATE_MCC(
   //     Real *pc_gpu, const Matrixr *particles_velocity_gradient_gpu,
   //     const uint8_t *particle_colors_gpu, const Matrix3r *stress_ref_gpu,
   //     const Real bulk_modulus, const Real shear_modulus, const Real M,
-  //     const Real lam, const Real kap, const Real Pc0, const Real Pt,
+  //     const Real lam, const Real kap,  const Real Pt,
   //     const Real beta, const Real Vs, const int mat_id,
   //     const bool do_update_history, const bool is_velgrad_strain_increment,
   //     const int tid)

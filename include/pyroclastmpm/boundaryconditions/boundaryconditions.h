@@ -76,7 +76,10 @@ public:
   };
 
   /// @brief Output arrays stored in boundary conditions
-  virtual void output_vtk(){
+  /// @param nodes_ref reference to NodesContainer
+  /// @param particles_ref reference to ParticlesContainer
+  virtual void output_vtk(NodesContainer &nodes_ref,
+                          ParticlesContainer &particles_ref){
       // override in derived classes
   };
 

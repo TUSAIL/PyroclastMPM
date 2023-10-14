@@ -50,7 +50,7 @@ namespace pyroclastmpm {
  * John Wiley & Sons, 2011.
  *
  */
-class ModifiedCamClay : public Material {
+class MCCMuI : public Material {
 
 public:
   /// @brief Construct a new Modified Cam Clay object
@@ -64,12 +64,11 @@ public:
   /// @param _Pc0 initial preconsolidation pressure
   /// @param _Pt Tensile yield hydrostatic stress
   /// @param _beta Parameter related to size of outer diameter of ellipse
-  ModifiedCamClay(const Real _density, const Real _E, const Real _pois,
-                  const Real _M, const Real _lam, const Real _kap,
-                  const Real _Vs, const Real _Pc0, const Real _Pt,
-                  const Real _beta);
+  MCCMuI(const Real _density, const Real _E, const Real _pois, const Real _M,
+         const Real _lam, const Real _kap, const Real _Vs, const Real _Pc0,
+         const Real _Pt, const Real _beta);
 
-  ~ModifiedCamClay() final = default;
+  ~MCCMuI() final = default;
 
   /// @brief Perform stress update
   /// @param particles_ptr ParticlesContainer class
@@ -89,8 +88,6 @@ public:
   /// @param particles_ref ParticleContainer reference
   /// @param mat_id material id
   void initialize(const ParticlesContainer &particles_ref, int mat_id);
-
-  void output_vtk(NodesContainer &nodes_ref, ParticlesContainer &particles_ref);
 
   /// @brief Slope of the critical state line
   Real M;
@@ -125,7 +122,7 @@ public:
   Real Vs;
 
   // initial preconsolidation pressure
-  Real R;
+  Real Pc0;
 
   /// @brief reference stress
   gpu_array<Matrix3r> stress_ref_gpu;

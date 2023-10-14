@@ -129,9 +129,9 @@ void Solver::run(const int total_steps, const int output_frequency) {
   //                 option::MaxProgress{total_steps + 1},
   //                 option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}};
   printf("Running simulation...\n");
-  printf("before output\n");
+
   output();
-  printf("after output\n");
+
   solve();
 
   increment_global();
@@ -168,7 +168,9 @@ void Solver::output() {
   nodes.output_vtk();
 
   for (auto &bc : boundaryconditions) {
-    std::visit([](auto &arg) { arg.output_vtk(); }, bc);
+    // FIXME: does not print out boundary condition child arrays
+    // (is_overlapping) std::visit([this](auto &arg) { arg.output_vtk(nodes,
+    // particles); }, bc);
   }
 }
 

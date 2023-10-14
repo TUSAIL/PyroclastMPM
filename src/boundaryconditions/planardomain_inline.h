@@ -58,8 +58,7 @@ __host__ __device__ inline void apply_planardomain(
     const Vectorr *particles_positions_gpu,
     const Vectorr *particles_velocities_gpu, const Real *particles_volumes_gpu,
     const Real *particle_masses_gpu, const Vectorr face0_friction,
-    const Vectorr face1_friction, const Vectorr domain_start,
-    const Vectorr domain_end, const int mem_index) {
+    const Vectorr face1_friction, const Grid grid, const int mem_index) {
 
   const Vectorr pos = particles_positions_gpu[mem_index];
   const Vectorr vel = particles_velocities_gpu[mem_index];
@@ -95,7 +94,7 @@ __host__ __device__ inline void apply_planardomain(
   const Vectorr normals1[1] = {Vectorr(-1)};
 #endif
 
-  const Vectorr overlap0 = Vectorr::Ones() * Radius - (pos - domain_start);
+  const Vectorr overlap0 = Vectorr::Ones() * Radius - (pos - grid.origin);
 
 #pragma unroll
   for (int i = 0; i < DIM; i++) {
@@ -109,7 +108,7 @@ __host__ __device__ inline void apply_planardomain(
           (mass / pow(dt, 2.)) * overlap0[i] * fric_term;
     }
   }
-  const Vectorr overlap1 = Vectorr::Ones() * Radius - (domain_end - pos);
+  const Vectorr overlap1 = Vectorr::Ones() * Radius - (grid.end - pos);
 
 #pragma unroll
   for (int i = 0; i < DIM; i++) {
@@ -131,8 +130,7 @@ __global__ void KERNELS_APPLY_PLANARDOMAIN(
     const Vectorr *particles_positions_gpu,
     const Vectorr *particles_velocities_gpu, const Real *particles_volumes_gpu,
     const Real *particle_masses_gpu, const Vectorr face0_friction,
-    const Vectorr face1_friction, const Vectorr domain_start,
-    const Vectorr domain_end, const int num_particles) {
+    const Vectorr face1_friction, const Grid grid, const int num_particles) {
   const int mem_index = blockIdx.x * blockDim.x + threadIdx.x;
 
   if (mem_index >= num_particles) {
@@ -141,8 +139,8 @@ __global__ void KERNELS_APPLY_PLANARDOMAIN(
 
   apply_planardomain(particles_forces_external_gpu, particles_positions_gpu,
                      particles_velocities_gpu, particles_volumes_gpu,
-                     particle_masses_gpu, face0_friction, face1_friction,
-                     domain_start, domain_end, mem_index);
+                     particle_masses_gpu, face0_friction, face1_friction, grid,
+                     mem_index);
 }
 
 #endif

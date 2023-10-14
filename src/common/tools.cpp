@@ -60,13 +60,16 @@ uniform_random_points_in_volume(const std::string &stl_filename,
 
   std::mt19937 mt(4355412);
 
-  std::array<Real, 6> bounds;
+  // TODO this gives problems
+  // std::array<Real, 6> bounds;
+  // std::copy(bounds.begin(), bounds.end(), geometry->GetBounds());
 
-  std::copy(bounds.begin(), bounds.end(), geometry->GetBounds());
+  double bounds[6];
+  geometry->GetBounds(bounds);
 
-  std::cout << "Bounds: " << bounds[0] << ", " << bounds[1] << " " << bounds[2]
-            << ", " << bounds[3] << " " << bounds[4] << ", " << bounds[5]
-            << std::endl;
+  std::cout << "Bounds uniform random grid: " << bounds[0] << ", " << bounds[1]
+            << " " << bounds[2] << ", " << bounds[3] << " " << bounds[4] << ", "
+            << bounds[5] << std::endl;
   // Generate random points within the bounding box of the polydata
   std::uniform_real_distribution<double> distributionX(bounds[0], bounds[1]);
   std::uniform_real_distribution<double> distributionY(bounds[2], bounds[3]);
@@ -77,11 +80,14 @@ uniform_random_points_in_volume(const std::string &stl_filename,
 
   points->SetNumberOfPoints(num_points);
   for (auto i = 0; i < num_points; ++i) {
-    std::array<Real, 3> point;
+    // std::array<Real, 3> point; // TOODO gives problems
+    double point[3];
+
     point[0] = static_cast<Real>(distributionX(mt));
     point[1] = static_cast<Real>(distributionY(mt));
     point[2] = static_cast<Real>(distributionZ(mt));
     points->SetPoint(i, point[0], point[1], point[2]);
+    // printf("Point: %f, %f, %f\n", point[0], point[1], point[2]);
   }
 
   vtkNew<vtkExtractEnclosedPoints> extract;
@@ -94,9 +100,12 @@ uniform_random_points_in_volume(const std::string &stl_filename,
   std::vector<Vector3r> positions_cpu;
   positions_cpu.resize(num_points);
 
-  std::array<Real, 3> point;
+  // std::array<Real, 3> point; gives problem
+  double point[3];
   for (int id = 0; id < num_points; id++) {
-    std::copy(point.begin(), point.end(), extract->GetOutput()->GetPoint(id));
+    // std::copy(point.begin(), point.end(),
+    // extract->GetOutput()->GetPoint(id));
+    extract->GetOutput()->GetPoint(id, point);
     positions_cpu[id][0] = point[0];
     positions_cpu[id][1] = point[1];
     positions_cpu[id][2] = point[2];
@@ -126,18 +135,20 @@ std::vector<Vector3r> grid_points_in_volume(const std::string &stl_filename,
 
   geometry = normals->GetOutput();
 
-  std::mt19937 mt(4355412);
+  // std::mt19937 mt(4355412);
 
   // xmin,xmax,ymin,ymax,zmin,zmax
-  std::array<Real, 6> bounds;
+  // std::array<Real, 6> bounds;
+  // std::copy(bounds.begin(), bounds.end(), geometry->GetBounds());
+  double bounds[6];
+  geometry->GetBounds(bounds);
 
-  std::copy(bounds.begin(), bounds.end(), geometry->GetBounds());
+  std::cout << "Bounds grid_points_in_volume: " << bounds[0] << ", "
+            << bounds[1] << " " << bounds[2] << ", " << bounds[3] << " "
+            << bounds[4] << ", " << bounds[5] << std::endl;
 
-  std::cout << "Bounds: " << bounds[0] << ", " << bounds[1] << " " << bounds[2]
-            << ", " << bounds[3] << " " << bounds[4] << ", " << bounds[5]
-            << std::endl;
-
-  std::array<int, 3> grid_sizes;
+  // std::array<int, 3> grid_sizes;
+  int grid_sizes[3];
 
   Real gap = cell_size / static_cast<Real>(point_per_cell);
 
@@ -149,12 +160,16 @@ std::vector<Vector3r> grid_points_in_volume(const std::string &stl_filename,
   vtkNew<vtkPoints> points;
   pointsPolyData->SetPoints(points);
 
+  // printf("Grid sizes: %d, %d, %d\n", grid_sizes[0], grid_sizes[1],
+  //        grid_sizes[2]);
   points->SetNumberOfPoints(grid_sizes[0] * grid_sizes[1] * grid_sizes[2]);
+
   for (auto xi = 0; xi < grid_sizes[0]; ++xi) {
     for (auto yi = 0; yi < grid_sizes[1]; ++yi) {
       for (auto zi = 0; zi < grid_sizes[2]; ++zi) {
 
-        std::array<Real, 3> point;
+        // std::array<Real, 3> point;
+        double point[3];
         point[0] = bounds[0] + ((Real)0.5) * gap + ((Real)xi) * gap;
         point[1] = bounds[2] + ((Real)0.5) * gap + ((Real)yi) * gap;
         point[2] = bounds[4] + ((Real)0.5) * gap + ((Real)zi) * gap;
@@ -178,9 +193,12 @@ std::vector<Vector3r> grid_points_in_volume(const std::string &stl_filename,
   std::vector<Vector3r> positions_cpu;
   positions_cpu.resize(num_points);
 
-  std::array<Real, 3> point;
+  // std::array<Real, 3> point;
+  double point[3];
   for (int id = 0; id < num_points; id++) {
-    std::copy(point.begin(), point.end(), extract->GetOutput()->GetPoint(id));
+    // std::copy(point.begin(), point.end(),
+    // extract->GetOutput()->GetPoint(id));
+    extract->GetOutput()->GetPoint(id, point);
     positions_cpu[id][0] = point[0];
     positions_cpu[id][1] = point[1];
     positions_cpu[id][2] = point[2];
@@ -218,10 +236,12 @@ grid_points_on_surface(const std::string &stl_filename, const Real cell_size,
   std::vector<Vector3r> positions_cpu;
   positions_cpu.resize(num_points);
 
-  std::array<Real, 3> point;
+  // std::array<Real, 3> point;
+  double point[3];
   for (int id = 0; id < num_points; id++) {
-    std::copy(point.begin(), point.end(), sampler->GetOutput()->GetPoint(id));
-    ;
+    // std::copy(point.begin(), point.end(),
+    // sampler->GetOutput()->GetPoint(id));
+    sampler->GetOutput()->GetPoint(id, point);
     positions_cpu[id][0] = point[0];
     positions_cpu[id][1] = point[1];
     positions_cpu[id][2] = point[2];
@@ -241,9 +261,12 @@ std::tuple<Vector3r, Vector3r> get_bounds(const std::string &stl_filename) {
   reader->Update();
 
   // xmin,xmax,ymin,ymax,zmin,zmax
-  std::array<Real, 6> bounds;
+  // std::array<Real, 6> bounds; // TODO this gives problems
+  double bounds[6];
 
-  std::copy(bounds.begin(), bounds.end(), reader->GetOutput()->GetBounds());
+  reader->GetOutput()->GetBounds(bounds);
+  // std::copy(bounds.begin(), bounds.end(),
+  // reader->GetOutput()->GetBounds());
 
   Vector3r bound_start = {bounds[0], bounds[2], bounds[4]};
 

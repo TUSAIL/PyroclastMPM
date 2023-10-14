@@ -43,6 +43,7 @@ namespace pyroclastmpm {
 
 /// @brief Shape function used to calculate node type
 extern const SFType shape_function_cpu;
+extern const int global_step_cpu;
 
 ///@brief Construct a new Nodes Container object
 ///@param _node_start Origin of where nodes will be generated
@@ -216,6 +217,13 @@ std::vector<Vectorr> NodesContainer::give_node_coords_stl() const {
 /// @brief Output node data
 /// @details Requires that `set_output_formats` is called first
 void NodesContainer::output_vtk() const {
+
+  if (output_formats.empty()) {
+    return;
+  }
+  if (global_step_cpu > 1) { // TODO: Remove
+    return;
+  }
 
   vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 

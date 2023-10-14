@@ -161,7 +161,7 @@ def mixed_control(
 
         # save the results
         if (callback is not None) & (n % callback_step == 0):
-            callback(particles, material, n)
+            callback(particles, material, n, cycle)
 
     return particles, material
 
