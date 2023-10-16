@@ -41,25 +41,74 @@ namespace py = pybind11;
 
 namespace pyroclastmpm {
 
+// materials
+void materials_module(const py::module &);
+void vonmises_module(const py::module &);
+void linearelastic_module(const py::module &);
+void modified_camclay_module(const py::module &);
+void mohr_coulomb_module(const py::module &);
+void newtonfluid_module(const py::module &);
+void localrheology_module(const py::module &);
+void mu_i_module(const py::module &);
+void modified_camclay_mu_i_module(const py::module &);
+
+// boundary conditions
+void boundaryconditions_module(const py::module &);
+void bodyforce_module(const py::module &);
+void gravity_module(const py::module &);
+void rigidbodylevelset_module(const py::module &);
+void planardomain_module(const py::module &);
+void nodedomain_module(const py::module &);
+
+
 void particles_module(const py::module &);
 void nodes_module(const py::module &);
-void boundaryconditions_module(const py::module &);
-void materials_module(const py::module &);
+
 void solver_module(const py::module &);
+void usl_module(const py::module &);
+
 void global_settings_module(py::module &);
 void tools_module(py::module &);
+
 
 PYBIND11_MODULE(PYBIND_MODULE_NAME, m) {
 
   m.attr("global_dimension") = DIM;
+  
+  // particles
   particles_module(m);
-  nodes_module(m);
-  boundaryconditions_module(m);
-  materials_module(m);
-  solver_module(m);
 
-  global_settings_module(m);
+  // nodes
+  nodes_module(m);
+
+  //tools
   tools_module(m);
+  global_settings_module(m);
+
+  // boundary conditions
+  boundaryconditions_module(m);
+  bodyforce_module(m);
+  gravity_module(m);
+  rigidbodylevelset_module(m);
+  planardomain_module(m);
+  nodedomain_module(m);
+
+  // materials
+  materials_module(m);
+  vonmises_module(m);
+  linearelastic_module(m);
+  modified_camclay_module(m);
+  mohr_coulomb_module(m);
+  newtonfluid_module(m);
+  localrheology_module(m);
+  mu_i_module(m);
+  modified_camclay_mu_i_module(m);
+
+  // solver
+  solver_module(m);
+  usl_module(m);
+  
+
 }
 
 } // namespace pyroclastmpm

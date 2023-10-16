@@ -105,41 +105,5 @@ void solver_module(const py::module &m) {
       },
       "List of boundary conditions");
 
-  // USL SOLVER
-  py::class_<USL, Solver>(m, "USL").def(
-      py::init<ParticlesContainer, NodesContainer, std::vector<MaterialType>,
-               std::vector<BoundaryConditionType>, Real>(),
-      R"(
-      Update Stress Last solver. The implementation is based on the paper:
-      
-      de Vaucorbeil, Alban, et al. "Material point method after 25 years: Theory,
-      implementation, and applications." Advances in applied mechanics 53 (2020):
-      185-398. (Page 32)
-
-      Example usage:
-          >>> import pyroclastmpm as pm
-          >>> particles = pm.ParticlesContainer( ... )
-          >>> nodes = pm.NodesContainer( ... )
-          >>> materials = [pm.LinearElastic( ... )]
-          >>> boundaryconditions = [pm.PlanarDomain( ... )]
-          >>> solver = pm.USL(particles,nodes,materials,boundaryconditions)
-
-      Parameters
-      ----------
-      particles : ParticlesContainer
-          Particles storing the material points
-      nodes : NodesContainer
-          Nodes storing the background grid
-      materials : [Material], optional
-          List of constitutive models, by default None
-      boundaryconditions : [BoundaryCondition], optional
-          List of boundary conditions, by default None
-      alpha : float, optional
-            Flip/PIC mixture ratio, by default 0.99
-      )",
-      py::arg("particles"), py::arg("nodes"),
-      py::arg("materials") = std::vector<MaterialType>(),
-      py::arg("boundaryconditions") = std::vector<BoundaryConditionType>(),
-      py::arg("alpha") = 0.99); // INIT
 }
 } // namespace pyroclastmpm

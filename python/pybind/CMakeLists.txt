@@ -20,7 +20,7 @@
 # SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
 # INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SpOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
 
@@ -28,13 +28,32 @@ set(
   PyroclastPyBind
 
   "_pyroclastmpm.cpp"
-  "particles_bind.cpp"
-  "nodes_bind.cpp"
-  "boundaryconditions_bind.cpp"
-  "materials_bind.cpp"
-  "solver_bind.cpp"
-  "global_settings_bind.cpp"
-  "tools_bind.cpp"
+  "particles/particles_bind.cpp"
+  "nodes/nodes_bind.cpp"
+
+
+  "common/global_settings_bind.cpp"
+  "common/tools_bind.cpp"
+
+  "solver/solver_bind.cpp"
+  "solver/usl_bind.cpp"
+
+  "boundaryconditions/boundaryconditions_bind.cpp"
+  "boundaryconditions/bodyforce_bind.cpp"
+  "boundaryconditions/gravity_bind.cpp"
+  "boundaryconditions/rigidbodylevelset_bind.cpp"
+  "boundaryconditions/planardomain_bind.cpp"
+  "boundaryconditions/nodedomain_bind.cpp"
+
+  "materials/materials_bind.cpp"
+  "materials/vonmises_bind.cpp"
+  "materials/linearelastic_bind.cpp"
+  "materials/modified_camclay_bind.cpp"
+  "materials/mohr_coulomb_bind.cpp"
+  "materials/newtonfluid_bind.cpp"
+  "materials/localrheology_bind.cpp"
+  "materials/mu_i_bind.cpp"
+  "materials/modified_camclay_mu_i_bind.cpp"
 
   # "spatialpartition_bind.cu" // currently no need to import this in python . . .
 )
