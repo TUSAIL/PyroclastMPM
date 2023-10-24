@@ -128,8 +128,11 @@ public:
   ParticlesContainer(const cpu_array<Vectorr> &_positions,
                      const cpu_array<Vectorr> &_velocities = {},
                      const cpu_array<uint8_t> &_colors = {},
-                     const cpu_array<bool> &_is_rigid = {}) noexcept;
-
+                     const cpu_array<Vectorr> &_rigid_positions = {},
+                     const cpu_array<Vectorr> &_rigid_velocities= {},
+                     const cpu_array<uint8_t> &_rigid_colors = {}
+                     ) noexcept;
+  
   /**
    * @brief Resets the gpu arrays
    * @details Resets the gpu arrays to default values.
@@ -234,8 +237,15 @@ public:
 
   std::vector<std::string> output_formats;
 
-  /// @brief Total Number of particles
+  /// @brief Total Number of particles (number of non-rigid + rigid particles)
   int num_particles = 0;
+
+  /// @brief Number of rigid particles
+  int num_rigid_particles = 0;
+
+
+  /// @brief Option to exclude rigid particles from output
+  bool exclude_rigid_from_output = true;
 
   /// @brief Flag if this is a restart simulations
   /// @details This is mainly used in the pickle functionality

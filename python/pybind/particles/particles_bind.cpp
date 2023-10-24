@@ -83,8 +83,13 @@ void particles_module(const py::module &m) {
   py::class_<ParticlesContainer> P_cls(m, "ParticlesContainer",
                                        py::dynamic_attr());
 
-  P_cls.def(py::init<std::vector<Vectorr>, std::vector<Vectorr>,
-                     std::vector<int>, std::vector<bool>>(),
+  P_cls.def(py::init<std::vector<Vectorr>,
+                     std::vector<Vectorr>,
+                     std::vector<int>, 
+                     std::vector<Vectorr>,
+                     std::vector<Vectorr>,
+                     std::vector<int>
+                     >(),
             R"(
     Stores the particles (Lagrangian markers) of the MPM simulation.
 
@@ -109,18 +114,25 @@ void particles_module(const py::module &m) {
         Velocities of the particles, by default None
     colors : List[int], optional
         A list (or np.array) of material type of the particles, and by default None
-    is_rigid : List[bool], optional
-        A list (or np.array) of mask to tag rigid particles, by default None
+    rigid_positions : List[bool], optional
+        Positions of the rigid particles, by default None
+    rigid_velocities : List[bool], optional
+        Velocities of the rigid particles, by default None
+    rigid_colors : List[int], optional
+        Material types of the rigid particles, and by default None
 
   )",
             py::arg("positions"),
             py::arg("velocities") = std::vector<Vectorr>(),
             py::arg("colors") = std::vector<int>() = std::vector<int>(),
-            py::arg("is_rigid") = std::vector<bool>() = std::vector<bool>());
+            py::arg("rigid_positions") = std::vector<Vectorr>(),
+            py::arg("rigid_velocities") = std::vector<Vectorr>(),
+            py::arg("rigid_colors") = std::vector<int>()
+            );
 
   P_cls.def("set_output_formats", &ParticlesContainer::set_output_formats,
             R"(
-            Set a list of formats that are outputted in a
+            Set a list of formats that are outputted in aVect
             directory specified in :func:`set_globals`.
 
             Example usage:
@@ -150,6 +162,11 @@ void particles_module(const py::module &m) {
 
   P_cls.def("set_spawner", &ParticlesContainer::set_spawner,
             "Warning unstable");
+
+  P_cls.def_readwrite(
+      "exclude_rigid_from_output", &ParticlesContainer::exclude_rigid_from_output,
+      "Option to eclude rigid particles from output");
+
   P_cls.def_readonly(
       "num_particles", &ParticlesContainer::num_particles,
       "Number of particles in the container (rigid and non-rigid)");
@@ -259,6 +276,8 @@ void particles_module(const py::module &m) {
         self.colors_gpu = host_val;
       },
       "Material IDs");
+
+
 
   P_cls.def(py::pickle(
                 [](const ParticlesContainer &particles) { // NOSONAR

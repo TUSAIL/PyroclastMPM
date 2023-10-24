@@ -83,6 +83,13 @@ public:
       // override in derived classes
   };
 
+  virtual void initialize(const NodesContainer &nodes_ref,
+                  const ParticlesContainer &particles_ref)
+    {
+        // override in derived classes
+    };
+                  
+
   /// @brief Flag if the boundary condition active or not
   bool isActive = true;
 };

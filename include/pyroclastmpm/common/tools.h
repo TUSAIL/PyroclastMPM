@@ -120,7 +120,7 @@ std::vector<Vector3r> grid_points_in_volume(const std::string &stl_filename,
  * @param point_per_cell Number of points per cell
  * @return std::vector<Vector3r> Output points
  */
-std::tuple<std::vector<Vector3r>, std::vector<Vector3r>>
+std::vector<Vector3r>
 grid_points_on_surface(const std::string &stl_filename, const Real cell_size,
                        const int point_per_cell);
 

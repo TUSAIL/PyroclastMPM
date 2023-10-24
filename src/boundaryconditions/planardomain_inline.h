@@ -73,6 +73,9 @@ __host__ __device__ inline void apply_planardomain(
 
   const Real mass = particle_masses_gpu[mem_index];
 
+  // print Radius mass and vol
+  // printf("Radius: %f, mass: %f, vol: %f\n", Radius, mass, vol);
+
 #ifdef CUDA_ENABLED
   const Real dt = dt_gpu;
 #else
@@ -80,48 +83,58 @@ __host__ __device__ inline void apply_planardomain(
 #endif
 
 #if DIM == 3
-  const Vectorr normals0[6] = {Vectorr({1, 0, 0}), Vectorr({0, 1, 0}),
+  const Vectorr wall_normals0[6] = {Vectorr({1, 0, 0}), Vectorr({0, 1, 0}),
                                Vectorr({0, 0, 1})};
-  const Vectorr normals1[6] = {Vectorr({-1, 0, 0}), Vectorr({0, -1, 0}),
+  const Vectorr wall_normals1[6] = {Vectorr({-1, 0, 0}), Vectorr({0, -1, 0}),
                                Vectorr({0, 0, -1})};
 
 #elif DIM == 2
-  const Vectorr normals0[2] = {Vectorr({1, 0}), Vectorr({0, 1})};
-  const Vectorr normals1[2] = {Vectorr({-1, 0}), Vectorr({0, -1})};
+  const Vectorr wall_normals0[2] = {Vectorr({1, 0}), Vectorr({0, 1})};
+  const Vectorr wall_normals1[2] = {Vectorr({-1, 0}), Vectorr({0, -1})};
 
 #else
-  const Vectorr normals0[1] = {Vectorr(1)};
-  const Vectorr normals1[1] = {Vectorr(-1)};
+  const Vectorr wall_normals0[1] = {Vectorr(1)};
+  const Vectorr wall_normals1[1] = {Vectorr(-1)};
 #endif
 
-  const Vectorr overlap0 = Vectorr::Ones() * Radius - (pos - grid.origin);
+// Radius - min distance of particle to wall
+const Vectorr component_overlap0 = Vectorr::Ones() * Radius - (pos - grid.origin);
 
 #pragma unroll
   for (int i = 0; i < DIM; i++) {
-    if (overlap0[i] > 0) {
+    const Real overlap = component_overlap0[i];
+    const Vectorr normal = wall_normals0[i];
+    if (overlap > 0) {
+
       const Vectorr vel_depth =
-          (overlap0[i] * normals0[i]).dot(vel) * normals0[i];
+          (overlap * normal).dot(vel) * normal;
       const Vectorr fric_term =
-          normals0[i] -
-          face0_friction(i) * (vel - normals0[i].dot(vel) * normals0[i]);
+          normal -
+          face0_friction(i) * (vel - normal.dot(vel) * normal);
       particles_forces_external_gpu[mem_index] +=
-          (mass / pow(dt, 2.)) * overlap0[i] * fric_term;
+          (mass / pow(dt, 2.)) * overlap * fric_term;
+
     }
   }
-  const Vectorr overlap1 = Vectorr::Ones() * Radius - (grid.end - pos);
+  const Vectorr component_overlap1 = Vectorr::Ones() * Radius - (grid.end - pos);
 
 #pragma unroll
   for (int i = 0; i < DIM; i++) {
-    if (overlap1[i] > 0) {
+    const Real overlap = component_overlap1[i];
+    const Vectorr normal = wall_normals1[i];
+    if (overlap > 0) {
+
+
       const Vectorr vel_depth =
-          (overlap1[i] * normals1[i]).dot(vel) * normals1[i];
+          (overlap * normal).dot(vel) * normal;
       const Vectorr fric_term =
-          normals1[i] -
-          face1_friction(i) * (vel - normals1[i].dot(vel) * normals1[i]);
+          normal -
+          face1_friction(i) * (vel -normal.dot(vel) * normal);
       particles_forces_external_gpu[mem_index] +=
-          (mass / pow(dt, 2.)) * overlap1[i] * fric_term;
+          (mass / pow(dt, 2.)) * overlap * fric_term;
     }
   }
+  
 }
 
 #ifdef CUDA_ENABLED

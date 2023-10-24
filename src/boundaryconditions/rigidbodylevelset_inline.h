@@ -64,33 +64,40 @@ __device__ __host__ inline void update_rigid_velocity(
     return;
   }
 
-#if DIM == 3
-  Vectorr omega = Vectorr::Zero();
 
-  const Real theta = euler_angles[0];
-  const Real phi = euler_angles[1];
-  const Real psi = euler_angles[2];
 
-  const Real dtheta = angular_velocities[0];
-  const Real dphi = angular_velocities[1];
-  const Real dpsi = angular_velocities[2];
-  omega[0] = dphi * sin(theta) * sin(psi) + dtheta * cos(psi);
-  omega[2] = dphi * sin(theta) * cos(psi) - dtheta * sin(psi);
-  omega[1] = dphi * cos(theta) + dpsi;
+  // x-to y, y-to z, z-to x
+  // roll, pitch, yaw
+  // const Real theta = euler_angles[0]; // about x axis
+  // const Real phi = euler_angles[1]; // about y axis
+  // const Real psi = euler_angles[2]; // about z axis
 
-  const Vectorr rotational_velocity =
-      omega.cross(particles_positions_gpu[tid] - COM);
-  // printf("body_velocity %f %f %f \n", body_velocity[0], body_velocity[1],
-  //        body_velocity[2]);
+  // const Real dtheta = angular_velocities[0];
+  // const Real dphi = angular_velocities[1];
+  // const Real dpsi = angular_velocities[2];
+
+  // Vector3r omega = Vectorr::Zero();
+  // omega[0] = dphi * sin(theta) * sin(psi) + dtheta * cos(psi);
+  // omega[2] = dphi * sin(theta) * cos(psi) - dtheta * sin(psi);
+  // omega[1] = dphi * cos(theta) + dpsi;
+
+  
+
+  // const Vector3r rotational_velocity =
+  //     omega.cross(particles_positions_gpu[tid] - COM);
 
   // printf("rotational_velocity %f %f %f \n", rotational_velocity[0],
   //        rotational_velocity[1], rotational_velocity[2]);
 
-  // particles_velocities_gpu[tid] = body_velocity + rotational_velocity;
-  particles_velocities_gpu[tid] = body_velocity;
-#else
-  printf("Rotation problems with 1D and 2d not implemented \n");
-#endif
+
+  // printf("body_velocity %f %f %f \n", body_velocity[0], body_velocity[1],body_velocity[2]);
+
+  // // printf("rotational_velocity %f %f %f \n", rotational_velocity[0],
+  // //        rotational_velocity[1], rotational_velocity[2]);
+
+  // // particles_velocities_gpu[tid] = body_velocity + rotational_velocity;
+  // particles_velocities_gpu[tid] = body_velocity;
+
 }
 
 #ifdef CUDA_ENABLED
@@ -184,10 +191,10 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
     const bool *particle_is_rigid_gpu, const Vectorr *particles_positions_gpu,
     const Grid &grid, const int node_mem_index) {
 
-#if DIM > 2 // TODO remove this
-  if (!is_overlapping_gpu[node_mem_index]) {
-    return;
-  }
+// #if DIM > 2 // TODO remove this
+  // if (!is_overlapping_gpu[node_mem_index]) {
+  //   return;
+  // }
 
   // printf("rigid node found?");
   const Real node_mass = nodes_masses_gpu[node_mem_index];
@@ -207,20 +214,35 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
   Real min_dist = (Real)999999999999999.;
   int min_id = -1;
 
-#ifdef CUDA_ENABLED
-  const int num_surround_nodes = num_surround_nodes_gpu;
-#else
-  const int num_surround_nodes = num_surround_nodes_cpu;
-#endif
+    #if DIM == 3
+  const int linear_p2g_window[64][3] = {{0, 0, 0},   {0, 0, -1},  {-1, 0, 0},
+                                      {-1, 0, -1}, {0, -1, 0},  {0, -1, -1},
+                                      {-1, -1, 0}, {-1, -1, -1}}
+  const int num_surround_nodes = 8;
+  #elif DIM == 2
+  const int linear_p2g_window[64][3] = {
+    {0, 0, 0}, {-1, 0, 0}, {0, -1, 0}, {-1, -1, 0}};
+  const int num_surround_nodes = 4;
+ #else
+  const int linear_p2g_window[64][3] = {{0, 0, 0}, {-1, 0, 0}};
+  const int num_surround_nodes = 2;
+ #endif
+
+// #ifdef CUDA_ENABLED
+//   const int num_surround_nodes = num_surround_nodes_gpu;
+// #else
+//   const int num_surround_nodes = num_surround_nodes_cpu;
+// #endif
+
   // bool has_normal_particle = false;
-// loop over non-rigid material to calculate grid normal
+// loop over non-rigid material to calculate grid normalcalculate_grid_normals_nn_rigid
 #pragma unroll
   for (int sid = 0; sid < num_surround_nodes; sid++) {
-
+ const Vectori selected_bin = WINDOW_BIN(node_bin, linear_p2g_window, sid);
 #ifdef CUDA_ENABLED
-    const Vectori selected_bin = WINDOW_BIN(node_bin, p2g_window_gpu, sid);
+    // const Vectori selected_bin = WINDOW_BIN(node_bin, p2g_window_gpu, sid);
 #else
-    const Vectori selected_bin = WINDOW_BIN(node_bin, p2g_window_cpu, sid);
+    // const Vectori selected_bin = WINDOW_BIN(node_bin, p2g_window_cpu, sid);
 #endif
 
     const unsigned int node_hash = NODE_MEM_INDEX(selected_bin, grid.num_cells);
@@ -242,6 +264,7 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
       const int particle_id = particles_sorted_indices_gpu[j];
 
       if (particle_is_rigid_gpu[particle_id]) {
+        
         const Vectorr relative_pos =
             (particles_positions_gpu[particle_id] - grid.origin) *
                 grid.inv_cell_size -
@@ -262,23 +285,32 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
 
         normal += dpsi_particle * particles_masses_gpu[particle_id];
 
+        // needed?
         if (has_normal == false) {
           has_normal = true;
         }
       }
     }
   }
+  
+  if (min_id == -1)
+  {
+    // node does not overlap
+    return;
+  }
+
+  Vectorr body_veloctity = particles_velocities_gpu[min_id];
 
   // if (!has_normal_particle) {
   //   is_overlapping_gpu[node_mem_index] = false;
   //   return;
   // }
 
-  Vectorr body_veloctity = Vectorr::Zero();
-  if (min_id != -1) {
+  // Vectorr body_veloctity = Vectorr::Zero();
+  // if (min_id != -1) {
     // TODO: Fix this
-    // body_veloctity = particles_velocities_gpu[min_id];
-  }
+    // 
+  // }
 
   normal.normalize();
 
@@ -313,7 +345,7 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
         (node_velocity_nt - contact_vel_nt) * node_mass;
   }
 
-#endif // endif DDIM=2 TODO: Remove this (or fix for 2D)
+// #endif // endif DDIM=2 TODO: Remove this (or fix for 2D)
 }
 
 #ifdef CUDA_ENABLED
@@ -346,70 +378,110 @@ __device__ __host__ inline void g2p_get_nodes_w_rigid_particles(
     bool *is_overlapping_gpu, const Vectorr *particles_positions_gpu,
     const Vectori *particles_bins_gpu, int *particles_cells_start_gpu,
     const int *particles_cells_end_gpu, const int *particles_sorted_indices_gpu,
-    const bool *particle_is_rigid_gpu, const Grid &grid, const int tid) {
+    const bool *particles_is_rigid_gpu, const Grid &grid, const int nid) {
 
-#if DIM > 2 // TODO remove this
-  if (!particle_is_rigid_gpu[tid]) {
-    return;
+  // printf("g2p_get_nodes_w_rigid_particles \n");
+  // if (!particle_is_rigid_gpu[nid]) {
+  //   return;
+  // }
+  const Vectorr particle_coords = particles_positions_gpu[nid];
+
+  const Vectori particle_bin = particles_bins_gpu[nid];
+  
+  #if DIM == 3
+  const int linear_p2g_window[64][3] = {{0, 0, 0},   {0, 0, -1},  {-1, 0, 0},
+                                      {-1, 0, -1}, {0, -1, 0},  {0, -1, -1},
+                                      {-1, -1, 0}, {-1, -1, -1}}
+  const int num_surround_nodes = 8;
+  #elif DIM == 2
+  const int linear_p2g_window[64][3] = {
+    {0, 0, 0}, {-1, 0, 0}, {0, -1, 0}, {-1, -1, 0}};
+  const int num_surround_nodes = 4;
+ #else
+  const int linear_p2g_window[64][3] = {{0, 0, 0}, {-1, 0, 0}};
+  const int num_surround_nodes = 2;
+ #endif
+
+  bool overlap_rigid = false;
+  bool overlap_non_rigid = false;
+
+  for (int sid = 0; sid < num_surround_nodes; sid++) {
+
+    const Vectori selected_bin = WINDOW_BIN(selected_bin, linear_p2g_window, sid);
+
+    const unsigned int node_hash = NODE_MEM_INDEX(selected_bin, grid.num_cells);
+    
+    if (node_hash >= grid.num_cells_total) {
+      continue;
+    }
+
+    const int cstart = particles_cells_start_gpu[node_hash];
+    if (cstart < 0) {
+      continue;
+    }
+    const int cend = particles_cells_end_gpu[node_hash];
+    if (cend < 0) {
+      continue;
+    }
+
+    for (int j = cstart; j < cend; j++) {
+
+      const int particle_id = particles_sorted_indices_gpu[j];
+
+      if (particles_is_rigid_gpu[particle_id])
+      {
+        overlap_rigid = true;
+      } else {
+        overlap_non_rigid = true;
+      }
+
+    }
   }
-  const Vectorr particle_coords = particles_positions_gpu[tid];
 
-  const Vectori particle_bin = particles_bins_gpu[tid];
+  if (overlap_rigid && overlap_non_rigid) {
+    is_overlapping_gpu[nid] = true;
+  } else {
+    is_overlapping_gpu[nid] = false;
+  }
 
-  const int linear_backward_window_3d[64][3] = {
-      {0, 0, 0},   {1, 0, 0},   {-1, 0, 0},  {0, 1, 0},   {1, 1, 0},
-      {-1, 1, 0},  {0, -1, 0},  {1, -1, 0},  {-1, -1, 0},
+    // const Vectori selected_bin =
+    //     WINDOW_BIN(particle_bin, linear_backward_window, i);
 
-      {0, 0, 1},   {1, 0, 1},   {-1, 0, 1},  {0, 1, 1},   {1, 1, 1},
-      {-1, 1, 1},  {0, -1, 1},  {1, -1, 1},  {-1, -1, 1},
 
-      {0, 0, -1},  {1, 0, -1},  {-1, 0, -1}, {0, 1, -1},  {1, 1, -1},
-      {-1, 1, -1}, {0, -1, -1}, {1, -1, -1}, {-1, -1, -1}
+// // #ifdef CUDA_ENABLED
+// //     const Vectori selected_bin =
+// //         WINDOW_BIN(particle_bin, linear_backward_window, i);
+// // #else
+// //     const Vectori selected_bin =
+// //         WINDOW_BIN(particle_bin, linear_backward_window_3d, i);
+// // #endif
 
-  };
+//     bool invalidCell = false;
+//     const unsigned int nhash = NODE_MEM_INDEX(selected_bin, grid.num_cells);
 
-#ifdef CUDA_ENABLED
-  const int num_surround_nodes = num_surround_nodes_gpu;
-#else
-  const int num_surround_nodes = num_surround_nodes_cpu;
-#endif
+//     const Vectorr relative_coordinates =
+//         (particle_coords - grid.origin) * grid.inv_cell_size -
+//         selected_bin.cast<Real>();
 
-  for (int i = 0; i < 27; i++) {
+//     const Real radius = 1;
+//     if (fabs(relative_coordinates(0)) >= radius) {
+//       continue;
+//     }
 
-#ifdef CUDA_ENABLED
-    const Vectori selected_bin =
-        WINDOW_BIN(particle_bin, linear_backward_window_3d, i);
-#else
-    const Vectori selected_bin =
-        WINDOW_BIN(particle_bin, linear_backward_window_3d, i);
-#endif
+// #if DIM > 1
+//     if (fabs(relative_coordinates(1)) >= radius) {
+//       continue;
+//     }
+// #endif
 
-    bool invalidCell = false;
-    const unsigned int nhash = NODE_MEM_INDEX(selected_bin, grid.num_cells);
-
-    const Vectorr relative_coordinates =
-        (particle_coords - grid.origin) * grid.inv_cell_size -
-        selected_bin.cast<Real>();
-
-    const Real radius = 1;
-    if (fabs(relative_coordinates(0)) >= radius) {
-      continue;
-    }
-
-#if DIM > 1
-    if (fabs(relative_coordinates(1)) >= radius) {
-      continue;
-    }
-#endif
-
-#if DIM > 2
-    if (fabs(relative_coordinates(2)) >= radius)
-      continue;
-#endif
-    if (nhash >= grid.num_cells_total) {
-      continue;
-    }
-    is_overlapping_gpu[nhash] = true;
+// #if DIM > 2
+//     if (fabs(relative_coordinates(2)) >= radius)
+//       continue;
+// #endif
+//     if (nhash >= grid.num_cells_total) {
+//       continue;
+//     }
+//     is_overlapping_gpu[nhash] = true;
 
     //   //     if (is_rigid_body) {
     //   //       is_overlapping_gpu[node_hash] = is_overlapping;
@@ -456,7 +528,7 @@ __device__ __host__ inline void g2p_get_nodes_w_rigid_particles(
     // }
 
     // is_overlapping_gpu[nhash] = true;
-  }
+  // }
 
   // __device__ __host__ inline void get_overlapping_rigid_body_grid(
   //     bool *is_overlapping_gpu, const Vectori *node_ids_gpu,
@@ -618,7 +690,7 @@ __device__ __host__ inline void g2p_get_nodes_w_rigid_particles(
   //   //     //  selected_bin[1], selected_bin[2]);
   //   //   }
 
-#endif // endif DDIM=2 TODO: Remove this (or fix for 2D)
+
 }
 
 #ifdef CUDA_ENABLED

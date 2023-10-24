@@ -211,8 +211,7 @@ std::vector<Vector3r> grid_points_in_volume(const std::string &stl_filename,
 /// @param cell_size Cell spacing of each point in the grid
 /// @param point_per_cell Number of points per cell
 /// @return std::vector<Vector3r> Output points
-std::tuple<std::vector<Vector3r>, std::vector<Vector3r>>
-grid_points_on_surface(const std::string &stl_filename, const Real cell_size,
+std::vector<Vector3r> grid_points_on_surface(const std::string &stl_filename, const Real cell_size,
                        const int point_per_cell) {
   vtkNew<vtkSTLReader> reader;
   reader->SetFileName(stl_filename.c_str());
@@ -247,9 +246,7 @@ grid_points_on_surface(const std::string &stl_filename, const Real cell_size,
     positions_cpu[id][2] = point[2];
   }
 
-  // TODO make normals
-
-  return std::make_tuple(positions_cpu, positions_cpu);
+  return positions_cpu;
 }
 
 /// @brief Get the start and end position of the bounding box of an STL file

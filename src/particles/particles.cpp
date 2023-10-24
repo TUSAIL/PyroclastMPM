@@ -47,19 +47,69 @@ extern const int global_step_cpu;
 /// @param _colors Particle types (optional)
 /// @param _is_rigid mask of rigid particles (optional)
 ParticlesContainer::ParticlesContainer(
-    const cpu_array<Vectorr> &_positions, const cpu_array<Vectorr> &_velocities,
+    const cpu_array<Vectorr> &_positions, 
+    const cpu_array<Vectorr> &_velocities,
     const cpu_array<uint8_t> &_colors,
-    const cpu_array<bool> &_is_rigid) noexcept
-    : num_particles(static_cast<int>(_positions.size())) {
+    const cpu_array<Vectorr> &_rigid_positions,
+    const cpu_array<Vectorr> &_rigid_velocities,
+    const cpu_array<uint8_t> &_rigid_colors
+    ) noexcept
+    {
+    // : num_particles(static_cast<int>(_positions.size())) {
+
+  num_rigid_particles = static_cast<int>(_rigid_positions.size());
+
+  int num_nonrigid_particles = static_cast<int>(_positions.size());
+
+  num_particles = num_nonrigid_particles + num_rigid_particles;
+
+  cpu_array<bool> is_rigid_cpu = cpu_array<bool>(num_particles, false);
+
+
+
+  // combined rigid and nonrigid positions, velocities and colors
+  cpu_array<Vectorr> combined_positions_cpu = cpu_array<Vectorr>(num_particles, Vectorr::Zero());
+
+  cpu_array<Vectorr> combined_velocities_cpu = cpu_array<Vectorr>(num_particles, Vectorr::Zero());
+
+  cpu_array<uint8_t> combined_colors_cpu = cpu_array<uint8_t>(num_particles, 0);
+
+  for (int pi = 0; pi < num_particles; pi++) {
+    if (pi < num_nonrigid_particles) {
+      combined_positions_cpu[pi] = _positions[pi];
+
+      if (_velocities.size() > 0) {
+        combined_velocities_cpu[pi] = _velocities[pi];
+      }
+      if (_colors.size() > 0) {
+        combined_colors_cpu[pi] = _colors[pi];
+      }
+
+    } else {
+      int rigid_pid = pi - num_nonrigid_particles;
+      combined_positions_cpu[pi] = _rigid_positions[rigid_pid];
+      
+      if (_rigid_velocities.size() > 0) {
+        combined_velocities_cpu[pi] = _rigid_velocities[rigid_pid];
+      }
+      if (_rigid_colors.size() > 0) {
+        combined_colors_cpu[pi] = _rigid_colors[rigid_pid];
+      }
+
+      is_rigid_cpu[pi] = true;
+    }
+  }
+
+  set_default_device<bool>(num_particles, is_rigid_cpu, is_rigid_gpu, false);
+  set_default_device<Vectorr>(num_particles, combined_positions_cpu, positions_gpu,
+                              Vectorr::Zero());
+  set_default_device<Vectorr>(num_particles, combined_velocities_cpu, velocities_gpu,
+                              Vectorr::Zero());
+  set_default_device<uint8_t>(num_particles, combined_colors_cpu, colors_gpu, 0);
 
   set_default_device<Matrix3r>(num_particles, {}, stresses_gpu,
                                Matrix3r::Zero());
-  set_default_device<Vectorr>(num_particles, _positions, positions_gpu,
-                              Vectorr::Zero());
-  set_default_device<Vectorr>(num_particles, _velocities, velocities_gpu,
-                              Vectorr::Zero());
-  set_default_device<uint8_t>(num_particles, _colors, colors_gpu, 0);
-  set_default_device<bool>(num_particles, _is_rigid, is_rigid_gpu, false);
+
 
   set_default_device<bool>(num_particles, {}, is_active_gpu, true);
 
@@ -105,6 +155,9 @@ void ParticlesContainer::reset(bool reset_psi) {
   }
   thrust::fill(velocity_gradient_gpu.begin(), velocity_gradient_gpu.end(),
                Matrixr::Zero());
+
+  thrust::fill(forces_external_gpu.begin(), forces_external_gpu.end(),
+            Vectorr::Zero());
 }
 
 /// @brief Reorder Particles arrays
@@ -156,13 +209,14 @@ void ParticlesContainer::output_vtk() const {
 
   cpu_array<bool> is_rigid_cpu = is_rigid_gpu;
   cpu_array<bool> do_output_cpu = is_rigid_gpu;
+
+
   for (int pi = 0; pi < num_particles; pi++) {
 
     do_output_cpu[pi] =
         !is_rigid_cpu[pi]; // flip to make sure we don't output rigid particles
   }
 
-  bool exclude_rigid_from_output = true; // TODO make this an option?
 
   // post process data
   cpu_array<Real> p_post_cpu = cpu_array<Real>(num_particles, 0.);

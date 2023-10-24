@@ -108,7 +108,7 @@ public:
   /// @param nodes_ref Nodes container
   /// @param particles_ref Particles container
   void initialize(const NodesContainer &nodes_ref,
-                  const ParticlesContainer &particles_ref);
+                  const ParticlesContainer &particles_ref) override;
 
   /// @brief calculates grid normals of rigid body level set
   /// @param nodes_ref Nodes container
@@ -138,6 +138,12 @@ public:
 
   void output_vtk(NodesContainer &nodes_ref,
                   ParticlesContainer &particles_ref) override;
+
+  void setModeLoopRotate(Vectorr euler_angles_per_second, Real rate = 1.0);
+
+  int mode = 0;
+
+  bool is_animated;
 
   /// @brief Number of animation frames for rigid body
   int num_frames;

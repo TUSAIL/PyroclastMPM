@@ -82,8 +82,17 @@ Solver::Solver(const ParticlesContainer &_particles,
   }
 
   particles.numColors = (int)materials.size();
+
+  for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
+    std::visit([this](auto &arg) { arg.initialize(nodes, particles); },
+    boundaryconditions[bc_id]
+    );
+  }
+
   // TODO: reorder particles with particles.reorder(_)
   output();
+
+
 }
 
 /// @brief Do stress update for all the materials
@@ -165,12 +174,13 @@ void Solver::run(const int total_steps, const int output_frequency) {
 /// @brief Output the results (ParticlesContainer,NodesContainer, etc. )
 void Solver::output() {
   particles.output_vtk();
+
   nodes.output_vtk();
 
-  for (auto &bc : boundaryconditions) {
-    // FIXME: does not print out boundary condition child arrays
-    // (is_overlapping) std::visit([this](auto &arg) { arg.output_vtk(nodes,
-    // particles); }, bc);
+  for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
+    std::visit([this](auto &arg) { arg.output_vtk(nodes, particles); },
+    boundaryconditions[bc_id]
+    );
   }
 }
 

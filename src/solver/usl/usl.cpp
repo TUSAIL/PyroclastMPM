@@ -68,30 +68,32 @@ void USL::solve() {
 
   calculate_shape_function(nodes, particles);
 
-  for (auto bc : boundaryconditions) {
-    std::visit([this](auto &arg) { arg.apply_on_particles(particles); }, bc);
+  for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
+    std::visit([this](auto &arg) { arg.apply_on_particles(particles); }, boundaryconditions[bc_id]);
   }
 
   P2G();
 
-  for (auto bc : boundaryconditions) {
-    std::visit([this](auto &arg) { arg.apply_on_nodes_f_ext(nodes); }, bc);
+
+  for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
+    std::visit([this](auto &arg) { arg.apply_on_nodes_f_ext(nodes); }, boundaryconditions[bc_id]);
   }
 
   nodes.integrate();
 
-  for (auto bc : boundaryconditions) {
+  for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
     std::visit(
         [this](auto &arg) { arg.apply_on_nodes_moments(nodes, particles); },
-        bc);
+        boundaryconditions[bc_id]);
   }
+
 
   G2P();
 
   stress_update();
 
-  for (auto bc : boundaryconditions) {
-    std::visit([this](auto &arg) { arg.apply_on_particles(particles); }, bc);
+  for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
+    std::visit([this](auto &arg) { arg.apply_on_particles(particles); }, boundaryconditions[bc_id]);
   }
 }
 

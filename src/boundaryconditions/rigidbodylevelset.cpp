@@ -44,25 +44,35 @@ RigidBodyLevelSet::RigidBodyLevelSet(const Vectorr _COM,
     : num_frames((int)_frames.size()), frames_cpu(_frames),
       locations_cpu(_locations), rotations_cpu(_rotations) {
 
-  if (DIM != 3) {
-    printf("Rigid body level set only supports 3D simulations\n");
-    exit(1);
-  }
-
+  printf("rigid body constructor \n");
   if (_locations.empty()) {
-    COM = _COM;
+
+    is_animated = false;
     return;
   }
-  printf("Rigid body level has motion \n"); // TODO: debug
+  is_animated = true;
 
-  COM = _locations[0];
+   std::string format = "vtk";
+
+  
+  COM = _COM;
 
   locations_cpu = _locations;
 
-  current_frame = 0;
-
   euler_angles = _rotations[0];
+
+
 }
+
+void RigidBodyLevelSet::setModeLoopRotate(Vectorr euler_angles_per_second, Real rate) {
+  
+ mode = 1;
+ is_animated = true;
+ euler_angles = rate*euler_angles_per_second;
+
+}
+
+
 
 /// @brief apply rigid body contact on background grid
 /// @param nodes_ref Nodes container
@@ -70,32 +80,46 @@ RigidBodyLevelSet::RigidBodyLevelSet(const Vectorr _COM,
 void RigidBodyLevelSet::apply_on_nodes_moments(
     NodesContainer &nodes_ref, ParticlesContainer &particles_ref) {
 
-  if (global_step_cpu == 0) {
-    initialize(nodes_ref, particles_ref);
-  }
+  // if (global_step_cpu == 0) {
+  //   initialize(nodes_ref, particles_ref);
+  // }
 
-  set_default_device<bool>(nodes_ref.grid.num_cells_total, {},
-                           is_overlapping_gpu, false);
+  // thrust::fill(is_overlapping_gpu.begin(), is_overlapping_gpu.end(), false);
+
+
+
   // Set velocity
-  // printf("frames %d \n", current_frame);
-  set_velocities(particles_ref);
+  // set_velocities(particles_ref);
+
+  // printf("rigid body after initialize \n");
+  // exit(0);
 
   // 4. Mask grid nodes that contribute to rigid body contact
-  calculate_overlapping_rigidbody(nodes_ref, particles_ref);
+  // calculate_overlapping_rigidbody(nodes_ref, particles_ref);
+
+  // exit(0);
 
   // 5. Get rigid body grid normals
   calculate_grid_normals(nodes_ref, particles_ref);
 
-  // update rigid body position
+  // // update rigid body position
   set_position(particles_ref);
 
-  if (global_step_cpu % 400 == 0) {
-
-    output_vtk(nodes_ref, particles_ref); // TODO: remove this , for
+  // if (global_step_cpu % 100 == 0) {
+  // printf("output rigid body \n");
+  // output_vtk(nodes_ref, particles_ref); // TODO: remove this , for
     //   debugging
-  }
+  // }
 
-  current_frame += 1;
+  // printf("current frame %d \n", current_frame);
+
+  // if (current_frame >1)
+  // {
+    // printf("should exit...");
+    // exit(0);
+  // }
+  current_frame = current_frame + 1;
+
 };
 
 /// @brief Set the output formats
@@ -108,11 +132,13 @@ void RigidBodyLevelSet::set_output_formats(
 /// @brief set velocities of rigid particles
 /// @param particles_ref Particles container
 void RigidBodyLevelSet::set_velocities(ParticlesContainer &particles_ref) {
+  
   if (current_frame >= num_frames - 1) {
     return;
   }
 
   translational_velocity = (locations_cpu[current_frame + 1] - COM) / dt_cpu;
+  
   // radians to degrees
   angular_velocities =
       (rotations_cpu[current_frame + 1] * (PI / 180) - euler_angles) / dt_cpu;
@@ -205,16 +231,32 @@ void RigidBodyLevelSet::calculate_grid_normals(
 #else
   for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++) {
     // TODO: fix this for CPU and 2D
-    // calculate_grid_normals_nn_rigid(
-    //     nodes_ref.moments_gpu.data(), nodes_ref.moments_nt_gpu.data(),
-    //     nodes_ref.node_ids_gpu.data(), nodes_ref.masses_gpu.data(),
-    //     is_overlapping_gpu.data(), particles_ref.velocities_gpu.data(),
-    //     particles_ref.dpsi_gpu.data(), particles_ref.masses_gpu.data(),
-    //     particles_ref.spatial.cell_start_gpu.data(),
-    //     particles_ref.spatial.cell_end_gpu.data(),
-    //     particles_ref.spatial.sorted_index_gpu.data(),
-    //     particles_ref.is_rigid_gpu.data(),
-    //     particles_ref.positions_gpu.data(), nodes_ref.grid, nid);
+    calculate_grid_normals_nn_rigid(
+       thrust::raw_pointer_cast(normals_gpu.data()),
+             thrust::raw_pointer_cast(nodes_ref.moments_gpu.data()),
+      thrust::raw_pointer_cast(nodes_ref.moments_nt_gpu.data()),
+      thrust::raw_pointer_cast(nodes_ref.node_ids_gpu.data()),
+      thrust::raw_pointer_cast(nodes_ref.masses_gpu.data()),
+      thrust::raw_pointer_cast(is_overlapping_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.velocities_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.dpsi_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.masses_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.spatial.cell_start_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.spatial.cell_end_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.spatial.sorted_index_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.is_rigid_gpu.data()),
+      thrust::raw_pointer_cast(particles_ref.positions_gpu.data()),
+      nodes_ref.grid, nid);
+    // //     nodes_ref.moments_gpu.data(), nodes_ref.moments_nt_gpu.data(),
+    // //     nodes_ref.node_ids_gpu.data(), nodes_ref.masses_gpu.data(),
+    // //     is_overlapping_gpu.data(), particles_ref.velocities_gpu.data(),
+    // //     particles_ref.dpsi_gpu.data(), particles_ref.masses_gpu.data(),
+    // //     particles_ref.spatial.cell_start_gpu.data(),
+    // //     particles_ref.spatial.cell_end_gpu.data(),
+    // //     particles_ref.spatial.sorted_index_gpu.data(),
+    // //     particles_ref.is_rigid_gpu.data(),
+    // //     particles_ref.positions_gpu.data(), nodes_ref.grid, nid
+    // );
   }
 #endif
 }
@@ -239,22 +281,28 @@ void RigidBodyLevelSet::calculate_overlapping_rigidbody(
 
   gpuErrchk(cudaDeviceSynchronize());
 #else
-  for (int pid = 0; pid < particles_ref.num_particles; pid++) {
-    // TODO: fix this for CPU and 2D
-    // get_overlapping_rigid_body_grid(
-    //     is_overlapping_gpu.data(), nodes_ref.node_ids_gpu.data(),
-    //     particles_ref.positions_gpu.data(),
-    //     particles_ref.spatial.bins_gpu.data(),
-    //     particles_ref.is_rigid_gpu.data(), nodes_ref.grid, pid);
+  for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++) {
+
+  g2p_get_nodes_w_rigid_particles(
+    is_overlapping_gpu.data(),
+    particles_ref.positions_gpu.data(),
+    particles_ref.spatial.bins_gpu.data(),
+    particles_ref.spatial.cell_start_gpu.data(),
+    particles_ref.spatial.cell_end_gpu.data(),
+    particles_ref.spatial.sorted_index_gpu.data(),
+    particles_ref.is_rigid_gpu.data(),
+    nodes_ref.grid, nid);
+
   }
 #endif
 }
 
 void RigidBodyLevelSet::output_vtk(NodesContainer &nodes_ref,
                                    ParticlesContainer &particles_ref) {
-  // override in derived classes
-  // printf("output vtk\n");
-#if DIM > 2 // TODO: FIX THIS
+
+  if (output_formats.empty()) {
+    return;
+  }
   // nodes
   vtkSmartPointer<vtkPolyData> nodes_polydata =
       vtkSmartPointer<vtkPolyData>::New();
@@ -272,21 +320,31 @@ void RigidBodyLevelSet::output_vtk(NodesContainer &nodes_ref,
 
   cpu_array<Real> nodes_masses_cpu = nodes_ref.masses_gpu;
 
-  std::string format = "vtk";
+  // std::string format = "vtk";
 
-  // TODO: fix this (remove and make so we can output int3)
-  cpu_array<Vectori> nodes_node_ids_cpu = nodes_ref.node_ids_gpu;
-  cpu_array<Vectorr> nodes_node_ids_real_cpu;
-  for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++) {
-    nodes_node_ids_real_cpu.push_back(Vectorr(
-        {(Real)nodes_node_ids_cpu[nid][0], (Real)nodes_node_ids_cpu[nid][1],
-         (Real)nodes_node_ids_cpu[nid][2]}));
-  }
+  // // TODO: fix this (remove and make so we can output int3)
+  // cpu_array<Vectori> nodes_node_ids_cpu = nodes_ref.node_ids_gpu;
+
+  // cpu_array<Vectorr> nodes_node_ids_real_cpu;
+  // for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++) {
+  //   #if DIM == 3
+  //   nodes_node_ids_real_cpu.push_back(Vectorr(
+  //       {(Real)nodes_node_ids_cpu[nid][0], (Real)nodes_node_ids_cpu[nid][1],
+  //        (Real)nodes_node_ids_cpu[nid][2]}));
+  //   #elif DIM ==2
+  //   nodes_node_ids_real_cpu.push_back(Vectorr(
+  //       {(Real)nodes_node_ids_cpu[nid][0], (Real)nodes_node_ids_cpu[nid][1]}));
+  //   #else
+  //   nodes_node_ids_real_cpu.push_back(Vectorr(
+  //       {(Real)nodes_node_ids_cpu[nid][0]}));
+  //   #endif
+  // }
+  // set_vtk_pointdata<Vectorr>(nodes_node_ids_real_cpu, nodes_polydata,
+                            //  "Nodes_id");
 
   set_vtk_points(nodes_positions_cpu, nodes_polydata);
-  set_vtk_pointdata<Vectorr>(nodes_normals_cpu, nodes_polydata, "Normals");
-  set_vtk_pointdata<Vectorr>(nodes_node_ids_real_cpu, nodes_polydata,
-                             "Nodes_id");
+
+  // set_vtk_pointdata<Vectorr>(nodes_normals_cpu, nodes_polydata, "Normals");
   set_vtk_pointdata<Vectorr>(nodes_moments_cpu, nodes_polydata, "Moments");
   set_vtk_pointdata<Vectorr>(nodes_moments_nt_cpu, nodes_polydata, "MomentsNT");
   set_vtk_pointdata<Vectorr>(nodes_forces_external_cpu, nodes_polydata,
@@ -296,27 +354,32 @@ void RigidBodyLevelSet::output_vtk(NodesContainer &nodes_ref,
   set_vtk_pointdata<Vectorr>(nodes_forces_total_cpu, nodes_polydata,
                              "ForcesTotal");
   set_vtk_pointdata<Real>(nodes_masses_cpu, nodes_polydata, "Mass");
-  set_vtk_pointdata<bool>(nodes_is_overlapping_cpu, nodes_polydata,
-                          "is_overlapping");
-  write_vtk_polydata(nodes_polydata, "nodes_rigid_body", format);
 
-  // particles
-
-  vtkSmartPointer<vtkPolyData> particles_polydata =
-      vtkSmartPointer<vtkPolyData>::New();
-
-  cpu_array<Vectorr> rigid_positions_cpu = {};
-
-  for (int pid = 0; pid < particles_ref.num_particles; pid++) {
-    if (particles_ref.is_rigid_gpu[pid]) {
-      rigid_positions_cpu.push_back(particles_ref.positions_gpu[pid]);
-    }
+  set_vtk_pointdata<bool>(
+    nodes_is_overlapping_cpu,
+    nodes_polydata,
+    "is_overlapping");
+  
+  for (const auto &format : output_formats) {
+    write_vtk_polydata(nodes_polydata, "nodes_rigid_body", format);
   }
 
-  int num_rigid = rigid_positions_cpu.size();
-  set_vtk_points(rigid_positions_cpu, particles_polydata);
-  write_vtk_polydata(particles_polydata, "rigid_particles", format);
+  // // particles
 
-#endif // endif DDIM=2 TODO: Remove this (or fix for 2D)
+  // vtkSmartPointer<vtkPolyData> particles_polydata =
+  //     vtkSmartPointer<vtkPolyData>::New();
+
+  // cpu_array<Vectorr> rigid_positions_cpu = {};
+
+  // for (int pid = 0; pid < particles_ref.num_particles; pid++) {
+  //   if (particles_ref.is_rigid_gpu[pid]) {
+  //     rigid_positions_cpu.push_back(particles_ref.positions_gpu[pid]);
+  //   }
+  // }
+
+  // int num_rigid = rigid_positions_cpu.size();
+  // set_vtk_points(rigid_positions_cpu, particles_polydata);
+  // write_vtk_polydata(particles_polydata, "rigid_particles", format);
+
 };
 } // namespace pyroclastmpm

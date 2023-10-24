@@ -118,6 +118,14 @@ void rigidbodylevelset_module(const py::module &m) {
               py::arg("output_formats"));
 
   boundarycondition_cls.def("initialize", &RigidBodyLevelSet::initialize);
+
+  boundarycondition_cls.def("set_mode_loop_rotate", &RigidBodyLevelSet::setModeLoopRotate,
+              R"(
+
+
+            )",
+            py::arg("euler_angles_per_second"),
+            py::arg("rate") = 1.0);
 };
 
 } // namespace pyroclastmpm
