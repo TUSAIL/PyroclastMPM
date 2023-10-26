@@ -101,16 +101,14 @@ def run_benchmark(model_cfg, benchmark_cfg, global_cfg, callback):
 
     """
     # initialize global variables
-    dt = global_cfg["timestep"]
     time = global_cfg["time"]
 
-    pm.set_global_timestep(dt)
-
-    # initialize particles and material
-    particles, material = create_material(model_cfg)
-
-    if not "timestep_array" in benchmark_cfg:
+    if type(global_cfg["timestep"]) == float:
+        dt = global_cfg["timestep"]
+        pm.set_global_timestep(dt)
+        particles, material = create_material(model_cfg)
         for ci, cycle in enumerate(benchmark_cfg["run"]):
+            print(f"cycle {ci} timestep {dt} cycle index {ci}")
             particles, material = mixed_control(
                 particles,
                 material,
@@ -125,27 +123,26 @@ def run_benchmark(model_cfg, benchmark_cfg, global_cfg, callback):
                 cycle=ci,
                 tolerance=global_cfg["tolerance"],
             )
-    else:
-        dt_range = np.linspace(
-            benchmark_cfg["timestep_array"][0],
-            benchmark_cfg["timestep_array"][1],
-            100,
-        )
-        for dt_dynamic in dt_range:
+    elif type(global_cfg["timestep"]) == list:
+        for ti, dt in enumerate(global_cfg["timestep"]):
+            pm.set_global_timestep(dt)
+            particles, material = create_material(model_cfg)
+            num_cycles = len(benchmark_cfg["run"])
             for ci, cycle in enumerate(benchmark_cfg["run"]):
-                pm.set_global_timestep(dt_dynamic)
+                cycle_index = ci + num_cycles * ti
+                print(f"cycle {ci} timestep {dt} cycle index {cycle_index}")
                 particles, material = mixed_control(
                     particles,
                     material,
                     time,
-                    dt_dynamic,
+                    dt,
                     np.array(cycle["is_stress_control"]),
                     np.array(cycle["target_strain"]),
                     target_stress=np.array(cycle["target_stress"]),
                     callback=callback,
                     callback_step=global_cfg["output_steps"],
                     is_finite_strain=global_cfg["is_finite_strain"],
-                    cycle=ci,
+                    cycle=cycle_index,  # linearize index
                     tolerance=global_cfg["tolerance"],
                 )
 

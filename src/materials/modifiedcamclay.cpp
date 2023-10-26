@@ -71,12 +71,6 @@ void ModifiedCamClay::initialize(const ParticlesContainer &particles_ref,
                                particles_ref.stresses_gpu, stress_ref_gpu,
                                Matrix3r::Zero());
 
-  // set_default_device<Matrix3r>(particles_ref.num_particles, {},
-  // stress_ref_gpu,
-  //  Matrix3r::Zero());
-
-  // set Pc0 based on overconsolidation ratio and pressures
-
   cpu_array<Matrix3r> stresses_cpu = particles_ref.stresses_gpu;
   cpu_array<Real> pc_cpu = pc_gpu;
   cpu_array<Real> pressures_cpu =
@@ -85,9 +79,8 @@ void ModifiedCamClay::initialize(const ParticlesContainer &particles_ref,
     // must be positive compression
     pressures_cpu[pi] = -(stresses_cpu[pi].trace() / 3.);
 
-    const Real Pc0 = pressures_cpu[pi] / R;
+    const Real Pc0 = pressures_cpu[pi] * R;
     pc_cpu[pi] = Pc0;
-    // printf("Pc0: %f\n", Pc0);
   }
   pc_gpu = pc_cpu;
 }
@@ -127,13 +120,6 @@ void ModifiedCamClay::stress_update(ParticlesContainer &particles_ref,
         is_velgrad_strain_increment, pid);
   }
 #endif
-
-  if (global_step_cpu % 2000 == 0) { // TODO: remove this
-
-    NodesContainer nodes_ref_DUMMY;
-    output_vtk(nodes_ref_DUMMY, particles_ref); // TODO: remove this , for
-    //   debugging
-  }
 }
 
 /// @brief Calculate time step wave propagation speed
@@ -155,19 +141,20 @@ Real ModifiedCamClay::calculate_timestep(Real cell_size, Real factor,
 void ModifiedCamClay::output_vtk(NodesContainer &nodes_ref,
                                  ParticlesContainer &particles_ref) {
 
-  std::string format = "vtk";
+  if (output_formats.empty()) {
+    return;
+  }
 
   vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 
   cpu_array<Vectorr> positions_cpu = particles_ref.positions_gpu;
   cpu_array<Real> alpha_cpu = alpha_gpu;
-  // cpu_array<Matrixr> eps_e_cpu = eps_e_gpu;
-
   set_vtk_points(positions_cpu, polydata);
   set_vtk_pointdata<Real>(alpha_cpu, polydata, "alpha");
-  // set_vtk_pointdata<Matrixr>(alpha_cpu, polydata, "eps_e");
 
-  write_vtk_polydata(polydata, "particles_mcc", "vtk");
+  for (const auto &format : output_formats) {
+    write_vtk_polydata(polydata, "modified_cam_clay", format);
+  }
 }
 
 } // namespace pyroclastmpm

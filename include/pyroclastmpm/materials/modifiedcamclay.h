@@ -90,7 +90,8 @@ public:
   /// @param mat_id material id
   void initialize(const ParticlesContainer &particles_ref, int mat_id);
 
-  void output_vtk(NodesContainer &nodes_ref, ParticlesContainer &particles_ref);
+  void output_vtk(NodesContainer &nodes_ref,
+                  ParticlesContainer &particles_ref) override;
 
   /// @brief Slope of the critical state line
   Real M;

@@ -85,14 +85,11 @@ Solver::Solver(const ParticlesContainer &_particles,
 
   for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
     std::visit([this](auto &arg) { arg.initialize(nodes, particles); },
-    boundaryconditions[bc_id]
-    );
+               boundaryconditions[bc_id]);
   }
 
   // TODO: reorder particles with particles.reorder(_)
   output();
-
-
 }
 
 /// @brief Do stress update for all the materials
@@ -179,8 +176,12 @@ void Solver::output() {
 
   for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
     std::visit([this](auto &arg) { arg.output_vtk(nodes, particles); },
-    boundaryconditions[bc_id]
-    );
+               boundaryconditions[bc_id]);
+  }
+
+  for (int mat_id = 0; mat_id < materials.size(); mat_id++) {
+    std::visit([this](auto &arg) { arg.output_vtk(nodes, particles); },
+               materials[mat_id]);
   }
 }
 

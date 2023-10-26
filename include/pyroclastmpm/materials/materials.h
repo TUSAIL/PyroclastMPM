@@ -68,6 +68,11 @@ public:
     return 100000;
   };
 
+  virtual void output_vtk(NodesContainer &nodes_ref,
+                          ParticlesContainer &particles_ref){
+      // override this function
+  };
+
   /// @brief material densities (per particle)
   gpu_array<Real> densities_gpu;
 
@@ -76,6 +81,9 @@ public:
 
   /// @brief Initial bulk density
   Real density = 0.0;
+
+  /// @brief Output formats
+  std::vector<std::string> output_formats;
 };
 
 } // namespace pyroclastmpm
