@@ -14,7 +14,11 @@
 
 # Welcome
 
-PyroclastMPM is an explicit GPU-based Material Point Method (MPM) solver developed by Retief Lubbe. The solver is written in CUDA and C++ with Python bindings and is designed to be fast, modular, and highly extensible.
+PyroclastMPM is an explicit GPU-based Material Point Method (MPM) solver. The solver is written in CUDA and C++ with Python bindings and is designed to be fast, modular, and highly extensible.
+
+# Team
+
+The software is a research output of the [TUSAIL](https://tusail.eu/projects/esr-12.html) ITN. The code was developed by Retief Lubbe in collaboration Hongyang Cheng, Stefan Luding and Vanessa Magnanimo.
 
 # Motivation
 
