@@ -35,97 +35,102 @@ namespace py = pybind11;
 namespace pyroclastmpm {
 
 void rigidbodylevelset_module(const py::module &m) {
- 
+
   py::class_<RigidBodyLevelSet> boundarycondition_cls(m, "RigidBodyLevelSet",
-                                        py::dynamic_attr());
-  boundarycondition_cls.def(py::init<Vectorr, std::vector<int>, std::vector<Vectorr>,
-                       std::vector<Vectorr>>(),
-              R"(
-            A rigid body consists of a set of (MPM)rigid particles that are connected. 
-            Rigid particles belong in the same array as the particles, but are mask as
-            `is_rigid` in :class:`ParticlesContainer`
+                                                      py::dynamic_attr());
+  boundarycondition_cls.def(py::init<>(),
+                            R"(
+              A rigid body consists of a set of (MPM)rigid particles that are
+              connected.
+              Rigid particles belong in the same array as the particles, but
+              are mask as
+              `is_rigid` in :class:`ParticlesContainer`
 
+              A motion .chan file can be parsed to input the animation
+              frames.
+              For more information on .chan files
+              see
+              https://docs.blender.org/manual/en/latest/addons/import_export/anim_nuke_chan.html
+              .
 
-            A motion .chan file can be parsed to input the animation frames.
-            For more information on .chan files
-            see https://docs.blender.org/manual/en/latest/addons/import_export/anim_nuke_chan.html .
+              Example usage:
 
+              .. highlight:: python
+              .. code-block:: python
 
-            Example usage:
+                    import pyroclastmpm as pm
+                    import numpy as np
 
-            .. highlight:: python
-            .. code-block:: python
+                    # make rigid paticles and material particles
+                    rigid_body = np.array([...])[0] # shape R, D
+                    material = np.array([...]) # shape N, D
 
-                  import pyroclastmpm as pm
-                  import numpy as np
+                    # combine particles and flag rigid particles
+                    positions = np.concatenate((material, rigid_body),
+                    axis=0) # shape N+R, D
+                    rigid_mask = np.array([...]) # shape N+R, 1
 
-                  # make rigid paticles and material particles
-                  rigid_body = np.array([...])[0] # shape R, D
-                  material = np.array([...]) # shape N, D
+                    # initialize ParticlesContainer
+                    particles = pm.ParticlesContainer(positions, rigid_mask)
 
-                  # combine particles and flag rigid particles
-                  positions = np.concatenate((material, rigid_body), axis=0) # shape N+R, D
-                  rigid_mask = np.array([...]) # shape N+R, 1 
+                    # initialize RigidBodyLevelSet boundary condition
+                    rigidbody_bc = pm.RigidBodyLevelSet()
+                    rigidbody_bc.set_output_formats(["vtk","csv"])
+                    rigidbody_bc.initialize(nodes,particles)
 
-                  # initialize ParticlesContainer
-                  particles = pm.ParticlesContainer(positions, rigid_mask)
+              Parameters
+              ----------
+              COM : np.ndarray, optional
+                  Center of mass of rigid body, required only if animated, by
+                  default None.
+              frames : np.ndarray, optional
+                  Animation frames, by default None.
+              locations : np.ndarray, optional
+                  Animation locations, by default None.
+              rotations : np.ndarray, optional
+                  Animation rotations, by default None.
+              output_formats : List[str], optional
+                  List of output formats, by default None.
 
-                  # initialize RigidBodyLevelSet boundary condition
-                  rigidbody_bc = pm.RigidBodyLevelSet()
-                  rigidbody_bc.set_output_formats(["vtk","csv"])
-                  rigidbody_bc.initialize(nodes,particles)
+              Tip
+              -----
+              The function :func:`grid_points_on_surface` is helpful convert
+              STL files to
+              rigid particles.
 
-            Parameters
-            ----------
-            COM : np.ndarray, optional
-                Center of mass of rigid body, required only if animated, by default None.
-            frames : np.ndarray, optional
-                Animation frames, by default None.
-            locations : np.ndarray, optional
-                Animation locations, by default None.
-            rotations : np.ndarray, optional
-                Animation rotations, by default None.
-            output_formats : List[str], optional
-                List of output formats, by default None.
+              )");
 
-            Tip
-            -----
-            The function :func:`grid_points_on_surface` is helpful convert STL files to
-            rigid particles.
+  // py::arg("COM") = Vectorr::Zero(), py::arg("frames") = std::vector<int>(),
+  //   py::arg("locations") = std::vector<Vectorr>(),
+  //   py::arg("rotations") = std::vector<Vectorr>()
+
+  // boundarycondition_cls.def("set_output_formats",
+  // &RigidBodyLevelSet::set_output_formats,
+  //             R"(
+  //           Set a list of formats that are outputted in a
+  //           directory specified in :func:`set_globals`.
+
+  //           Example usage:
+  //                 >>> import pyroclastmpm as pm
+  //                 >>> rigidbody_bc = pm.RigidBodyLevelSet(...)
+  //                 >>> rigidbody_bc.set_output_formats(["vtk","csv"])
+
+  //           Parameters
+  //           ----------
+  //           output_formats : List[str]
+  //               List of output formats.
+
+  //           )",
+  //             py::arg("output_formats"));
+
+  // boundarycondition_cls.def("initialize", &RigidBodyLevelSet::initialize);
+
+  boundarycondition_cls.def(
+      "set_mode_loop_rotate", &RigidBodyLevelSet::set_mode_loop_rotate,
+      R"(
 
             )",
-              py::arg("COM") = Vectorr::Zero(),
-              py::arg("frames") = std::vector<int>(),
-              py::arg("locations") = std::vector<Vectorr>(),
-              py::arg("rotations") = std::vector<Vectorr>());
-
-  boundarycondition_cls.def("set_output_formats", &RigidBodyLevelSet::set_output_formats,
-              R"(
-            Set a list of formats that are outputted in a
-            directory specified in :func:`set_globals`.
-
-            Example usage:
-                  >>> import pyroclastmpm as pm
-                  >>> rigidbody_bc = pm.RigidBodyLevelSet(...)
-                  >>> rigidbody_bc.set_output_formats(["vtk","csv"])
-
-            Parameters
-            ----------
-            output_formats : List[str]
-                List of output formats.
-
-            )",
-              py::arg("output_formats"));
-
-  boundarycondition_cls.def("initialize", &RigidBodyLevelSet::initialize);
-
-  boundarycondition_cls.def("set_mode_loop_rotate", &RigidBodyLevelSet::setModeLoopRotate,
-              R"(
-
-
-            )",
-            py::arg("euler_angles_per_second"),
-            py::arg("rate") = 1.0);
+      py::arg("euler_angles_per_second"), py::arg("COM") = Vectorr::Zero());
 };
 
 } // namespace pyroclastmpm

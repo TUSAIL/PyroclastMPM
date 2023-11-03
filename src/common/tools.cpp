@@ -38,6 +38,84 @@
 
 namespace pyroclastmpm {
 
+std::tuple<std::vector<std::vector<int>>, std::vector<Vectorr>>
+get_stl_cells(const std::string &stl_filename) {
+
+  vtkNew<vtkSTLReader> reader;
+  reader->SetFileName(stl_filename.c_str());
+  reader->Update();
+
+  // vtkNew<vtkPolyDataNormals> normals;
+  // normals->SetInputConnection(reader->GetOutputPort());
+  // normals->FlipNormalsOn();
+  // normals->Update();
+
+  // vtkSmartPointer<vtkPolyData> geometry =
+  // vtkSmartPointer<vtkPolyData>::New();
+
+  vtkSmartPointer<vtkPolyData> geometry = reader->GetOutput();
+
+  // geometry = normals->GetOutput();
+  // vtkPoints *points = geometry->GetPoints();
+
+  // int numPoints = points->GetNumberOfPoints();
+
+  int numberOfFaces = geometry->GetNumberOfCells();
+
+  printf("Number of faces: %d \n", numberOfFaces);
+
+  double bounds[6];
+  geometry->GetBounds(bounds);
+
+  std::cout << "Bounds uniform random grid: " << bounds[0] << ", " << bounds[1]
+            << " " << bounds[2] << ", " << bounds[3] << " " << bounds[4] << ", "
+            << bounds[5] << std::endl;
+
+  std::vector<std::vector<int>> wall_list;
+  for (int fi = 0; fi < numberOfFaces; fi++) {
+    vtkCell *cell = geometry->GetCell(fi);
+    std::vector<int> wall;
+    for (int wi = 0; wi < 3; wi++) {
+      wall.push_back(cell->GetPointId(wi));
+    }
+    wall_list.push_back(wall);
+    printf("Wall: %d, %d, %d\n", wall[0], wall[1], wall[2]);
+  }
+
+  std::vector<Vectorr> vertex_list;
+  int num_vertices = geometry->GetNumberOfPoints();
+  for (int pi = 0; pi < num_vertices; pi++) {
+    double pt[3];
+    geometry->GetPoint(pi, pt);
+
+    // vertex_list.push_back(std::vector<double>{pt[0], pt[1], pt[2]});
+
+    Vectorr vert_point;
+    vert_point[0] = pt[0];
+#if DIM > 1
+    vert_point[1] = pt[1];
+#endif
+
+#if DIM > 2
+    vert_point[2] = pt[2];
+#endif
+    vertex_list.push_back(vert_point);
+  }
+
+  // auto it = geometry->NewCellIterator();
+
+  // for (it->InitTraversal(); !it->IsDoneWithTraversal();
+  // it->GoToNextCell()) {
+
+  //   auto cell = vtkSmartPointer<vtkGenericCell>::New();
+  //   // it->GetCell(cell);
+  // }
+
+  // std::vector<Vectorr> temp = {};
+
+  return std::make_tuple(wall_list, vertex_list);
+}
+
 /// @brief Samples points randomly in a volume
 /// @param stl_filename String containing the path to the STL file
 /// @param num_points Number of points to sample
@@ -211,8 +289,9 @@ std::vector<Vector3r> grid_points_in_volume(const std::string &stl_filename,
 /// @param cell_size Cell spacing of each point in the grid
 /// @param point_per_cell Number of points per cell
 /// @return std::vector<Vector3r> Output points
-std::vector<Vector3r> grid_points_on_surface(const std::string &stl_filename, const Real cell_size,
-                       const int point_per_cell) {
+std::vector<Vector3r> grid_points_on_surface(const std::string &stl_filename,
+                                             const Real cell_size,
+                                             const int point_per_cell) {
   vtkNew<vtkSTLReader> reader;
   reader->SetFileName(stl_filename.c_str());
   reader->Update();

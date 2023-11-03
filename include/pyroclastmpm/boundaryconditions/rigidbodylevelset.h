@@ -47,6 +47,8 @@
 
 namespace pyroclastmpm {
 
+enum class RigidBodyMode { STATIC, LOOP_ROTATE, SCRIPTED };
+
 /**
  * @brief Apply rigid body level set boundary conditions
  * @details A rigid body consists of a set of rigid particles that are
@@ -91,17 +93,13 @@ namespace pyroclastmpm {
 class RigidBodyLevelSet : public BoundaryCondition {
 public:
   /// @brief Construct a new Rigid Body Level Set object
-  /// @param _COM center of mass of rigid body
-  /// @param _frames animation frames
-  /// @param _locations animation locations
-  /// @param _rotations animation rotations
-  RigidBodyLevelSet(const Vectorr _COM = Vectorr::Zero(),
-                    const cpu_array<int> &_frames = {},
-                    const cpu_array<Vectorr> &_locations = {},
-                    const cpu_array<Vectorr> &_rotations = {});
+  RigidBodyLevelSet();
 
-  /// @brief Set the output formats
-  /// @param _output_formats output formats
+  void set_mode_loop_rotate(Vectorr _euler_angles_per_second,
+                            Vectorr _COM = Vectorr::Zero());
+
+  // /// @brief Set the output formats
+  // /// @param _output_formats output formats
   void set_output_formats(const std::vector<std::string> &_output_formats);
 
   /// @brief allocates memory for rigid body level set
@@ -110,17 +108,20 @@ public:
   void initialize(const NodesContainer &nodes_ref,
                   const ParticlesContainer &particles_ref) override;
 
+  /// @brief apply rigid body contact on background grid
+  /// @param nodes_ref Nodes container
+  /// @param particles_ref Particles container
+  void apply_on_nodes_moments(NodesContainer &nodes_ref,
+                              ParticlesContainer &particles_ref) override;
+
   /// @brief calculates grid normals of rigid body level set
   /// @param nodes_ref Nodes container
   /// @param particles_ref Particles container
   void calculate_grid_normals(NodesContainer &nodes_ref,
                               ParticlesContainer &particles_ref);
 
-  /// @brief finds the closest rigid particle to each grid node
-  /// @param nodes_ref Nodes container
-  /// @param particles_ref Particles container
-  void calculate_overlapping_rigidbody(NodesContainer &nodes_ref,
-                                       ParticlesContainer &particles_ref);
+  /// @brief set velocities of rigid particles
+  void update_animation();
 
   /// @brief set velocities of rigid particles
   /// @param particles_ref Particles container
@@ -130,65 +131,63 @@ public:
   /// @param particles_ref Particles container
   void set_position(ParticlesContainer &particles_ref);
 
-  /// @brief apply rigid body contact on background grid
-  /// @param nodes_ref Nodes container
-  /// @param particles_ref Particles container
-  void apply_on_nodes_moments(NodesContainer &nodes_ref,
-                              ParticlesContainer &particles_ref) override;
+  // void output_vtk(NodesContainer &nodes_ref,
+  //                 ParticlesContainer &particles_ref) override;
 
-  void output_vtk(NodesContainer &nodes_ref,
-                  ParticlesContainer &particles_ref) override;
+  RigidBodyMode mode = RigidBodyMode::STATIC;
 
-  void setModeLoopRotate(Vectorr euler_angles_per_second, Real rate = 1.0);
+  // bool is_animated = false;
 
-  int mode = 0;
-
-  bool is_animated;
-
-  /// @brief Number of animation frames for rigid body
-  int num_frames;
+  // /// @brief Number of animation frames for rigid body
+  // int num_frames = -1;
 
   /// @brief Rigid body center of mass of previous step
   Vectorr COM;
 
-  /// @brief Rigid body euler angles of previous step
-  Vectorr ROT;
-
-  /// @brief Translational velocity of rigid body
-  Vectorr translational_velocity;
-
-  /// @brief Rotation matrix of rigid body
-  Matrixr rotation_matrix;
-
-  /// @brief Normals of non-rigid material points
-  gpu_array<Vectorr> normals_gpu;
-
-  /// @brief Flag if rigid grid node overlaps with non-rigid material point
-  gpu_array<bool> is_overlapping_gpu;
-
-  /// @brief Closest rigid particle to a node
-  gpu_array<int> closest_rigid_particle_gpu;
-
-  /// @brief Animations frames (steps)
-  cpu_array<int> frames_cpu;
-
-  /// @brief Animations locations
-  cpu_array<Vectorr> locations_cpu;
-
-  //// @brief Animations euler angles
-  cpu_array<Vectorr> rotations_cpu;
-
-  /// @brief Current animation frame
-  int current_frame = 0;
-
-  /// @brief Output formats
-  /// @details supported formats are: "vtk" "obj"  "csv"
-  std::vector<std::string> output_formats;
+  Vectorr euler_angles_per_second;
 
   /// @brief current euler angles of rigid body
   Vectorr euler_angles;
 
   /// @brief current angular velocity of rigid body
   Vectorr angular_velocities;
+
+  Vectorr translational_velocity;
+
+  Matrixr rotation_matrix;
+
+  // /// @brief Rotation matrix of rigid body
+  // Matrix3r rotation_matrix_3D;
+
+  // /// @brief Animations locations
+  // cpu_array<Vector3r> locations_array_3D;
+
+  // //// @brief Animations euler angles
+  // cpu_array<Vector3r> rotations_array_3D;
+
+  // /// @brief Animations frames (steps)
+  // cpu_array<int> frames_cpu;
+
+  // /// @brief Current animation frame
+  // int current_frame = 0;
+
+  // // /// @brief Rigid body euler angles of previous step
+  // // Vector3r ROT;
+
+  // // /// @brief Translational velocity of rigid body
+  // // Vectorr translational_velocity;
+
+  // /// @brief Normals of non-rigid material points
+  // gpu_array<Vectorr> normals_gpu;
+
+  // /// @brief Flag if rigid grid node overlaps with non-rigid material point
+  // gpu_array<bool> is_overlapping_gpu;
+
+  // /// @brief Closest rigid particle to a node
+  // gpu_array<int> closest_rigid_particle_gpu;
+
+  /// @brief Output formats
+  /// @details supported formats are: "vtk" "obj"  "csv"
+  std::vector<std::string> output_formats;
 };
 } // namespace pyroclastmpm
