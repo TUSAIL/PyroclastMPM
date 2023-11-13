@@ -315,12 +315,12 @@ __device__ __host__ inline void update_modifiedcamclay(
     conv = R.norm();
 
     counter++;
-    // if (counter > 1000) {
-    //   printf("counter %d cov %.16f \n increasing tol %.16f \n", counter,
-    //   conv,
-    //          tol);
-    //   tol *= 10;
-    // }
+    if (counter > 1000) {
+      tol *= 10;
+      // printf("counter %d cov %.16f \n increasing tol %.16f \n", counter,
+      // conv,
+      //        tol);
+    }
   } while (conv > tol);
 
   if (p_trail > 0) {
