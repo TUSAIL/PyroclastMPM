@@ -39,7 +39,6 @@ def triax_loading_path(
     material,
     do_update_history=False,
     is_finite_strain=False,
-    debug=False
 ):
     # strain goal of target strain tensor with guess
     # if successfull except strain tensor
@@ -58,7 +57,7 @@ def triax_loading_path(
 
     particles.volumes = [volume]
     particles.velocity_gradient = [velgrad]
-    # print(f"{velgrad=}")
+
     particles.F = [strain_trail]
 
     # update yield surface and history variables
@@ -68,19 +67,14 @@ def triax_loading_path(
 
     particles, _ = material.stress_update(particles, 0)
 
-    curr_stress_11_22 = np.array(particles.stresses[0])[(1, 2), (1, 2)]
     if do_update_history:
-        if debug:
-            print(f"{do_update_history=} {curr_stress_11_22=}, {target_radial_stress_11_22=}")
         return particles, material
 
+    curr_stress_11_22 = np.array(particles.stresses[0])[(1, 2), (1, 2)]
 
-    if debug:
-        print(f"{do_update_history=} {curr_stress_11_22=}, {target_radial_stress_11_22=} {velgrad=}")
-    stress_11_22_diff = curr_stress_11_22 - target_radial_stress_11_22
-    normalized_stress_11_22_diff = stress_11_22_diff
-    # print(normalized_stress_11_22_diff)
-    return normalized_stress_11_22_diff
+    return (curr_stress_11_22 - target_radial_stress_11_22) / abs(
+        target_radial_stress_11_22[0]
+    )
 
 
 class TriaxialControl(BaseControl):
@@ -91,82 +85,49 @@ class TriaxialControl(BaseControl):
     _summary_
     """
 
-    def run(self,debug=False):
+    def run(self):
         if self.mode is None:
             raise ValueError("Mode not set")
-
-        # sigma11 and sigma22 are the same
-        target_radial_stress_11_22 = np.ones(2) * self.radial_stress_target
+        
+        self.material.do_update_history = True
 
         for step in range(self.num_steps):
-
-            # start from prestrain
             target_strain_tensor = self.prestrain.copy()
             target_strain_tensor[0, 0] += self.axial_strain_target_list[step]
 
-            # exit()
-            # initial guess / starting point (eps11,eps22) is previous step
-            strain_guess_11_22 = np.array(self.strain_prev)[(1, 2), (1, 2)]
-            
-            # if step == 0:
-                # self.store_results(step)
-                # self.strain_prev = -1*np.ones(2)
-                # continue # skip first step
-            res = scipy.optimize.root(
-                triax_loading_path,
-                strain_guess_11_22,
-                args=(
-                    target_radial_stress_11_22,
-                    target_strain_tensor,
-                    self.strain_prev,
-                    self.timestep,
-                    self.particles,
-                    self.material,
-                    False,
-                    self.is_finite_strain,
-                    debug
-                ),
-                method=self.optimize_method,
-                
-                options={
-                    "ftol": self.tolerance, 
-                    "line_search": "wolfe",
-                    "disp": True,
+            # strain controlled
+            current_volume = self.particles.volumes[0]
+            # use the strain increment instead of velocty gradient
+            if self.is_finite_strain:
+                dFdt = (target_strain_tensor - self.strain_prev) / self.timestep
+                velgrad = dFdt @ np.linalg.inv(target_strain_tensor)
+            else:
+                velgrad = target_strain_tensor - self.strain_prev
+                volume = current_volume * (1 + np.trace(velgrad))
 
-                    },
-            )
+            particles.volumes = [volume]
+            particles.velocity_gradient = [velgrad]
 
+            particles.F = [target_strain_tensor]
 
-            # return
+            self.material.is_velgrad_strain_increment = ~self.is_finite_strain
 
-            self.particles, self.material = triax_loading_path(
-                res.x,
-                target_radial_stress_11_22,
-                target_strain_tensor,
-                self.strain_prev,
-                self.timestep,
-                self.particles,
-                self.material,
-                do_update_history=True,
-                is_finite_strain=self.is_finite_strain,
-            )
+            particles, _ = self.material.stress_update(particles, 0)
+
             self.strain_prev = np.array(self.particles.F[0])
-            self.strain_prev[(1, 2), (1, 2)] = res.x
+
 
             if step % self.output_step == 0:
                 self.store_results(step) # defined in baseclass
 
-
-
     def set_mode_sequence(
-        self, axial_strain_target_list, radial_stress_target, total_time
+        self, axial_strain_target_list, total_time
     ):
         """
         Set the mode to "sequence" and set the sequence of strain targets.
         """
         self.mode = "sequence"
         self.axial_strain_target_list = axial_strain_target_list
-        self.radial_stress_target = radial_stress_target
         self.total_time = total_time
         self.num_steps = len(axial_strain_target_list)
         self.timestep = total_time / self.num_steps
@@ -175,7 +136,6 @@ class TriaxialControl(BaseControl):
     def set_mode_range(
         self,
         axial_strain_target,
-        radial_stress_target,
         total_time,
         timestep,
     ):
@@ -187,8 +147,6 @@ class TriaxialControl(BaseControl):
         self.axial_strain_target_list = np.linspace(
             0, axial_strain_target, self.num_steps
         )
-
-        self.radial_stress_target = radial_stress_target
         self.total_time = total_time
         self.timestep = timestep
         pm.set_global_timestep(self.timestep)
