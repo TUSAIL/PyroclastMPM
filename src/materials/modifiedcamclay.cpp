@@ -61,7 +61,9 @@ ModifiedCamClay::ModifiedCamClay(const Real _density, const Real _E,
 /// @param mat_id material id
 void ModifiedCamClay::initialize(const ParticlesContainer &particles_ref,
                                  [[maybe_unused]] int mat_id) {
+
   set_default_device<Real>(particles_ref.num_particles, {}, alpha_gpu, 0.0);
+
   set_default_device<Real>(particles_ref.num_particles, {}, pc_gpu, 0.0);
 
   set_default_device<Matrixr>(particles_ref.num_particles, {}, eps_e_gpu,
@@ -72,15 +74,25 @@ void ModifiedCamClay::initialize(const ParticlesContainer &particles_ref,
                                Matrix3r::Zero());
 
   cpu_array<Matrix3r> stresses_cpu = particles_ref.stresses_gpu;
+
   cpu_array<Real> pc_cpu = pc_gpu;
+
   cpu_array<Real> pressures_cpu =
       cpu_array<Real>(particles_ref.num_particles, 0.);
+
   for (int pi = 0; pi < particles_ref.num_particles; pi++) {
     // must be positive compression
     pressures_cpu[pi] = -(stresses_cpu[pi].trace() / 3.);
 
     const Real Pc0 = pressures_cpu[pi] * R;
+
     pc_cpu[pi] = Pc0;
+
+    if (pressures_cpu[pi] > pc_cpu[pi]) {
+      printf("ModifiedCamClay::initialize: Warning: Pc0 (%f) > p0 (%f)  check "
+             "R ( %f)\n",
+             pc_cpu[pi], pressures_cpu[pi], R);
+    }
   }
   pc_gpu = pc_cpu;
 }

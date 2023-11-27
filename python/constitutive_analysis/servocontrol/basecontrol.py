@@ -1,13 +1,11 @@
-#%%
+# %%
 
 
 import numpy as np
 import pyroclastmpm.MPM3D as pm
 
 
-
 class BaseControl:
-
     def __init__(
         self,
         particles,
@@ -47,7 +45,7 @@ class BaseControl:
 
         self.strain_prev = self.prestrain
         self.particles.F = [self.prestrain]
-        print(self.strain_prev)
+        # print(self.strain_prev)
 
     def set_sign_flip(self, sign_flip):
         """
@@ -57,7 +55,7 @@ class BaseControl:
         # SOL 1. (best) eliminate the need for this function by making compresison always positive
         # SOL 2. Rename function...?
         self.sign_flip = sign_flip
-    
+
     def store_results(self, step):
         """
         Store the results in a list.
@@ -65,19 +63,16 @@ class BaseControl:
 
         stress = np.array(self.particles.stresses[0]) * self.sign_flip
         strain = np.array(self.particles.F[0]) * self.sign_flip
-            
+
         self.stress_list.append(stress)
         self.strain_list.append(strain)
         self.step_list.append(step)
 
-        print(f"stress: {stress}")
-        print(f"strain: {strain}")
-        x = input()
-        if self.verbose:
-            print(f"storing array step {step}")
+        # print(f"stress: {np.diag(stress)}")
+        # print(f"strain: {np.diag(strain)}")
 
-
-
+        # if self.verbose:
+        # print(f"storing array step {step}, stess {np.diag(stress)}", end="\r")
 
     def post_process(self):
         self.stress_list = np.array(self.stress_list)
@@ -106,7 +101,7 @@ class BaseControl:
         self.tau_list = np.array(
             list(
                 map(
-                    lambda s: 0.5* np.trace(s @ s.T),
+                    lambda s: 0.5 * np.trace(s @ s.T),
                     self.dev_stress_list,
                 )
             )
@@ -118,24 +113,23 @@ class BaseControl:
             + self.strain_list[:, 2, 2]
         )
 
-
         self.dev_strain_list = (
             self.strain_list
-            + (1./3)*np.identity(3) * self.volumetric_strain_list[:, None, None]
+            + (1.0 / 3)
+            * np.identity(3)
+            * self.volumetric_strain_list[:, None, None]
         )
 
         self.gamma_list = np.array(
             list(
                 map(
-                    lambda s: 0.5* np.trace(s @ s.T),
+                    lambda s: 0.5 * np.trace(s @ s.T),
                     self.dev_strain_list,
                 )
             )
         )
-        print(self.stress_list[:,0,0]/1000000.0)
-        print(self.strain_list[:,0,0])
-
-
+        # print(self.stress_list[:, 0, 0] / 1000000.0)
+        # print(self.strain_list[:, 0, 0])
 
     def plot_strain_grid(self, file=None):
         import matplotlib.pyplot as plt
@@ -182,5 +176,6 @@ class BaseControl:
         import matplotlib.pyplot as plt
 
         stress_list_np = np.array(self.stress_list)
+
 
 # %%

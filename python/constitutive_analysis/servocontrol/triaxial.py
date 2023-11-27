@@ -29,6 +29,7 @@ import scipy
 
 from .basecontrol import BaseControl
 
+
 def triax_loading_path(
     strain_guess_11_22,
     target_radial_stress_11_22,
@@ -39,10 +40,10 @@ def triax_loading_path(
     material,
     do_update_history=False,
     is_finite_strain=False,
-    debug=False
+    debug=False,
 ):
     # strain goal of target strain tensor with guess
-    # if successfull except strain tensor
+    # if successful except strain tensor
     # else make new guess
     strain_trail = target_strain_tensor.copy()
     strain_trail[(1, 2), (1, 2)] = strain_guess_11_22
@@ -71,14 +72,17 @@ def triax_loading_path(
     curr_stress_11_22 = np.array(particles.stresses[0])[(1, 2), (1, 2)]
     if do_update_history:
         if debug:
-            print(f"{do_update_history=} {curr_stress_11_22=}, {target_radial_stress_11_22=}")
+            print(
+                f"{do_update_history=} {curr_stress_11_22=}, {target_radial_stress_11_22=}"
+            )
         return particles, material
 
-
     if debug:
-        print(f"{do_update_history=} {curr_stress_11_22=}, {target_radial_stress_11_22=} {velgrad=}")
+        print(
+            f"{do_update_history=} {curr_stress_11_22=}, {target_radial_stress_11_22=} {velgrad=}"
+        )
     stress_11_22_diff = curr_stress_11_22 - target_radial_stress_11_22
-    normalized_stress_11_22_diff = stress_11_22_diff
+    normalized_stress_11_22_diff = np.linalg.norm(stress_11_22_diff) ** 2
     # print(normalized_stress_11_22_diff)
     return normalized_stress_11_22_diff
 
@@ -91,7 +95,7 @@ class TriaxialControl(BaseControl):
     _summary_
     """
 
-    def run(self,debug=False):
+    def run(self, debug=False):
         if self.mode is None:
             raise ValueError("Mode not set")
 
@@ -99,7 +103,6 @@ class TriaxialControl(BaseControl):
         target_radial_stress_11_22 = np.ones(2) * self.radial_stress_target
 
         for step in range(self.num_steps):
-
             # start from prestrain
             target_strain_tensor = self.prestrain.copy()
             target_strain_tensor[0, 0] += self.axial_strain_target_list[step]
@@ -107,12 +110,12 @@ class TriaxialControl(BaseControl):
             # exit()
             # initial guess / starting point (eps11,eps22) is previous step
             strain_guess_11_22 = np.array(self.strain_prev)[(1, 2), (1, 2)]
-            
+
             # if step == 0:
-                # self.store_results(step)
-                # self.strain_prev = -1*np.ones(2)
-                # continue # skip first step
-            res = scipy.optimize.root(
+            # self.store_results(step)
+            # self.strain_prev = -1*np.ones(2)
+            # continue # skip first step
+            res = scipy.optimize.minimize(
                 triax_loading_path,
                 strain_guess_11_22,
                 args=(
@@ -124,18 +127,23 @@ class TriaxialControl(BaseControl):
                     self.material,
                     False,
                     self.is_finite_strain,
-                    debug
+                    debug,
                 ),
-                method=self.optimize_method,
-                
+                tol=self.tolerance,
+                # method=self.optimize_method,
+                method="Nelder-Mead",
+                # bounds=scipy.optimize.Bounds(-1e-13, 1e-3, True),
                 options={
-                    "ftol": self.tolerance, 
-                    "line_search": "wolfe",
-                    "disp": True,
-
-                    },
+                    # "xatol": 1e-6
+                    # maxiter =100
+                    # "ftol": self.tolerance,
+                    # "line_search": None,
+                    # "xtol": 1e-6,
+                    # "xatol": 1e-12,
+                    # "jac_options": {"rdiff": 1e-8},
+                    # "disp": True,
+                },
             )
-
 
             # return
 
@@ -154,9 +162,7 @@ class TriaxialControl(BaseControl):
             self.strain_prev[(1, 2), (1, 2)] = res.x
 
             if step % self.output_step == 0:
-                self.store_results(step) # defined in baseclass
-
-
+                self.store_results(step)  # defined in baseclass
 
     def set_mode_sequence(
         self, axial_strain_target_list, radial_stress_target, total_time
@@ -192,6 +198,3 @@ class TriaxialControl(BaseControl):
         self.total_time = total_time
         self.timestep = timestep
         pm.set_global_timestep(self.timestep)
-
-
-  
