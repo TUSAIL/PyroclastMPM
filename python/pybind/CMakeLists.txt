@@ -49,6 +49,7 @@ set(
   "materials/vonmises_bind.cpp"
   "materials/linearelastic_bind.cpp"
   "materials/modified_camclay_bind.cpp"
+  "materials/modified_camclay_nl_bind.cpp"
   "materials/mohr_coulomb_bind.cpp"
   "materials/newtonfluid_bind.cpp"
   "materials/localrheology_bind.cpp"
