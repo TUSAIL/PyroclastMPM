@@ -248,7 +248,7 @@ __device__ __host__ inline void update_modifiedcamclay(
     }
     return;
   }
-  // return;
+
   // printf("plastic step! \n");
 
   Vector2hp R = Vector2hp::Zero();

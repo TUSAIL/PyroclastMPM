@@ -31,7 +31,7 @@ methods for plasticity: theory and applications. John Wiley & Sons, 2011.
 
 #include "pyroclastmpm/materials/mohrcoulomb.h"
 
-#include "pyroclastmpm/materials/materials_methods.h"
+
 
 namespace pyroclastmpm {
 

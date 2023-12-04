@@ -263,20 +263,20 @@ __device__ __host__ inline void update_modifiedcamclay_nl(
   const Real eps_e_v_trail = -eps_e_trail.trace();
 
   Real p_trail;
-  if (isPressureDependentBulkModulus) {
-    p_trail =
-        p_ref + calc_pressure_nonlinK(specific_volume_original, kap, p_prev,
-                                      eps_e_v_trail, eps_e_v_prev);
+  // if (isPressureDependentBulkModulus) {
+  //   p_trail =
+  //       p_ref + calc_pressure_nonlinK(specific_volume_original, kap, p_prev,
+  //                                     eps_e_v_trail, eps_e_v_prev);
 
-    bulk_modulus = p_trail / eps_e_v_trail;
+  //   bulk_modulus = p_trail / eps_e_v_trail;
 
-    shear_modulus = shear_modulus_factor * bulk_modulus;
+  //   shear_modulus = shear_modulus_factor * bulk_modulus;
 
-  } else {
-    p_trail = p_ref + bulk_modulus * eps_e_v_trail;
+  // } else {
+  p_trail = p_ref + bulk_modulus * eps_e_v_trail;
 
     // printf("p_trail %f \n", p_trail);
-  }
+  // }
 
   // Deviatoric elastic strain
   // Workaround for plane strain condition
@@ -326,6 +326,8 @@ __device__ __host__ inline void update_modifiedcamclay_nl(
     // return;
   }
   // return;
+
+
   // ignore what happens
   // plastic multiplier (0) volumetric plastic strain (1)
   Vector2hp OptVariables = Vector2hp::Zero();
@@ -389,7 +391,7 @@ __device__ __host__ inline void update_modifiedcamclay_nl(
 
     // 5. compute Jacobian
     // slope of the hardening curve
-    const double dPc = -pc_next * ((specific_volume_original) / (lam - kap));
+    const double dPc = pc_next * (-specific_volume_original / (lam - kap));
 
     const double H = dPc / (1 + beta);
 
@@ -404,14 +406,14 @@ __device__ __host__ inline void update_modifiedcamclay_nl(
         ((-12 * shear_modulus) / (M * M + 6 * shear_modulus * dgamma_next)) *
         (q_next / M) * (q_next / M);
 
-    // not sure if bulk modulus counts here
-    d(0, 1) = ((2.0 * p_overline) / (b_next * b_next)) * (bulk_modulus + H) -
+
+    d(0, 1) = ((2.0 * p_overline) / (b_next * b_next)) * (-bulk_modulus - H) -
               2.0 * a_next * H;
 
     d(1, 0) = (2.0 * p_overline) / (b_next * b_next);
 
     d(1, 1) =
-        1 + ((2.0 * dgamma_next) / (b_next * b_next)) * (bulk_modulus + H);
+        1 + ((2.0 * dgamma_next) / (b_next * b_next)) * (-bulk_modulus - H);
 
     const Matrix2hp d_inv = d.inverse();
     OptVariables = OptVariables - d_inv * R;
