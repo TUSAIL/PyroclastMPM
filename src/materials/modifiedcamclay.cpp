@@ -53,6 +53,8 @@ ModifiedCamClay::ModifiedCamClay(const Real _density, const Real _E,
   bulk_modulus = E / ((Real)3.0 * ((Real)1.0 - (Real)2.0 * pois));
   shear_modulus = E / ((Real)2.0 * ((Real)1 + pois));
 
+  printf("shear modulus %f bulk modulus %f \n", shear_modulus, bulk_modulus);
+
   density = _density;
 }
 
@@ -81,15 +83,19 @@ void ModifiedCamClay::initialize(const ParticlesContainer &particles_ref,
       cpu_array<Real>(particles_ref.num_particles, 0.);
 
   for (int pi = 0; pi < particles_ref.num_particles; pi++) {
-    // must be positive compression
-    pressures_cpu[pi] = -(stresses_cpu[pi].trace() / 3.);
+    // check positive compression
+    pressures_cpu[pi] = -stresses_cpu[pi].trace() / 3.;
 
     const Real Pc0 = pressures_cpu[pi] * R;
 
     pc_cpu[pi] = Pc0;
 
     if (pressures_cpu[pi] > pc_cpu[pi]) {
-      printf("ModifiedCamClay::initialize: Warning: Pc0 (%f) > p0 (%f)  check "
+      printf("ModifiedCamClay::initialize: Warning: Pc0 (%f) < p0 (%f)  check "
+             "R ( %f)\n",
+             pc_cpu[pi], pressures_cpu[pi], R);
+    } else {
+      printf("ModifiedCamClay::initialize: Pc0 (%f) > p0 (%f)  check "
              "R ( %f)\n",
              pc_cpu[pi], pressures_cpu[pi], R);
     }

@@ -64,10 +64,12 @@ public:
   /// @param _Pc0 initial preconsolidation pressure
   /// @param _Pt Tensile yield hydrostatic stress
   /// @param _beta Parameter related to size of outer diameter of ellipse
-  ModifiedCamClayNonLinear(const Real _density, const Real _pois,
-                  const Real _M, const Real _lam, const Real _kap,
-                  const Real _Vs, const Real _Pc0, const Real _Pt,
-                  const Real _beta);
+  ModifiedCamClayNonLinear(const Real _density = 1.0, const Real _pois = 0.2,
+                           const Real _M = 0.5, const Real _lam = 0.025,
+                           const Real _kap = 0.005, const Real _Vs = 1.0,
+                           const Real _R = 1.0, const Real _Pt = 0.0,
+                           const Real _beta = 1.0,
+                           const Real _bulk_modulus = NAN);
 
   ~ModifiedCamClayNonLinear() final = default;
 

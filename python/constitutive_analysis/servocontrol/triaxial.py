@@ -100,12 +100,12 @@ class TriaxialControl(BaseControl):
             raise ValueError("Mode not set")
 
         # sigma11 and sigma22 are the same
-        target_radial_stress_11_22 = np.ones(2) * self.radial_stress_target
+        target_radial_stress_11_22 = -np.ones(2) * self.radial_stress_target
 
         for step in range(self.num_steps):
             # start from prestrain
             target_strain_tensor = self.prestrain.copy()
-            target_strain_tensor[0, 0] += self.axial_strain_target_list[step]
+            target_strain_tensor[0, 0] += -self.axial_strain_target_list[step]
 
             # exit()
             # initial guess / starting point (eps11,eps22) is previous step
@@ -162,6 +162,7 @@ class TriaxialControl(BaseControl):
             self.strain_prev[(1, 2), (1, 2)] = res.x
 
             if step % self.output_step == 0:
+                # print(f"step:{step} ", end="\r")
                 self.store_results(step)  # defined in baseclass
 
     def set_mode_sequence(

@@ -1,20 +1,19 @@
-#include "pyroclastmpm/materials/modifiedcamclay_nl.h"
 #include "pybind11/eigen.h"
+#include "pyroclastmpm/common/types_common.h"
+#include "pyroclastmpm/materials/modifiedcamclay_nl.h"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "pyroclastmpm/common/types_common.h"
-
 
 namespace py = pybind11;
-
 
 namespace pyroclastmpm {
 
 void modified_camclay_nl_module(const py::module &m) {
 
- py::class_<ModifiedCamClayNonLinear> material_cls(m, "ModifiedCamClayNonLinear", py::dynamic_attr());
+  py::class_<ModifiedCamClayNonLinear> material_cls(
+      m, "ModifiedCamClayNonLinear", py::dynamic_attr());
   material_cls.def(
-      py::init<Real, Real, Real, Real, Real, Real, Real, Real, Real>(),
+      py::init<Real, Real, Real, Real, Real, Real, Real, Real, Real, Real>(),
       R"(
                 Non Linear Modified Cam Clay
                 (infinitesimal strain)
@@ -44,13 +43,15 @@ void modified_camclay_nl_module(const py::module &m) {
                 beta: float
                     Parameter related to size of outer diameter of ellipse
                     )",
-      py::arg("density"),py::arg("pois"), py::arg("M"),
-      py::arg("lam"), py::arg("kap"), py::arg("Vs"), py::arg("R"),
-      py::arg("Pt"), py::arg("beta"));
+      py::arg("density") = 1.0, py::arg("pois") = 0.2, py::arg("M") = 0.5,
+      py::arg("lam") = 0.025, py::arg("kap") = 0.005, py::arg("Vs") = 1.0,
+      py::arg("R") = 1.0, py::arg("Pt") = 0.0, py::arg("beta") = 1.0,
+      py::arg("bulk_modulus") = NAN);
 
   material_cls.def(
       "stress_update",
-      [](ModifiedCamClayNonLinear &self, ParticlesContainer particles_ref, int mat_id) {
+      [](ModifiedCamClayNonLinear &self, ParticlesContainer particles_ref,
+         int mat_id) {
         self.stress_update(particles_ref, mat_id);
         return std::make_tuple(particles_ref, mat_id);
       },
@@ -64,7 +65,8 @@ void modified_camclay_nl_module(const py::module &m) {
               )");
   material_cls.def(
       "initialize",
-      [](ModifiedCamClayNonLinear &self, ParticlesContainer particles_ref, int mat_id) {
+      [](ModifiedCamClayNonLinear &self, ParticlesContainer particles_ref,
+         int mat_id) {
         self.initialize(particles_ref, mat_id);
         return std::make_tuple(particles_ref, mat_id);
       },
@@ -104,29 +106,32 @@ void modified_camclay_nl_module(const py::module &m) {
         self.pc_gpu = host_val;
       },
       "Preconsolidation pressure (updated)");
-  material_cls.def_readwrite("E", &ModifiedCamClayNonLinear::E, "Young's modulus");
-  material_cls.def_readwrite("pois", &ModifiedCamClayNonLinear::pois, "Poisson's ratio");
-  material_cls.def_readwrite("shear_modulus", &ModifiedCamClayNonLinear::shear_modulus,
-                        "Shear modulus G");
-  material_cls.def_readwrite("lame_modulus", &ModifiedCamClayNonLinear::lame_modulus,
-                        "Lame modulus lambda");
-  material_cls.def_readwrite("bulk_modulus", &ModifiedCamClayNonLinear::bulk_modulus,
-                        "Bulk modulus K");
+  material_cls.def_readwrite("E", &ModifiedCamClayNonLinear::E,
+                             "Young's modulus");
+  material_cls.def_readwrite("pois", &ModifiedCamClayNonLinear::pois,
+                             "Poisson's ratio");
+  material_cls.def_readwrite("shear_modulus",
+                             &ModifiedCamClayNonLinear::shear_modulus,
+                             "Shear modulus G");
+  material_cls.def_readwrite("lame_modulus",
+                             &ModifiedCamClayNonLinear::lame_modulus,
+                             "Lame modulus lambda");
+  material_cls.def_readwrite("bulk_modulus",
+                             &ModifiedCamClayNonLinear::bulk_modulus,
+                             "Bulk modulus K");
   material_cls.def_readwrite("density", &ModifiedCamClayNonLinear::density,
-                        "Bulk density of the material");
+                             "Bulk density of the material");
   material_cls.def_readwrite("do_update_history",
-                        &ModifiedCamClayNonLinear::do_update_history,
-                        "Flag if we update the history or not");
+                             &ModifiedCamClayNonLinear::do_update_history,
+                             "Flag if we update the history or not");
   material_cls.def_readwrite(
       "is_velgrad_strain_increment",
       &ModifiedCamClayNonLinear::is_velgrad_strain_increment,
       R"(Flag if we should use strain increment instead of velocity gradient for constitutive
                                udpdate)");
-  material_cls.def("calculate_timestep", &ModifiedCamClayNonLinear::calculate_timestep,
-              "calculate_timestep");
-
-
-
+  material_cls.def("calculate_timestep",
+                   &ModifiedCamClayNonLinear::calculate_timestep,
+                   "calculate_timestep");
 }
 
-}
+} // namespace pyroclastmpm

@@ -61,8 +61,8 @@ class BaseControl:
         Store the results in a list.
         """
 
-        stress = np.array(self.particles.stresses[0]) * self.sign_flip
-        strain = np.array(self.particles.F[0]) * self.sign_flip
+        stress = np.array(self.particles.stresses[0])
+        strain = np.array(self.particles.F[0])
 
         self.stress_list.append(stress)
         self.strain_list.append(strain)
@@ -72,10 +72,11 @@ class BaseControl:
         # print(f"strain: {np.diag(strain)}")
 
         # if self.verbose:
-        # print(f"storing array step {step}, stess {np.diag(stress)}", end="\r")
+        # print(f"storing array step {step}, stess {np.diag(stress)}")
 
     def post_process(self):
         self.stress_list = np.array(self.stress_list)
+
         self.strain_list = np.array(self.strain_list)
 
         self.pressure_list = -(1 / 3.0) * (
@@ -145,37 +146,35 @@ class BaseControl:
         if file is not None:
             plt.savefig(file)
 
-    def plot_q_p(self, file=None):
+    def plot_q_p(self, normalize_stress=1.0e6, ax=None, file=None):
         import matplotlib.pyplot as plt
 
-        stress_list_np = np.array(self.stress_list)
+        if ax is None:
+            fig, ax = plt.subplots()
 
-        pressure = -(1 / 3.0) * (
-            stress_list_np[:, 0, 0]
-            + stress_list_np[:, 1, 1]
-            + stress_list_np[:, 2, 2]
+        ax.plot(
+            self.pressure_list / normalize_stress,
+            self.q_vm_list / normalize_stress,
+            ls="--",
+            lw=3,
         )
 
-        dev_stress = stress_list_np + np.identity(3) * pressure[:, None, None]
+        units = ""
+        if np.isclose(normalize_stress, 1.0e6):
+            units = "(MPa)"
 
-        q_vomMises = np.array(
-            list(
-                map(
-                    lambda s: np.sqrt(3 * 0.5 * np.trace(s @ s.T)),
-                    dev_stress,
-                )
-            )
-        )
-        fig, ax = plt.subplots()
-
-        ax.plot(pressure, q_vomMises)
+        ax.set_xlabel(f"$q$ {units}")
+        ax.set_ylabel(f"$p$ {units}")
         if file is not None:
             plt.savefig(file)
 
-    def plot_q_eps11(self, file=None):
+    def plot_q_eps11(self, normalize_stress=1.0e6, ax=None, file=None):
         import matplotlib.pyplot as plt
 
-        stress_list_np = np.array(self.stress_list)
+        if ax is None:
+            fig, ax = plt.subplots()
+
+        ax.plot(-self.strain_list[:, 0, 0], self.q_vm_list / normalize_stress)
 
 
 # %%

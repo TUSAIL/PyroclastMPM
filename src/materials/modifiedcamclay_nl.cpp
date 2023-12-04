@@ -42,16 +42,22 @@ extern const int global_step_cpu;
 /// @param R  preconsolidation ratio
 /// @param _Pt Tensile yield hydrostatic stress
 /// @param _beta Parameter related to size of outer diameter of ellipse
-ModifiedCamClayNonLinear::ModifiedCamClayNonLinear(const Real _density,
-                                 const Real _pois, const Real _M,
-                                 const Real _lam, const Real _kap,
-                                 const Real _Vs, const Real _R, const Real _Pt,
-                                 const Real _beta)
-    : M(_M), Pt(_Pt), beta(_beta), pois(_pois), lam(_lam), kap(_kap),
-      Vs(_Vs), R(_R) {
+ModifiedCamClayNonLinear::ModifiedCamClayNonLinear(
+    const Real _density, const Real _pois, const Real _M, const Real _lam,
+    const Real _kap, const Real _Vs, const Real _R, const Real _Pt,
+    const Real _beta, const Real _bulk_modulus)
+    : M(_M), Pt(_Pt), beta(_beta), pois(_pois), lam(_lam), kap(_kap), Vs(_Vs),
+      R(_R), bulk_modulus(_bulk_modulus) {
 
-  // bulk_modulus = E / ((Real)3.0 * ((Real)1.0 - (Real)2.0 * pois));
-  // shear_modulus = E / ((Real)2.0 * ((Real)1 + pois));
+  shear_modulus = (3.0 * (1.0 - 2.0 * pois)) / (2.0 * (1.0 + pois));
+
+  if (!std::isnan(bulk_modulus)) {
+    shear_modulus *= bulk_modulus;
+    printf("shear modulus %f bulk modulus %f \n", shear_modulus, bulk_modulus);
+  } else {
+
+    printf("bulk modulus not defined %f \n", bulk_modulus);
+  }
 
   density = _density;
 }
@@ -59,8 +65,8 @@ ModifiedCamClayNonLinear::ModifiedCamClayNonLinear(const Real _density,
 /// @brief Initialize material (allocate memory for history variables)
 /// @param particles_ref ParticleContainer reference
 /// @param mat_id material id
-void ModifiedCamClayNonLinear::initialize(const ParticlesContainer &particles_ref,
-                                 [[maybe_unused]] int mat_id) {
+void ModifiedCamClayNonLinear::initialize(
+    const ParticlesContainer &particles_ref, [[maybe_unused]] int mat_id) {
 
   set_default_device<Real>(particles_ref.num_particles, {}, alpha_gpu, 0.0);
 
@@ -80,6 +86,7 @@ void ModifiedCamClayNonLinear::initialize(const ParticlesContainer &particles_re
   cpu_array<Real> pressures_cpu =
       cpu_array<Real>(particles_ref.num_particles, 0.);
 
+  // printf("hi! \n");
   for (int pi = 0; pi < particles_ref.num_particles; pi++) {
     // must be positive compression
     pressures_cpu[pi] = -(stresses_cpu[pi].trace() / 3.);
@@ -89,7 +96,12 @@ void ModifiedCamClayNonLinear::initialize(const ParticlesContainer &particles_re
     pc_cpu[pi] = Pc0;
 
     if (pressures_cpu[pi] > pc_cpu[pi]) {
-      printf("ModifiedCamClay::initialize: Warning: Pc0 (%f) > p0 (%f)  check "
+      printf("ModifiedCamClayNonLinear::initialize: Warning: Pc0 (%f) > p0 "
+             "(%f)  check "
+             "R ( %f)\n",
+             pc_cpu[pi], pressures_cpu[pi], R);
+    } else {
+      printf("ModifiedCamClayNonLinear::initialize: Pc0 (%f) > p0 (%f)  check "
              "R ( %f)\n",
              pc_cpu[pi], pressures_cpu[pi], R);
     }
@@ -101,24 +113,24 @@ void ModifiedCamClayNonLinear::initialize(const ParticlesContainer &particles_re
 /// @param particles_ptr ParticlesContainer class
 /// @param mat_id material id
 void ModifiedCamClayNonLinear::stress_update(ParticlesContainer &particles_ref,
-                                    int mat_id) {
+                                             int mat_id) {
 
 #ifdef CUDA_ENABLED
   // TODO ADD KERNEL
 
-  KERNEL_STRESS_UPDATE_MCC_NL<<<particles_ref.launch_config.tpb,
-                             particles_ref.launch_config.bpg>>>(
-      thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
-      thrust::raw_pointer_cast(eps_e_gpu.data()),
-      thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
-      thrust::raw_pointer_cast(particles_ref.volumes_original_gpu.data()),
-      thrust::raw_pointer_cast(alpha_gpu.data()),
-      thrust::raw_pointer_cast(pc_gpu.data()),
-      thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
-      thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
-      thrust::raw_pointer_cast(stress_ref_gpu.data()), bulk_modulus,
-      shear_modulus, M, lam, kap, Pt, beta, Vs, mat_id, do_update_history,
-      is_velgrad_strain_increment, particles_ref.num_particles);
+  // KERNEL_STRESS_UPDATE_MCC_NL<<<particles_ref.launch_config.tpb,
+  //                               particles_ref.launch_config.bpg>>>(
+  //     thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
+  //     thrust::raw_pointer_cast(eps_e_gpu.data()),
+  //     thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
+  //     thrust::raw_pointer_cast(particles_ref.volumes_original_gpu.data()),
+  //     thrust::raw_pointer_cast(alpha_gpu.data()),
+  //     thrust::raw_pointer_cast(pc_gpu.data()),
+  //     thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
+  //     thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
+  //     thrust::raw_pointer_cast(stress_ref_gpu.data()), bulk_modulus,
+  //     shear_modulus, M, lam, kap, Pt, beta, Vs, mat_id, do_update_history,
+  //     is_velgrad_strain_increment, particles_ref.num_particles);
 
 #else
   for (int pid = 0; pid < particles_ref.num_particles; pid++) {
@@ -127,8 +139,8 @@ void ModifiedCamClayNonLinear::stress_update(ParticlesContainer &particles_ref,
         particles_ref.volumes_gpu.data(),
         particles_ref.volumes_original_gpu.data(), alpha_gpu.data(),
         pc_gpu.data(), particles_ref.velocity_gradient_gpu.data(),
-        particles_ref.colors_gpu.data(), stress_ref_gpu.data(),
-        pois, M, lam, kap, Pt, beta, Vs, mat_id, do_update_history,
+        particles_ref.colors_gpu.data(), stress_ref_gpu.data(), bulk_modulus,
+        shear_modulus, M, lam, kap, Pt, beta, Vs, mat_id, do_update_history,
         is_velgrad_strain_increment, pid);
   }
 #endif
@@ -139,8 +151,9 @@ void ModifiedCamClayNonLinear::stress_update(ParticlesContainer &particles_ref,
 /// @param factor Scaling factor for speed
 /// @return Real a timestep
 Real ModifiedCamClayNonLinear::calculate_timestep(Real cell_size, Real factor,
-                                         Real bulk_modulus, Real shear_modulus,
-                                         Real density) {
+                                                  Real bulk_modulus,
+                                                  Real shear_modulus,
+                                                  Real density) {
   // https://www.sciencedirect.com/science/article/pii/S0045782520306885
   const auto c = (Real)sqrt((bulk_modulus + 4. * shear_modulus / 3.) / density);
 
@@ -151,7 +164,7 @@ Real ModifiedCamClayNonLinear::calculate_timestep(Real cell_size, Real factor,
 }
 
 void ModifiedCamClayNonLinear::output_vtk(NodesContainer &nodes_ref,
-                                 ParticlesContainer &particles_ref) {
+                                          ParticlesContainer &particles_ref) {
 
   if (output_formats.empty()) {
     return;
