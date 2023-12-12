@@ -33,4 +33,4 @@
 #     set_style,
 # )
 
-from .servocontrol import triaxial, basecontrol
+from .servocontrol import basecontrol, triaxial, uniaxial

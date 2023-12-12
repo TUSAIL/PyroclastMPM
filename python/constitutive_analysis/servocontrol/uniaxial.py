@@ -29,55 +29,8 @@ import scipy
 
 from .basecontrol import BaseControl
 
-def triax_loading_path(
-    strain_guess_11_22,
-    target_radial_stress_11_22,
-    target_strain_tensor,
-    strain_prev,
-    dt,
-    particles,
-    material,
-    do_update_history=False,
-    is_finite_strain=False,
-):
-    # strain goal of target strain tensor with guess
-    # if successfull except strain tensor
-    # else make new guess
-    strain_trail = target_strain_tensor.copy()
-    strain_trail[(1, 2), (1, 2)] = strain_guess_11_22
 
-    current_volume = particles.volumes[0]
-    # use the strain increment instead of velocty gradient
-    if is_finite_strain:
-        dFdt = (strain_trail - strain_prev) / dt
-        velgrad = dFdt @ np.linalg.inv(strain_trail)
-    else:
-        velgrad = strain_trail - strain_prev
-        volume = current_volume * (1 + np.trace(velgrad))
-
-    particles.volumes = [volume]
-    particles.velocity_gradient = [velgrad]
-
-    particles.F = [strain_trail]
-
-    # update yield surface and history variables
-    material.do_update_history = do_update_history
-
-    material.is_velgrad_strain_increment = ~is_finite_strain
-
-    particles, _ = material.stress_update(particles, 0)
-
-    if do_update_history:
-        return particles, material
-
-    curr_stress_11_22 = np.array(particles.stresses[0])[(1, 2), (1, 2)]
-
-    return (curr_stress_11_22 - target_radial_stress_11_22) / abs(
-        target_radial_stress_11_22[0]
-    )
-
-
-class TriaxialControl(BaseControl):
+class UniaxialControl(BaseControl):
     """
 
     modes: sequence - takes a strain_target sequence
@@ -86,43 +39,37 @@ class TriaxialControl(BaseControl):
     """
 
     def run(self):
-        if self.mode is None:
-            raise ValueError("Mode not set")
-        
-        self.material.do_update_history = True
-
         for step in range(self.num_steps):
             target_strain_tensor = self.prestrain.copy()
-            target_strain_tensor[0, 0] += self.axial_strain_target_list[step]
-
-            # strain controlled
+            target_strain_tensor[0, 0] += -self.axial_strain_target_list[step]
+            # print(target_strain_tensor)
             current_volume = self.particles.volumes[0]
-            # use the strain increment instead of velocty gradient
+
             if self.is_finite_strain:
-                dFdt = (target_strain_tensor - self.strain_prev) / self.timestep
+                dFdt = (target_strain_tensor - self.strain_prev) / self.dt
                 velgrad = dFdt @ np.linalg.inv(target_strain_tensor)
             else:
                 velgrad = target_strain_tensor - self.strain_prev
                 volume = current_volume * (1 + np.trace(velgrad))
 
-            particles.volumes = [volume]
-            particles.velocity_gradient = [velgrad]
+            self.particles.volumes = [volume]
+            self.particles.velocity_gradient = [velgrad]
+            # print(f"{velgrad=}")
+            self.particles.F = [target_strain_tensor]
 
-            particles.F = [target_strain_tensor]
+            # update yield surface and history variables
+            self.material.do_update_history = True
 
             self.material.is_velgrad_strain_increment = ~self.is_finite_strain
 
-            particles, _ = self.material.stress_update(particles, 0)
+            self.particles, _ = self.material.stress_update(self.particles, 0)
 
             self.strain_prev = np.array(self.particles.F[0])
 
-
             if step % self.output_step == 0:
-                self.store_results(step) # defined in baseclass
+                self.store_results(step)  # defined in baseclass
 
-    def set_mode_sequence(
-        self, axial_strain_target_list, total_time
-    ):
+    def set_mode_sequence(self, axial_strain_target_list, total_time):
         """
         Set the mode to "sequence" and set the sequence of strain targets.
         """
@@ -147,9 +94,7 @@ class TriaxialControl(BaseControl):
         self.axial_strain_target_list = np.linspace(
             0, axial_strain_target, self.num_steps
         )
+
         self.total_time = total_time
         self.timestep = timestep
         pm.set_global_timestep(self.timestep)
-
-
-  

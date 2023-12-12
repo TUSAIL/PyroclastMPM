@@ -52,6 +52,7 @@ void newtonfluid_module(const py::module &);
 void localrheology_module(const py::module &);
 void mu_i_module(const py::module &);
 void modified_camclay_mu_i_module(const py::module &);
+void duckerprager_cap_module(const py::module &);
 
 // boundary conditions
 void boundaryconditions_module(const py::module &);
@@ -60,7 +61,6 @@ void gravity_module(const py::module &);
 void rigidbodylevelset_module(const py::module &);
 void planardomain_module(const py::module &);
 void nodedomain_module(const py::module &);
-
 
 void particles_module(const py::module &);
 void nodes_module(const py::module &);
@@ -71,18 +71,17 @@ void usl_module(const py::module &);
 void global_settings_module(py::module &);
 void tools_module(py::module &);
 
-
 PYBIND11_MODULE(PYBIND_MODULE_NAME, m) {
 
   m.attr("global_dimension") = DIM;
-  
+
   // particles
   particles_module(m);
 
   // nodes
   nodes_module(m);
 
-  //tools
+  // tools
   tools_module(m);
   global_settings_module(m);
 
@@ -100,6 +99,7 @@ PYBIND11_MODULE(PYBIND_MODULE_NAME, m) {
   linearelastic_module(m);
   modified_camclay_module(m);
   modified_camclay_nl_module(m);
+  duckerprager_cap_module(m);
   mohr_coulomb_module(m);
   newtonfluid_module(m);
   localrheology_module(m);
@@ -109,8 +109,6 @@ PYBIND11_MODULE(PYBIND_MODULE_NAME, m) {
   // solver
   solver_module(m);
   usl_module(m);
-  
-
 }
 
 } // namespace pyroclastmpm
