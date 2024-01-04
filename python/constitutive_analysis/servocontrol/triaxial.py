@@ -129,20 +129,8 @@ class TriaxialControl(BaseControl):
                     self.is_finite_strain,
                     debug,
                 ),
-                tol=self.tolerance,
-                # method=self.optimize_method,
+                **self.opt_options,
                 method="Nelder-Mead",
-                # bounds=scipy.optimize.Bounds(-1e-13, 1e-3, True),
-                options={
-                    # "xatol": 1e-6
-                    # maxiter =100
-                    # "ftol": self.tolerance,
-                    # "line_search": None,
-                    # "xtol": 1e-6,
-                    # "xatol": 1e-12,
-                    # "jac_options": {"rdiff": 1e-8},
-                    # "disp": True,
-                },
             )
 
             # return
