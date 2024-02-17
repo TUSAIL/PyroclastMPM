@@ -235,8 +235,12 @@ __device__ __host__ inline void update_modifiedcamclay(
     particles_stresses_gpu[tid] = Matrix3r::Zero();
     return;
   }
+
+  // printf("Phi_trail (Linear) %f \n", p_trail);
+
   if (Phi_trail <= (Real)0.0) {
 
+    // printf("elastic step! \n");
     particles_stresses_gpu[tid] = s_trail + p_trail * Matrix3r::Identity();
 
     if (do_update_history) {
@@ -244,6 +248,8 @@ __device__ __host__ inline void update_modifiedcamclay(
     }
     return;
   }
+
+  // printf("plastic step! \n");
 
   Vector2hp R = Vector2hp::Zero();
 
@@ -315,12 +321,12 @@ __device__ __host__ inline void update_modifiedcamclay(
     conv = R.norm();
 
     counter++;
-    // if (counter > 1000) {
-    //   printf("counter %d cov %.16f \n increasing tol %.16f \n", counter,
-    //   conv,
-    //          tol);
-    //   tol *= 10;
-    // }
+    if (counter > 1000) {
+      tol *= 10;
+      // printf("counter %d cov %.16f \n increasing tol %.16f \n", counter,
+      // conv,
+      //        tol);
+    }
   } while (conv > tol);
 
   if (p_trail > 0) {

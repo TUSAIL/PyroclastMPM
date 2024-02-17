@@ -71,20 +71,20 @@ else()
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX)
     
     message(STATUS "Compiling Thrust without CUDA... ")
- 
-    find_path(THRUST_INCLUDE_DIR
-    HINTS
-        ext/thrust/cmake
-        ext/thrust/
-        /usr/include/cuda
-        /usr/local/include
-        /usr/local/cuda/include
-        ${CUDA_INCLUDE_DIRS}
-    NAMES thrust/version.h
-    DOC "Thrust headers"
-    )
+    set(Thrust_DIR ext/thrust/thrust/cmake)
+    # find_path(THRUST_INCLUDE_DIR
+    # HINTS
+    #     ext/thrust/cmake
+    #     ext/thrust/
+    #     /usr/include/cuda
+    #     /usr/local/include
+    #     /usr/local/cuda/include
+    #     ${CUDA_INCLUDE_DIRS}
+    # NAMES thrust/version.h
+    # DOC "Thrust headers"
+    # )
 
-    find_package(Thrust REQUIRED)
+    find_package(Thrust REQUIRED CONFIG)
 
 
     if(THRUST_FOUND)

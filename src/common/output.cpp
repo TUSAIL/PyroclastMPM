@@ -60,6 +60,7 @@ void set_vtk_points(cpu_array<Vectorr> input,
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
   for (int id = 0; id < input.size(); id++) {
+    // if option is selected to exclude rigid particles, skip them
     if (use_mask && !mask[id]) {
       continue;
     }

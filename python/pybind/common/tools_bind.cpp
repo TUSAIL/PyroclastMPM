@@ -37,6 +37,13 @@ namespace py = pybind11;
 namespace pyroclastmpm {
 
 void tools_module(py::module &m) {
+
+  m.def("get_stl_cells", &get_stl_cells,
+        R"(
+
+            )",
+        py::arg("stl_filename"));
+
   m.def("uniform_random_points_in_volume", &uniform_random_points_in_volume,
         R"(
             Generate a uniform random distribution of points within a volume.

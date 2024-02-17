@@ -35,7 +35,9 @@ set(
   "materials/localrheo.cpp"
   "materials/vonmises.cpp"
   "materials/mohrcoulomb.cpp"
+  "materials/druckerprager_cap.cpp"
   "materials/modifiedcamclay.cpp"
+  "materials/modifiedcamclay_nl.cpp"
   "materials/muijop.cpp"
   "materials/mcc_mu_i.cpp"
 

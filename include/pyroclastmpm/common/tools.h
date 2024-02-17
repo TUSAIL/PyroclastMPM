@@ -56,6 +56,10 @@
 #include <tuple>
 
 namespace pyroclastmpm {
+
+std::tuple<std::vector<std::vector<int>>, std::vector<Vectorr>>
+get_stl_cells(const std::string &stl_filename);
+
 /**
  * @brief Samples points randomly in a volume
  * @details This function is only implemented for 3D
@@ -120,9 +124,9 @@ std::vector<Vector3r> grid_points_in_volume(const std::string &stl_filename,
  * @param point_per_cell Number of points per cell
  * @return std::vector<Vector3r> Output points
  */
-std::tuple<std::vector<Vector3r>, std::vector<Vector3r>>
-grid_points_on_surface(const std::string &stl_filename, const Real cell_size,
-                       const int point_per_cell);
+std::vector<Vector3r> grid_points_on_surface(const std::string &stl_filename,
+                                             const Real cell_size,
+                                             const int point_per_cell);
 
 /**
  * @brief Get the start and end position of the bounding box of an STL file
