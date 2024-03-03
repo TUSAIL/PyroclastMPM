@@ -33,8 +33,8 @@
 
 namespace pyroclastmpm {
 
-// extern const int global_step_cpu;
-// extern const Real dt_cpu;
+extern const int global_step_cpu;
+extern const Real dt_cpu;
 
 /// @brief Construct a new Rigid Body Level Set object
 RigidBodyLevelSet::RigidBodyLevelSet() {
@@ -75,14 +75,8 @@ void RigidBodyLevelSet::set_mode_loop_rotate(Vectorr _euler_angles_per_second,
 void RigidBodyLevelSet::initialize(
     const NodesContainer &nodes_ref,
     [[maybe_unused]] const ParticlesContainer &particles_ref) {
-  // set_default_device<Vectorr>(nodes_ref.grid.num_cells_total, {},
-  // normals_gpu,
-  //                             Vectorr::Zero());
 
-  // set_default_device<bool>(nodes_ref.grid.num_cells_total, {},
-  //                          is_overlapping_gpu, false);
-  // set_default_device<int>(nodes_ref.grid.num_cells_total, {},
-  //                         closest_rigid_particle_gpu, -1);
+
 }
 
 /// @brief Set the output formats
@@ -108,8 +102,6 @@ void RigidBodyLevelSet::apply_on_nodes_moments(
 
   set_position(particles_ref);
 
-  // exit(0);
-  // current_frame = current_frame + 1;
 };
 
 /// @brief calculates grid normals of rigid body level set
@@ -282,89 +274,4 @@ void RigidBodyLevelSet::set_velocities(ParticlesContainer &particles_ref) {
 #endif
 };
 
-// void RigidBodyLevelSet::output_vtk(NodesContainer &nodes_ref,
-//                                    ParticlesContainer &particles_ref) {
-//   if (output_formats.empty()) {
-//     return;
-//   }
-//   // nodes
-//   vtkSmartPointer<vtkPolyData> nodes_polydata =
-//       vtkSmartPointer<vtkPolyData>::New();
-
-//   cpu_array<Vectorr> nodes_positions_cpu = nodes_ref.give_node_coords();
-//   cpu_array<Vectorr> nodes_moments_cpu = nodes_ref.moments_gpu;
-//   cpu_array<Vectorr> nodes_moments_nt_cpu = nodes_ref.moments_nt_gpu;
-//   cpu_array<Vectorr> nodes_forces_external_cpu =
-//   nodes_ref.forces_external_gpu; cpu_array<Vectorr>
-//   nodes_forces_internal_cpu = nodes_ref.forces_internal_gpu;
-//   cpu_array<Vectorr> nodes_forces_total_cpu = nodes_ref.forces_total_gpu;
-
-//   cpu_array<bool> nodes_is_overlapping_cpu = is_overlapping_gpu;
-
-//   cpu_array<Vectorr> nodes_normals_cpu = normals_gpu;
-
-//   cpu_array<Real> nodes_masses_cpu = nodes_ref.masses_gpu;
-
-//   // std::string format = "vtk";
-
-//   // // TODO: fix this (remove and make so we can output int3)
-//   // cpu_array<Vectori> nodes_node_ids_cpu = nodes_ref.node_ids_gpu;
-
-//   // cpu_array<Vectorr> nodes_node_ids_real_cpu;
-//   // for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++) {
-//   //   #if DIM == 3
-//   //   nodes_node_ids_real_cpu.push_back(Vectorr(
-//   //       {(Real)nodes_node_ids_cpu[nid][0],
-//   (Real)nodes_node_ids_cpu[nid][1],
-//   //        (Real)nodes_node_ids_cpu[nid][2]}));
-//   //   #elif DIM ==2
-//   //   nodes_node_ids_real_cpu.push_back(Vectorr(
-//   //       {(Real)nodes_node_ids_cpu[nid][0],
-//   //       (Real)nodes_node_ids_cpu[nid][1]}));
-//   //   #else
-//   //   nodes_node_ids_real_cpu.push_back(Vectorr(
-//   //       {(Real)nodes_node_ids_cpu[nid][0]}));
-//   //   #endif
-//   // }
-//   // set_vtk_pointdata<Vectorr>(nodes_node_ids_real_cpu, nodes_polydata,
-//   //  "Nodes_id");
-
-//   set_vtk_points(nodes_positions_cpu, nodes_polydata);
-
-//   // set_vtk_pointdata<Vectorr>(nodes_normals_cpu, nodes_polydata,
-//   "Normals"); set_vtk_pointdata<Vectorr>(nodes_moments_cpu, nodes_polydata,
-//   "Moments"); set_vtk_pointdata<Vectorr>(nodes_moments_nt_cpu,
-//   nodes_polydata, "MomentsNT");
-//   set_vtk_pointdata<Vectorr>(nodes_forces_external_cpu, nodes_polydata,
-//                              "ForcesExternal");
-//   set_vtk_pointdata<Vectorr>(nodes_forces_internal_cpu, nodes_polydata,
-//                              "ForcesInternal");
-//   set_vtk_pointdata<Vectorr>(nodes_forces_total_cpu, nodes_polydata,
-//                              "ForcesTotal");
-//   set_vtk_pointdata<Real>(nodes_masses_cpu, nodes_polydata, "Mass");
-
-//   set_vtk_pointdata<bool>(nodes_is_overlapping_cpu, nodes_polydata,
-//                           "is_overlapping");
-
-//   for (const auto &format : output_formats) {
-//     write_vtk_polydata(nodes_polydata, "nodes_rigid_body", format);
-//   }
-
-//   // // particles
-
-//   // vtkSmartPointer<vtkPolyData> particles_polydata =
-//   //     vtkSmartPointer<vtkPolyData>::New();
-
-//   // cpu_array<Vectorr> rigid_positions_cpu = {};
-
-//   // for (int pid = 0; pid < particles_ref.num_particles; pid++) {
-//   //   if (particles_ref.is_rigid_gpu[pid]) {
-//   //     rigid_positions_cpu.push_back(particles_ref.positions_gpu[pid]);
-//   //   }
-//   // }
-
-//   // int num_rigid = rigid_positions_cpu.size();
-//   // set_vtk_points(rigid_positions_cpu, particles_polydata);
-//   // write_vtk_polydata(particles_polydata, "rigid_particles", format);
-// };
 } // namespace pyroclastmpm

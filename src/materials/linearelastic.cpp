@@ -54,6 +54,7 @@ LinearElastic::LinearElastic(const Real _density, const Real _E,
   lame_modulus =
       E * pois / (((Real)1.0 + pois) * ((Real)1.0 - (Real)2.0 * pois));
   density = _density;
+
 }
 
 /// @brief Perform stress update

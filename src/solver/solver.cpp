@@ -34,158 +34,168 @@
  */
 
 #include "pyroclastmpm/solver/solver.h"
+#include <typeinfo>
+#include "spdlog/stopwatch.h"
 
-namespace pyroclastmpm {
+namespace pyroclastmpm
+{
 
 #ifdef CUDA_ENABLED
-extern __constant__ SFType shape_function_gpu;
-extern __constant__ int num_surround_nodes_gpu;
-extern __constant__ int forward_window_gpu[64][3];
+  extern __constant__ SFType shape_function_gpu;
+  extern __constant__ int num_surround_nodes_gpu;
+  extern __constant__ int forward_window_gpu[64][3];
 #else
-extern const SFType shape_function_cpu;
-extern const int num_surround_nodes_cpu;
-extern const int forward_window_cpu[64][3];
+  extern const SFType shape_function_cpu;
+  extern const int num_surround_nodes_cpu;
+  extern const int forward_window_cpu[64][3];
 #endif
 
-extern const int global_step_cpu;
+  extern const int global_step_cpu;
 
-/*!
- * @brief Construct a new Solver
- * home/retief/Code/TUSAIL/PyroclastMPM/ext/eigen/Eigen/Core:284,object
- * @details The following steps are performed:
- * (1) initialize the particles spatial partitioning
- * (2) calculate the initial volumes of the particles
- * (3) calculate the initial masses of the particles
- * (4) reorder the particles (TODO: broken)
- *
- * @param _particles ParticlesContainer
- * @param _nodes NodesContainer
- * @param _boundaryconditions A list of boundary conditions to be applied
- * @param _materials A list of materials to be applied
- */
-Solver::Solver(const ParticlesContainer &_particles,
-               const NodesContainer &_nodes,
-               const cpu_array<MaterialType> &_materials,
-               const cpu_array<BoundaryConditionType> &_boundaryconditions)
-    : nodes(_nodes), particles(_particles), materials(_materials),
-      boundaryconditions(_boundaryconditions) {
-  particles.set_spatialpartition(nodes.grid);
+  /*!
+   * @brief Construct a new Solver
+   * home/retief/Code/TUSAIL/PyroclastMPM/ext/eigen/Eigen/Core:284,object
+   * @details The following steps are performed:
+   * (1) initialize the particles spatial partitioning
+   * (2) calculate the initial volumes of the particles
+   * (3) calculate the initial masses of the particles
+   * (4) reorder the particles (TODO: broken)
+   *
+   * @param _particles ParticlesContainer
+   * @param _nodes NodesContainer
+   * @param _boundaryconditions A list of boundary conditions to be applied
+   * @param _materials A list of materials to be applied
+   */
+  Solver::Solver(const ParticlesContainer &_particles,
+                 const NodesContainer &_nodes,
+                 const cpu_array<MaterialType> &_materials,
+                 const cpu_array<BoundaryConditionType> &_boundaryconditions)
+      : nodes(_nodes), particles(_particles), materials(_materials),
+        boundaryconditions(_boundaryconditions)
+  {
 
-  particles.calculate_initial_volumes();
+    particles.set_spatialpartition(nodes.grid);
 
-  for (int mat_id = 0; mat_id < materials.size(); mat_id++) {
-    std::visit(
-        [this, mat_id](auto &arg) {
-          particles.calculate_initial_masses(mat_id, arg.density);
-        },
-        materials[mat_id]);
-  }
+    particles.calculate_initial_volumes();
 
-  particles.numColors = (int)materials.size();
+    total_memory_mb += particles.total_memory_mb;
+    total_memory_mb += nodes.total_memory_mb;
 
-  for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
-    std::visit([this](auto &arg) { arg.initialize(nodes, particles); },
-               boundaryconditions[bc_id]);
-  }
-
-  // TODO: reorder particles with particles.reorder(_)
-  output();
-}
-
-/// @brief Do stress update for all the materials
-/// @details loops through a list of variant materials and calls the
-/// stress_update function for each material
-void Solver::stress_update() {
-  // todo make it so material can have different stress measure
-
-  for (int mat_id = 0; mat_id < materials.size(); mat_id++) {
-    std::visit(
-        [this, mat_id](auto &arg) { arg.stress_update(particles, mat_id); },
-        materials[mat_id]);
-  }
-}
-
-/// @brief Solve the main loop for n_steps
-/// @param n_steps
-void Solver::solve_nsteps(int n_steps) {
-  for (int step = 0; step < n_steps; step++) {
-    solve();
-    // Modifies global memory
-
-    increment_global();
-  }
-  output();
-}
-
-/// @brief Solve the main loop for n_steps
-/// @param total_steps number of steps to solve for
-/// @param output_frequency output frequency
-void Solver::run(const int total_steps, const int output_frequency) {
-
-  // using namespace indicators;
-  // ProgressBar bar{option::BarWidth{50},
-  //                 option::Start{"⏳️["},
-  //                 option::Fill{"."},
-  //                 option::Lead{"■"},
-  //                 option::Remainder{" "},
-  //                 option::End{" ]"},
-  //                 option::ShowElapsedTime{true},
-  //                 option::ShowRemainingTime{true},
-  //                 option::PrefixText{"Progress: "},
-  //                 option::MaxProgress{total_steps + 1},
-  //                 option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}};
-  printf("Running simulation...\n");
-
-  output();
-
-  solve();
-
-  increment_global();
-
-  for (int step = 1; step < total_steps + 1; step++) {
-    solve();
-
-    if (step % output_frequency == 0) {
-      output();
-      printf("Step %d/%d\n", step, total_steps);
-      // // Show iteration as postfix text
-      // bar.set_option(option::PostfixText{std::to_string(step) + "/" +
-      //                                    std::to_string(total_steps)});
-
-      // // update progress bar
-      // bar.set_progress(step);
+    for (int mat_id = 0; mat_id < materials.size(); mat_id++)
+    {
+      std::visit(
+          [this, mat_id](auto &arg)
+          {
+            particles.calculate_initial_masses(mat_id, arg.density);
+          },
+          materials[mat_id]);
     }
 
-    // Modifies global memory
+    particles.numColors = (int)materials.size();
+
+    for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++)
+    {
+      std::visit([this](auto &arg)
+                 { arg.initialize(nodes, particles); },
+                 boundaryconditions[bc_id]);
+    }
+
+    // TODO: reorder particles with particles.reorder(_)
+    output();
+  }
+
+  /// @brief Do stress update for all the materials
+  /// @details loops through a list of variant materials and calls the
+  /// stress_update function for each material
+  void Solver::stress_update()
+  {
+    // todo make it so material can have different stress measure
+
+    for (int mat_id = 0; mat_id < materials.size(); mat_id++)
+    {
+      std::visit(
+          [this, mat_id](auto &arg)
+          { arg.stress_update(particles, mat_id); },
+          materials[mat_id]);
+    }
+  }
+
+  /// @brief Solve the main loop for n_steps
+  /// @param n_steps
+  void Solver::solve_nsteps(int n_steps)
+  {
+    for (int step = 0; step < n_steps; step++)
+    {
+      solve();
+      // Modifies global memory
+
+      increment_global();
+    }
+    output();
+  }
+
+  /// @brief Solve the main loop for n_steps
+  /// @param total_steps number of steps to solve for
+  /// @param output_frequency output frequency
+  void Solver::run(const int total_steps, const int output_frequency)
+  {
+
+    spdlog::info("[Solver] Running solver");
+    spdlog::info("[Solver] total steps: {}", total_steps);
+    spdlog::info("[Solver] output frequency: {}", output_frequency);
+
+    output();
+
+    solve();
+
     increment_global();
+
+    spdlog::stopwatch sw;
+    // spdlog::info("[Solver] Elapsed: {}", sw);
+
+    for (int step = 1; step < total_steps + 1; step++)
+    {
+      solve();
+
+      if (step % output_frequency == 0)
+      {
+        output();
+        spdlog::info("[Solver] output {}/{} \r", step, total_steps);
+      }
+
+      // Modifies global memory
+      increment_global();
+    }
+    spdlog::info("[Solver] Done Elapsed: {:.3}", sw);
+    // bar.mark_as_completed();
+
+    // Show cursor
+    // indicators::show_console_cursor(true);
+  };
+
+  /// @brief Output the results (ParticlesContainer,NodesContainer, etc. )
+  void Solver::output()
+  {
+    particles.output_vtk();
+
+    nodes.output_vtk();
+
+    for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++)
+    {
+      std::visit([this](auto &arg)
+                 { arg.output_vtk(nodes, particles); },
+                 boundaryconditions[bc_id]);
+    }
+
+    for (int mat_id = 0; mat_id < materials.size(); mat_id++)
+    {
+      std::visit([this](auto &arg)
+                 { arg.output_vtk(nodes, particles); },
+                 materials[mat_id]);
+    }
   }
 
-  // bar.mark_as_completed();
-
-  printf("Done.\n");
-
-  // Show cursor
-  // indicators::show_console_cursor(true);
-};
-
-/// @brief Output the results (ParticlesContainer,NodesContainer, etc. )
-void Solver::output() {
-  particles.output_vtk();
-
-  nodes.output_vtk();
-
-  for (int bc_id = 0; bc_id < boundaryconditions.size(); bc_id++) {
-    std::visit([this](auto &arg) { arg.output_vtk(nodes, particles); },
-               boundaryconditions[bc_id]);
-  }
-
-  for (int mat_id = 0; mat_id < materials.size(); mat_id++) {
-    std::visit([this](auto &arg) { arg.output_vtk(nodes, particles); },
-               materials[mat_id]);
-  }
-}
-
-/// @brief Destroy the Solver:: Solver object
-Solver::~Solver() { set_global_step(0); }
+  /// @brief Destroy the Solver:: Solver object
+  Solver::~Solver() { set_global_step(0); }
 
 } // namespace pyroclastmpm

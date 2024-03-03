@@ -41,113 +41,106 @@
 #include "pyroclastmpm/common/output.h"
 #include "pyroclastmpm/common/types_common.h"
 
-namespace pyroclastmpm {
+namespace pyroclastmpm
+{
 
-/**
- * @brief Background grid nodes
- * @details A background grid is implemented here which serves
- * as the main data structure to store nodal quantities (mass, forces etc)
- * and solve the governing equations.
- * \verbatim embed:rst:leading-asterisk
- *     Example usage
- *
- *     .. code-block:: cpp
- *
- *        #include "pyroclastmpm/nodes/nodes.h"
- *
- *        Vectorr min = Vectorr::Zero();
+  /**
+   * @brief Background grid nodes
+   * @details A background grid is implemented here which serves
+   * as the main data structure to store nodal quantities (mass, forces etc)
+   * and solve the governing equations.
+   * \verbatim embed:rst:leading-asterisk
+   *     Example usage
+   *
+   *     .. code-block:: cpp
+   *
+   *        #include "pyroclastmpm/nodes/nodes.h"
+   *
+   *        Vectorr min = Vectorr::Zero();
 
- *        Vectorr max = Vectorr::Ones();
- *
- *        Real nodal_spacing = 0.5;
- *
- *        NodesContainer nodes = NodesContainer(min, max, nodal_spacing);
- *
- *        Vectorr node_coords = nodes.give_node_coords();
- *
- *
- * \endverbatim
- *
- */
-class NodesContainer {
+   *        Vectorr max = Vectorr::Ones();
+   *
+   *        Real nodal_spacing = 0.5;
+   *
+   *        NodesContainer nodes = NodesContainer(min, max, nodal_spacing);
+   *
+   *        Vectorr node_coords = nodes.give_node_coords();
+   *
+   *
+   * \endverbatim
+   *
+   */
+  class NodesContainer
+  {
 
-private:
-  /// @brief Calculates the node ids
-  void calculate_bin_ids();
+  private:
+    /// @brief Calculates the node ids
+    void calculate_bin_ids();
 
-  /// @brief Calculates the node types (i.e boundary or interior)
-  void calculate_bin_types();
+    /// @brief Calculates the node types (i.e boundary or interior)
+    void calculate_bin_types();
 
-public:
-  /// @brief Construct a new Nodes Container object (default constructor)
-  NodesContainer() = default;
+  public:
+    /// @brief Construct a new Nodes Container object (default constructor)
+    NodesContainer() = default;
 
-  ///@brief Construct a new Nodes Container object
-  ///@param _node_start Origin of where nodes will be generated
-  ///@param _node_end  End where nodes will be generated
-  ///@param _node_spacing Cell size of the background grid
-  NodesContainer(const Vectorr _node_start, const Vectorr _node_end,
-                 const Real _node_spacing);
+    ///@brief Construct a new Nodes Container object
+    ///@param _node_start Origin of where nodes will be generated
+    ///@param _node_end  End where nodes will be generated
+    ///@param _node_spacing Cell size of the background grid
+    NodesContainer(const Vectorr _node_start, const Vectorr _node_end,
+                   const Real _node_spacing);
 
-  /// @brief Destroy the NodesContainer object
-  ~NodesContainer() = default;
+    /// @brief Destroy the NodesContainer object
+    ~NodesContainer() = default;
 
-  /// @brief Resets arrays of the background grid
-  void reset();
+    /// @brief Resets arrays of the background grid
+    void reset();
 
-  /// @brief Give the coordinates of the nodes as a flattened array
-  gpu_array<Vectorr> give_node_coords() const;
+    /// @brief Give the coordinates of the nodes as a flattened array
+    gpu_array<Vectorr> give_node_coords() const;
 
-  /// @brief Give the coordinates of the nodes as a flattened array (as stl)
-  std::vector<Vectorr> give_node_coords_stl() const;
+    /// @brief Give the coordinates of the nodes as a flattened array (as stl)
+    std::vector<Vectorr> give_node_coords_stl() const;
 
-  /// @brief Integrate the nodal forces to the momentu
-  void integrate();
+    /// @brief Output particle data ("vtk", "csv", "obj")
+    /// @details Requires that `set_output_formats` is called first
+    void output_vtk() const;
 
-  /// @brief Output particle data ("vtk", "csv", "obj")
-  /// @details Requires that `set_output_formats` is called first
-  void output_vtk() const;
+    /// @brief Set output format of the nodal quantities
+    void set_output_formats(const std::vector<std::string> &_output_formats);
 
-  /// @brief Set output format of the nodal quantities
-  void set_output_formats(const std::vector<std::string> &_output_formats);
+    /// @brief Current moment of the nodes
+    gpu_array<Vectorr> moments_gpu;
 
-  /// @brief Current moment of the nodes
-  gpu_array<Vectorr> moments_gpu;
+    /// @brief Forward moment of the nodes (related to the USL integration)
+    gpu_array<Vectorr> moments_nt_gpu;
 
-  /// @brief Forward moment of the nodes (related to the USL integration)
-  gpu_array<Vectorr> moments_nt_gpu;
+    /// @brief Masses of the nodes
+    gpu_array<Real> masses_gpu;
 
-  /// @brief External forces of the nodes (i.e external loads or gravity)
-  gpu_array<Vectorr> forces_external_gpu;
+    /// @brief Ids of the nodes at a bin level (i,j,k)
+    gpu_array<Vectori> node_ids_gpu;
 
-  /// @brief Internal forces of the nodes (from particle stresses)
-  gpu_array<Vectorr> forces_internal_gpu;
+    /// @brief Types of the nodes (boundary or interior)
+    gpu_array<Vectori> node_types_gpu;
 
-  /// @brief Total forces of the nodes (F_INT + F_EXT)
-  gpu_array<Vectorr> forces_total_gpu;
-
-  /// @brief Masses of the nodes
-  gpu_array<Real> masses_gpu;
-
-  /// @brief Ids of the nodes at a bin level (i,j,k)
-  gpu_array<Vectori> node_ids_gpu;
-
-  /// @brief Types of the nodes (boundary or interior)
-  gpu_array<Vectori> node_types_gpu;
-
-  /// @brief Information about the grid (number of cells, cell size etc)
-  Grid grid = Grid();
+    /// @brief Information about the grid (number of cells, cell size etc)
+    Grid grid = Grid();
 
 #ifdef CUDA_ENABLED
-  /// @brief CUDA GPU launch configuration
-  GPULaunchConfig launch_config;
+    /// @brief CUDA GPU launch configuration
+    GPULaunchConfig launch_config;
 #endif
 
-  /// @brief Output formats for the nodes
-  std::vector<std::string> output_formats;
+    /// @brief Output formats for the nodes
+    std::vector<std::string> output_formats;
 
-  /// @brief Small mass value to prevent division by zero
-  Real small_mass_cutoff = (Real)(0.000000001);
-};
+    /// @brief Small mass value to prevent division by zero
+    Real small_mass_cutoff = (Real)(0.000000001);
+
+    /// @brief Total memory
+    double total_memory_mb = 0.0;
+  };
 
 } // namespace pyroclastmpm

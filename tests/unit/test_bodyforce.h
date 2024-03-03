@@ -35,68 +35,8 @@ using namespace pyroclastmpm;
  * @brief Construct a new TEST object for the BodyForce boundary condition
  *
  */
-TEST(BodyForce, ApplyOnNodesForces) {
-  // TEST x-axis
-
-  std::vector<bool> mask = {false, true};
-
-#if DIM == 3
-  std::vector<Vectorr> values = {Vectorr({0., 0.25, 0.}),
-                                 Vectorr({0.8, 0.6, 0.4})};
-#elif DIM == 2
-  std::vector<Vectorr> values = {Vectorr({0., 0.25}), Vectorr({0.8, 0.6})};
-#else
-  std::vector<Vectorr> values = {Vectorr(0.), Vectorr(0.8)};
-#endif
-
-  auto boundarycondition = BodyForce("forces", values, mask);
-
-  EXPECT_EQ(boundarycondition.mode_id, 0);
-
-  Vectorr min = Vectorr::Zero();
-  Vectorr max = Vectorr::Ones();
-
-  Real nodal_spacing = 0.5;
-
-  auto nodes = NodesContainer(min, max, nodal_spacing);
-
-  // this might be needed if we add particles to the apply_on_nodes_f_ext
-  // argument later ParticlesContainer particles =
-  // ParticlesContainer(std::vector({Vectorr::Ones() * 0.1}));
-
-  //  this part just checks if forces are added (not fixed)
-  nodes.forces_external_gpu[0] = values[0];
-  nodes.forces_external_gpu[1] = values[1];
-
-  boundarycondition.apply_on_nodes_f_ext(nodes);
-
-  cpu_array<Vectorr> forces_ext = nodes.forces_external_gpu;
-
-#if DIM == 3
-  EXPECT_NEAR(forces_ext[0][0], 0., 0.0001);
-  EXPECT_NEAR(forces_ext[0][1], 0.25, 0.0001);
-  EXPECT_NEAR(forces_ext[0][2], 0., 0.0001);
-
-  EXPECT_NEAR(forces_ext[1][0], 2. * values[1][0], 0.0001);
-  EXPECT_NEAR(forces_ext[1][1], 2. * values[1][1], 0.0001);
-  EXPECT_NEAR(forces_ext[1][2], 2. * values[1][2], 0.0001);
-#elif DIM == 2
-  EXPECT_NEAR(forces_ext[0][0], 0., 0.0001);
-  EXPECT_NEAR(forces_ext[0][1], 0.25, 0.0001);
-  EXPECT_NEAR(forces_ext[1][0], 2. * values[1][0], 0.0001);
-  EXPECT_NEAR(forces_ext[1][1], 2. * values[1][1], 0.0001);
-
-#else
-  EXPECT_NEAR(forces_ext[0][0], 0., 0.0001);
-  EXPECT_NEAR(forces_ext[1][0], 2. * values[1][0], 0.0001);
-#endif
-}
-
-/**
- * @brief Construct a new TEST object for the BodyForce boundary condition
- *
- */
-TEST(BodyForce, ApplyOnNodesMoments) {
+TEST(BodyForce, ApplyOnNodesMoments)
+{
   // TEST x-axis
 
   std::vector<bool> mask = {false, true};
@@ -160,7 +100,8 @@ TEST(BodyForce, ApplyOnNodesMoments) {
  * @brief Construct a new TEST object for the BodyForce boundary condition
  *
  */
-TEST(BodyForce, ApplyOnNodesMomentsFixed) {
+TEST(BodyForce, ApplyOnNodesMomentsFixed)
+{
   // TEST x-axis
 
   std::vector<bool> mask = {false, true};

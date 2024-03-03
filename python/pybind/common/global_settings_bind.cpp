@@ -34,11 +34,13 @@
 
 namespace py = pybind11;
 
-namespace pyroclastmpm {
+namespace pyroclastmpm
+{
 
-void global_settings_module(py::module &m) {
-  m.def("set_global_shapefunction", &set_global_shapefunction,
-        R"(
+      void global_settings_module(py::module &m)
+      {
+            m.def("set_global_shapefunction", &set_global_shapefunction,
+                  R"(
             Sets the global shape function for the MPM simulation. 
 
             Example usage:
@@ -51,10 +53,10 @@ void global_settings_module(py::module &m) {
                 Type of shape function to use  "linear" or "cubic", by default "linear".
 
              )",
-        py::arg("shapefunction") = "linear");
+                  py::arg("shapefunction") = "linear");
 
-  m.def("set_global_timestep", &set_global_dt,
-        R"(
+            m.def("set_global_timestep", &set_global_dt,
+                  R"(
             Sets the global time step for the MPM simulation. 
 
             Example usage:
@@ -67,10 +69,10 @@ void global_settings_module(py::module &m) {
                 Input time step.
 
              )",
-        py::arg("timestep"));
+                  py::arg("timestep"));
 
-  m.def("set_global_step", &set_global_step,
-        R"(
+            m.def("set_global_step", &set_global_step,
+                  R"(
             Sets the global step for the MPM simulation. 
 
             Example usage:
@@ -82,10 +84,10 @@ void global_settings_module(py::module &m) {
             step: int
                 input step.
              )",
-        py::arg("step"));
+                  py::arg("step"));
 
-  m.def("set_global_output_directory", &set_global_output_directory,
-        R"(
+            m.def("set_global_output_directory", &set_global_output_directory,
+                  R"(
             Sets the output directory for the MPM simulation where
             the output files will be saved.
 
@@ -98,10 +100,10 @@ void global_settings_module(py::module &m) {
             directory: str
                 Folder path to save the output files.
              )",
-        py::arg("directory"));
+                  py::arg("directory"));
 
-  m.def("set_globals", &set_globals,
-        R"(
+            m.def("set_globals", &set_globals,
+                  R"(
             Sets the global variables for the MPM simulation.
 
             Example usage:
@@ -120,9 +122,9 @@ void global_settings_module(py::module &m) {
             directory: str
                   Folder path to save the output files.
             )",
-        py::arg("timestep"), py::arg("particles_per_cell"),
-        py::arg("shapefunction") = "linear",
-        py::arg("directory") = "./output/");
-}
+                  py::arg("time_step"), py::arg("particles_per_cell"),
+                  py::arg("shape_function") = "linear",
+                  py::arg("output_directory") = "./output/");
+      }
 
 } // namespace pyroclastmpm

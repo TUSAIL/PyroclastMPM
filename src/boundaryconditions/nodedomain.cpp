@@ -31,7 +31,11 @@ namespace pyroclastmpm {
 /// @param face0_mode roller or fixed modes for cube face x0,y0,z0
 /// @param face1_mode roller or fixed modes  for cube face x1,y1,z1
 NodeDomain::NodeDomain(Vectori _face0_mode, Vectori _face1_mode)
-    : face1_mode(_face1_mode), face0_mode(_face0_mode) {}
+    : face1_mode(_face1_mode), face0_mode(_face0_mode) {
+  
+  Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+  spdlog::info("[NodeDomain] face0_mode: {}; face1_mode: {} ", face0_mode.format(CleanFmt),  face1_mode.format(CleanFmt));
+  }
 
 /// @brief Apply to node moments (walls)
 /// @param nodes_ref reference to NodesContainer

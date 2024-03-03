@@ -23,9 +23,9 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "pyroclastmpm/materials/druckerprager_cap.h"
+#include "pyroclastmpm/materials/dp_rheo.h"
 
-#include "druckerprager_cap_inline.h"
+#include "dp_rheo_inline.h"
 
 namespace pyroclastmpm {
 
@@ -42,14 +42,14 @@ extern const int global_step_cpu;
 /// @param R  preconsolidation ratio
 /// @param _Pt Tensile yield hydrostatic stress
 /// @param _beta Parameter related to size of outer diameter of ellipse
-DruckerPragerCap::DruckerPragerCap(const Real _density, const Real _E,
+DP_rheo::DP_rheo(const Real _density, const Real _E,
                                    const Real _pois, const Real _M,
                                    const Real _lam, const Real _kap,
                                    const Real _Vs, const Real _R,
                                    const Real _Pt, const Real _beta,
-                                   const Real _dilatancy_angle)
+                                   const Real _dilatancy_angle, const Real _solid_volume_fraction)
     : M(_M), Pt(_Pt), beta(_beta), E(_E), pois(_pois), lam(_lam), kap(_kap),
-      Vs(_Vs), R(_R) {
+      Vs(_Vs), R(_R),solid_volume_fraction(_solid_volume_fraction) {
 
   bulk_modulus = E / ((Real)3.0 * ((Real)1.0 - (Real)2.0 * pois));
   shear_modulus = E / ((Real)2.0 * ((Real)1 + pois));
@@ -66,17 +66,20 @@ DruckerPragerCap::DruckerPragerCap(const Real _density, const Real _E,
       6.0 * sin(dilatancy_angle) / (sqrt(3.0) * (3.0 + sin(dilatancy_angle)));
 
   printf("eta_overline %f \n", eta_overline);
+
 }
 
 /// @brief Initialize material (allocate memory for history variables)
 /// @param particles_ref ParticleContainer reference
 /// @param mat_id material id
-void DruckerPragerCap::initialize(const ParticlesContainer &particles_ref,
+void DP_rheo::initialize(const ParticlesContainer &particles_ref,
                                   [[maybe_unused]] int mat_id) {
 
   set_default_device<Real>(particles_ref.num_particles, {}, alpha_gpu, 0.0);
 
   set_default_device<Real>(particles_ref.num_particles, {}, pc_gpu, 0.0);
+
+  set_default_device<Real>(particles_ref.num_particles, {}, solid_volume_fraction_gpu, solid_volume_fraction);
 
   set_default_device<Matrixr>(particles_ref.num_particles, {}, eps_e_gpu,
                               Matrixr::Zero());
@@ -84,6 +87,7 @@ void DruckerPragerCap::initialize(const ParticlesContainer &particles_ref,
   set_default_device<Matrix3r>(particles_ref.num_particles,
                                particles_ref.stresses_gpu, stress_ref_gpu,
                                Matrix3r::Zero());
+
 
   cpu_array<Matrix3r> stresses_cpu = particles_ref.stresses_gpu;
 
@@ -116,13 +120,13 @@ void DruckerPragerCap::initialize(const ParticlesContainer &particles_ref,
 /// @brief Perform stress update
 /// @param particles_ptr ParticlesContainer class
 /// @param mat_id material id
-void DruckerPragerCap::stress_update(ParticlesContainer &particles_ref,
+void DP_rheo::stress_update(ParticlesContainer &particles_ref,
                                      int mat_id) {
 
 #ifdef CUDA_ENABLED
   // TODO ADD KERNEL
 
-  KERNEL_STRESS_UPDATE_DPCAP<<<particles_ref.launch_config.tpb,
+  KERNEL_STRESS_UPDATE_DP_RHEO<<<particles_ref.launch_config.tpb,
                              particles_ref.launch_config.bpg>>>(
       thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
       thrust::raw_pointer_cast(eps_e_gpu.data()),
@@ -130,6 +134,7 @@ void DruckerPragerCap::stress_update(ParticlesContainer &particles_ref,
       thrust::raw_pointer_cast(particles_ref.volumes_original_gpu.data()),
       thrust::raw_pointer_cast(alpha_gpu.data()),
       thrust::raw_pointer_cast(pc_gpu.data()),
+      thrust::raw_pointer_cast(solid_volume_fraction_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
       thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
       thrust::raw_pointer_cast(stress_ref_gpu.data()), bulk_modulus,
@@ -139,11 +144,13 @@ void DruckerPragerCap::stress_update(ParticlesContainer &particles_ref,
 
 #else
   for (int pid = 0; pid < particles_ref.num_particles; pid++) {
-    update_druckerpragercap(
+    update_dp_rheo(
         particles_ref.stresses_gpu.data(), eps_e_gpu.data(),
         particles_ref.volumes_gpu.data(),
         particles_ref.volumes_original_gpu.data(), alpha_gpu.data(),
-        pc_gpu.data(), particles_ref.velocity_gradient_gpu.data(),
+        pc_gpu.data(),
+        solid_volume_fraction_gpu.data(),
+        particles_ref.velocity_gradient_gpu.data(),
         particles_ref.colors_gpu.data(), stress_ref_gpu.data(), bulk_modulus,
         shear_modulus, M, lam, kap, Pt, beta, Vs, eta_overline, mat_id,
         do_update_history, is_velgrad_strain_increment, pid);
@@ -155,7 +162,7 @@ void DruckerPragerCap::stress_update(ParticlesContainer &particles_ref,
 /// @param cell_size Fell size of the background grid
 /// @param factor Scaling factor for speed
 /// @return Real a timestep
-Real DruckerPragerCap::calculate_timestep(Real cell_size, Real factor,
+Real DP_rheo::calculate_timestep(Real cell_size, Real factor,
                                           Real bulk_modulus, Real shear_modulus,
                                           Real density) {
   // https://www.sciencedirect.com/science/article/pii/S0045782520306885
@@ -167,7 +174,7 @@ Real DruckerPragerCap::calculate_timestep(Real cell_size, Real factor,
   return delta_t;
 }
 
-void DruckerPragerCap::output_vtk(NodesContainer &nodes_ref,
+void DP_rheo::output_vtk(NodesContainer &nodes_ref,
                                   ParticlesContainer &particles_ref) {
 
   if (output_formats.empty()) {

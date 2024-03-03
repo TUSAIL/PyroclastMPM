@@ -55,102 +55,106 @@
 #include <random>
 #include <tuple>
 
-namespace pyroclastmpm {
+namespace pyroclastmpm
+{
 
-std::tuple<std::vector<std::vector<int>>, std::vector<Vectorr>>
-get_stl_cells(const std::string &stl_filename);
+    std::tuple<std::vector<std::vector<int>>, std::vector<Vectorr>>
+    get_stl_cells(const std::string &stl_filename);
 
-/**
- * @brief Samples points randomly in a volume
- * @details This function is only implemented for 3D
- * \verbatim embed:rst:leading-asterisk
- *     Example usage
- *
- *     .. code-block:: cpp
- *
- *        #include "pyroclastmpm/common/tools.h"
- *
- *        std::vector<Vector3r> points =
- * uniform_random_points_in_volume("./object.stl", 100);
- *
- * \endverbatim
- * @param stl_filename String containing the path to the STL file
- * @param num_points Number of points to sample
- * @return std::vector<Vector3r> output points
- */
-std::vector<Vector3r>
-uniform_random_points_in_volume(const std::string &stl_filename,
-                                const int num_points);
+    /**
+     * @brief Samples points randomly in a volume
+     * @details This function is only implemented for 3D
+     * \verbatim embed:rst:leading-asterisk
+     *     Example usage
+     *
+     *     .. code-block:: cpp
+     *
+     *        #include "pyroclastmpm/common/tools.h"
+     *
+     *        std::vector<Vector3r> points =
+     * uniform_random_points_in_volume("./object.stl", 100);
+     *
+     * \endverbatim
+     * @param stl_filename String containing the path to the STL file
+     * @param num_points Number of points to sample
+     * @return std::vector<Vector3r> output points
+     */
+    std::vector<Vector3r>
+    uniform_random_points_in_volume(const std::string &stl_filename,
+                                    const int num_points);
 
-/**
- * @brief Samples points as a grid within a volume
- * @details This function is only implemented for 3D
- * \verbatim embed:rst:leading-asterisk
- *     Example usage
- *
- *     .. code-block:: cpp
- *
- *        #include "pyroclastmpm/common/tools.h"
- *
- *        std::vector<Vector3r> points = grid_points_in_volume("./object.stl",
- * 0.1, 100);
- *
- * \endverbatim
- * @param stl_filename String containing the path to the STL file
- * @param cell_size Cell spacing of each point in the grid
- * @param point_per_cell Number of points per cell
- * @return std::vector<Vector3r> Output points
- */
-std::vector<Vector3r> grid_points_in_volume(const std::string &stl_filename,
-                                            const Real cell_size,
-                                            const int point_per_cell);
+    /**
+     * @brief Samples points as a grid within a volume
+     * @details This function is only implemented for 3D
+     * \verbatim embed:rst:leading-asterisk
+     *     Example usage
+     *
+     *     .. code-block:: cpp
+     *
+     *        #include "pyroclastmpm/common/tools.h"
+     *
+     *        std::vector<Vector3r> points = grid_points_in_volume("./object.stl",
+     * 0.1, 100);
+     *
+     * \endverbatim
+     * @param stl_filename String containing the path to the STL file
+     * @param cell_size Cell spacing of each point in the grid
+     * @param point_per_cell Number of points per cell
+     * @return std::vector<Vector3r> Output points
+     */
+    std::vector<Vector3r> grid_points_in_volume(const std::string &stl_filename,
+                                                const Real cell_size,
+                                                const int point_per_cell);
 
-/**
- * @brief Samples points as a grid on the surface of an STL file
- * @details This function is only implemented for 3D
- * \verbatim embed:rst:leading-asterisk
- *     Example usage
- *
- *     .. code-block:: cpp
- *
- *        #include "pyroclastmpm/common/tools.h"
- *
- *        std::vector<Vector3r> points = grid_points_on_surface("./object.stl",
- * 0.1, 100);
- *
- * \endverbatim
- * @param stl_filename String containing the path to the STL file
- * @param cell_size Cell spacing of each point in the grid
- * @param point_per_cell Number of points per cell
- * @return std::vector<Vector3r> Output points
- */
-std::vector<Vector3r> grid_points_on_surface(const std::string &stl_filename,
-                                             const Real cell_size,
-                                             const int point_per_cell);
+    /**
+     * @brief Samples points as a grid on the surface of an STL file
+     * @details This function is only implemented for 3D
+     * \verbatim embed:rst:leading-asterisk
+     *     Example usage
+     *
+     *     .. code-block:: cpp
+     *
+     *        #include "pyroclastmpm/common/tools.h"
+     *
+     *        std::vector<Vector3r> points = grid_points_on_surface("./object.stl",
+     * 0.1, 100);
+     *
+     * \endverbatim
+     * @param stl_filename String containing the path to the STL file
+     * @param cell_size Cell spacing of each point in the grid
+     * @param point_per_cell Number of points per cell
+     * @return std::vector<Vector3r> Output points
+     */
+    std::vector<Vector3r> grid_points_on_surface(const std::string &stl_filename,
+                                                 const Real cell_size,
+                                                 const int point_per_cell);
 
-/**
- * @brief Get the start and end position of the bounding box of an STL file
- * @details This function is only implemented for 3D
- * \verbatim embed:rst:leading-asterisk
- *     Example usage
- *
- *     .. code-block:: cpp
- *
- *        #include "pyroclastmpm/common/tools.h"
- *
- *        std::tuple<Vector3r, Vector3r>  bounds = get_bounds("./object.stl");
- *
- * \endverbatim
- * @param stl_filename  String containing the path to the STL file
- * @return std::tuple<Vector3r, Vector3r> Tuple containing the start and end
- */
-std::tuple<Vector3r, Vector3r> get_bounds(const std::string &stl_filename);
+    /**
+     * @brief Get the start and end position of the bounding box of an STL file
+     * @details This function is only implemented for 3D
+     * \verbatim embed:rst:leading-asterisk
+     *     Example usage
+     *
+     *     .. code-block:: cpp
+     *
+     *        #include "pyroclastmpm/common/tools.h"
+     *
+     *        std::tuple<Vector3r, Vector3r>  bounds = get_bounds("./object.stl");
+     *
+     * \endverbatim
+     * @param stl_filename  String containing the path to the STL file
+     * @return std::tuple<Vector3r, Vector3r> Tuple containing the start and end
+     */
+    std::tuple<Vector3r, Vector3r> get_bounds(const std::string &stl_filename);
 
-Real calculate_timestep(Real cell_size, Real factor, Real bulk_modulus,
-                        Real shear_modulus, Real density);
+    Real calculate_timestep(Real cell_size, Real factor, Real bulk_modulus,
+                            Real shear_modulus, Real density);
+
+    void set_logger(const std::string &log_file, const std::string &log_level);
+
 #ifdef CUDA_ENABLED
-/// @brief Set the GPU device id to run on
-void set_device(int device_id);
+    /// @brief Set the GPU device id to run on
+    void set_device(int device_id);
 #endif
 
 } // namespace pyroclastmpm

@@ -41,67 +41,71 @@
 #include "pyroclastmpm/boundaryconditions/boundaryconditions.h"
 #include "pyroclastmpm/nodes/nodes.h"
 
-namespace pyroclastmpm {
+namespace pyroclastmpm
+{
 
-/**
- * @brief Gravity boundary conditions
- * @details Gravity can either be constant
- * or have linear ramping to a final value.
- * \verbatim embed:rst:leading-asterisk
- *     Example usage (constant)
- *
- *     .. code-block:: cpp
- *
- *        #include "pyroclastmpm/boundaryconditions/gravity.h"
- *        #include "pyroclastmpm/nodes/nodes.h"
- *
- *        // set globals
- *
- *        // Create NodesContainer
- *
- *        auto gravity = Gravity(Vectorr(0.0, -9.81, 0.0));
- *
- *        // Add gravity to Solver class
- *
- * \endverbatim
- *
- * \verbatim embed:rst:leading-asterisk
- *    Example usage (ramping)
- *
- *   .. code-block:: cpp
- *
- *      auto gravity = Gravity(Vectorr(0.0, 0.0, 0.0),true,100,Vectorr(0.0,
- * -9.81, 0.0));
- *
- * \endverbatim
- *
- *
- */
-class Gravity : public BoundaryCondition {
-public:
-  /// @brief Construct a new Gravity object
-  /// @param _gravity gravity vector
-  /// @param _is_ramp flag whether gravity is ramping linearly or not
-  /// @param _ramp_step the amount of steps to ramp gravity to full value
-  /// @param _gravity_end gravity value at end of ramp
-  Gravity(Vectorr _gravity, bool _is_ramp = false, int _ramp_step = 0,
-          Vectorr _gravity_end = Vectorr::Zero());
+  /**
+   * @brief Gravity boundary conditions
+   * @details Gravity can either be constant
+   * or have linear ramping to a final value.
+   * \verbatim embed:rst:leading-asterisk
+   *     Example usage (constant)
+   *
+   *     .. code-block:: cpp
+   *
+   *        #include "pyroclastmpm/boundaryconditions/gravity.h"
+   *        #include "pyroclastmpm/nodes/nodes.h"
+   *
+   *        // set globals
+   *
+   *        // Create NodesContainer
+   *
+   *        auto gravity = Gravity(Vectorr(0.0, -9.81, 0.0));
+   *
+   *        // Add gravity to Solver class
+   *
+   * \endverbatim
+   *
+   * \verbatim embed:rst:leading-asterisk
+   *    Example usage (ramping)
+   *
+   *   .. code-block:: cpp
+   *
+   *      auto gravity = Gravity(Vectorr(0.0, 0.0, 0.0),true,100,Vectorr(0.0,
+   * -9.81, 0.0));
+   *
+   * \endverbatim
+   *
+   *
+   */
+  class Gravity : public BoundaryCondition
+  {
+  public:
+    /// @brief Construct a new Gravity object
+    /// @param _gravity gravity vector
+    /// @param _is_ramp flag whether gravity is ramping linearly or not
+    /// @param _ramp_step the amount of steps to ramp gravity to full value
+    /// @param _gravity_end gravity value at end of ramp
+    Gravity(Vectorr _gravity, bool _is_ramp = false, int _ramp_step = 0,
+            Vectorr _gravity_end = Vectorr::Zero());
 
-  /// @brief Apply graivity to external node forces
-  /// @param nodes_ref reference to NodesContainer
-  void apply_on_nodes_f_ext(NodesContainer &nodes_ptr) override;
+    /// @brief apply rigid body contact on background grid
+    /// @param nodes_ref Nodes container
+    /// @param particles_ref Particles container
+    void apply_on_nodes_moments(NodesContainer &nodes_ref,
+                                ParticlesContainer &particles_ref) override;
 
-  /// @brief Initial gravity vector
-  Vectorr gravity;
+    /// @brief Initial gravity vector
+    Vectorr gravity;
 
-  /// @brief flag whether gravity is ramping linearly or not
-  bool is_ramp;
+    /// @brief flag whether gravity is ramping linearly or not
+    bool is_ramp;
 
-  /// @brief the amount of steps to ramp gravity to full value
-  int ramp_step;
+    /// @brief the amount of steps to ramp gravity to full value
+    int ramp_step;
 
-  /// @brief gravity value at end of ramp
-  Vectorr gravity_end;
-};
+    /// @brief gravity value at end of ramp
+    Vectorr gravity_end;
+  };
 
 } // namespace pyroclastmpm

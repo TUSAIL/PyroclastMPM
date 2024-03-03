@@ -149,6 +149,10 @@ public:
 
   /** current step of the main loop */
   int current_step;
+  
+
+ /// @brief Total memory 
+  double total_memory_mb = 0.0;
 };
 
 } // namespace pyroclastmpm

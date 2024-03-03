@@ -29,7 +29,8 @@
  * @brief Construct a new TEST object for NodesContainer to test the constructor
  *
  */
-TEST(NodesContainer, CONSTRUCTOR) {
+TEST(NodesContainer, CONSTRUCTOR)
+{
 
   auto min = Vectorr::Zero();
   auto max = Vectorr::Ones();
@@ -96,53 +97,4 @@ TEST(NodesContainer, CONSTRUCTOR) {
   EXPECT_EQ(node_ids[1], Vectori(1));
   EXPECT_EQ(node_ids[2], Vectori(2));
 #endif
-}
-
-/**
- * @brief Construct a new TEST object for integrating the nodes
- *
- */
-TEST(NodesContainer, INTEGRATE) {
-  set_global_dt(0.1);
-  auto min = Vectorr::Zero();
-  auto max = Vectorr::Ones();
-  Real nodal_spacing = 0.5;
-
-  auto nodes = pyroclastmpm::NodesContainer(min, max, nodal_spacing);
-
-  cpu_array<Real> masses = nodes.masses_gpu;
-  masses[0] = 1.;
-  masses[1] = 2.;
-  masses[2] = 3.;
-  nodes.masses_gpu = masses;
-
-  cpu_array<Vectorr> moments = nodes.moments_gpu;
-  moments[0][0] = 1.;
-  moments[1][0] = 1.;
-  moments[2][0] = 1.;
-  nodes.moments_gpu = moments;
-
-  cpu_array<Vectorr> forces_internal = nodes.forces_internal_gpu;
-  forces_internal[0][0] = 1.;
-  forces_internal[1][0] = 2.;
-  forces_internal[2][0] = 3.;
-  nodes.forces_internal_gpu = forces_internal;
-
-  cpu_array<Vectorr> forces_external = nodes.forces_external_gpu;
-  forces_external[0][0] = 1.;
-  forces_external[1][0] = 2.;
-  forces_external[2][0] = 3.;
-  nodes.forces_external_gpu = forces_external;
-
-  nodes.integrate();
-
-  cpu_array<Vectorr> forces_total = nodes.forces_total_gpu;
-  EXPECT_NEAR(forces_total[0][0], 2., 0.000001);
-  EXPECT_NEAR(forces_total[1][0], 4., 0.000001);
-  EXPECT_NEAR(forces_total[2][0], 6., 0.000001);
-
-  cpu_array<Vectorr> moments_nt = nodes.moments_nt_gpu;
-  EXPECT_NEAR(moments_nt[0][0], 1.2, 0.000001);
-  EXPECT_NEAR(moments_nt[1][0], 1.4, 0.000001);
-  EXPECT_NEAR(moments_nt[2][0], 1.6, 0.000001);
 }

@@ -40,81 +40,99 @@
 
 #include "spatialpartition_inline.h"
 
-namespace pyroclastmpm {
+#include "spdlog/spdlog.h"
 
-/// @brief Construct a new Spatial Partition object
-/// @param _grid Grid object (@see Grid)
-/// @param _num_elements number of particles (or points) being partitioned
-SpatialPartition::SpatialPartition(const Grid &_grid, const int _num_elements)
-    : grid(_grid), num_elements(_num_elements) {
+namespace pyroclastmpm
+{
 
-  set_default_device<int>(grid.num_cells_total, {}, cell_start_gpu, -1);
-  set_default_device<int>(grid.num_cells_total, {}, cell_end_gpu, -1);
-  set_default_device<int>(num_elements, {}, sorted_index_gpu, -1);
-  set_default_device<unsigned int>(num_elements, {}, hash_unsorted_gpu, 0);
-  set_default_device<unsigned int>(num_elements, {}, hash_sorted_gpu, 0);
-  set_default_device<Vectori>(num_elements, {}, bins_gpu, Vectori::Zero());
+  /// @brief Construct a new Spatial Partition object
+  /// @param _grid Grid object (@see Grid)
+  /// @param _num_elements number of particles (or points) being partitioned
+  SpatialPartition::SpatialPartition(const Grid &_grid, const int _num_elements)
+      : grid(_grid), num_elements(_num_elements)
+  {
 
-  reset();
+    /// @brief Total memory
+    double total_memory_mb = 0.0;
+
+    total_memory_mb += set_default_device<int>(grid.num_cells_total, {}, cell_start_gpu, 0);
+    total_memory_mb += set_default_device<int>(grid.num_cells_total, {}, cell_end_gpu, 0);
+    total_memory_mb += set_default_device<int>(num_elements, {}, sorted_index_gpu, -1);
+    total_memory_mb += set_default_device<unsigned int>(num_elements, {}, hash_unsorted_gpu, 0);
+    total_memory_mb += set_default_device<unsigned int>(num_elements, {}, hash_sorted_gpu, 0);
+    total_memory_mb += set_default_device<Vectori>(num_elements, {}, bins_gpu, Vectori::Zero());
+
+    reset();
+
+    spdlog::info("[SpatialPartition] Number of node: {}", num_elements);
+    spdlog::info("[SpatialPartition] Total memory allocated: {:2f} MB", total_memory_mb);
+    spdlog::info("[SpatialPartition] Memory allocated per node: {:4f} MB", total_memory_mb / grid.num_cells_total);
+
 #ifdef CUDA_ENABLED
-  launch_config = GPULaunchConfig(num_elements);
+    launch_config = GPULaunchConfig(num_elements);
 #endif
-}
-
-/// @brief Resets arrays of the Spatial Partition object
-void SpatialPartition::reset() {
-
-  thrust::sequence(sorted_index_gpu.begin(), sorted_index_gpu.end(), 0, 1);
-  thrust::fill(cell_start_gpu.begin(), cell_start_gpu.end(), -1);
-  thrust::fill(cell_end_gpu.begin(), cell_end_gpu.end(), -1);
-  thrust::fill(hash_sorted_gpu.begin(), hash_sorted_gpu.end(), 0);
-  thrust::fill(hash_unsorted_gpu.begin(), hash_unsorted_gpu.end(), 0);
-  thrust::fill(bins_gpu.begin(), bins_gpu.end(), Vectori::Zero());
-}
-
-/// @brief Calculates the cartesian hash of a set of points
-/// @param positions_gpu Set of points with the same size as _num_elements
-void SpatialPartition::calculate_hash(gpu_array<Vectorr> &positions_gpu) {
-
-#ifdef CUDA_ENABLED
-  KERNEL_CALC_HASH<<<launch_config.tpb, launch_config.bpg>>>(
-      thrust::raw_pointer_cast(bins_gpu.data()),
-      thrust::raw_pointer_cast(hash_unsorted_gpu.data()),
-      thrust::raw_pointer_cast(positions_gpu.data()), grid, num_elements);
-  gpuErrchk(cudaDeviceSynchronize());
-#else
-
-  for (int index = 0; index < num_elements; index++) {
-    calculate_hashes(bins_gpu.data(), hash_unsorted_gpu.data(),
-                     positions_gpu.data(), grid, index);
   }
 
-#endif
+  /// @brief Resets arrays of the Spatial Partition object
+  void SpatialPartition::reset()
+  {
 
-  hash_sorted_gpu = hash_unsorted_gpu;
-}
-
-/// @brief Sorts hashes of the points
-void SpatialPartition::sort_hashes() {
-  thrust::stable_sort_by_key(hash_sorted_gpu.begin(), hash_sorted_gpu.end(),
-                             sorted_index_gpu.begin());
-}
-
-/// @brief Bins the points into the grid
-/// @details Calculates the start and end cell index of each point
-void SpatialPartition::bin_particles() {
-#ifdef CUDA_ENABLED
-  KERNEL_BIN_PARTICLES<<<launch_config.tpb, launch_config.bpg>>>(
-      thrust::raw_pointer_cast(cell_start_gpu.data()),
-      thrust::raw_pointer_cast(cell_end_gpu.data()),
-      thrust::raw_pointer_cast(hash_sorted_gpu.data()), num_elements);
-  gpuErrchk(cudaDeviceSynchronize());
-#else
-  for (size_t ti = 0; ti < num_elements; ti++) {
-    bin_particles_kernel(cell_start_gpu.data(), cell_end_gpu.data(),
-                         hash_sorted_gpu.data(), num_elements, ti);
+    thrust::sequence(sorted_index_gpu.begin(), sorted_index_gpu.end(), 0, 1);
+    thrust::fill(cell_start_gpu.begin(), cell_start_gpu.end(), 0);
+    thrust::fill(cell_end_gpu.begin(), cell_end_gpu.end(), 0);
+    thrust::fill(hash_sorted_gpu.begin(), hash_sorted_gpu.end(), 0);
+    thrust::fill(hash_unsorted_gpu.begin(), hash_unsorted_gpu.end(), 0);
+    thrust::fill(bins_gpu.begin(), bins_gpu.end(), Vectori::Zero());
   }
+
+  /// @brief Calculates the cartesian hash of a set of points
+  /// @param positions_gpu Set of points with the same size as _num_elements
+  void SpatialPartition::calculate_hash(gpu_array<Vectorr> &positions_gpu)
+  {
+
+#ifdef CUDA_ENABLED
+    KERNEL_CALC_HASH<<<launch_config.tpb, launch_config.bpg>>>(
+        thrust::raw_pointer_cast(bins_gpu.data()),
+        thrust::raw_pointer_cast(hash_unsorted_gpu.data()),
+        thrust::raw_pointer_cast(positions_gpu.data()), grid, num_elements);
+    gpuErrchk(cudaDeviceSynchronize());
+#else
+
+    for (int index = 0; index < num_elements; index++)
+    {
+      calculate_hashes(bins_gpu.data(), hash_unsorted_gpu.data(),
+                       positions_gpu.data(), grid, index);
+    }
+
 #endif
-}
+
+    hash_sorted_gpu = hash_unsorted_gpu;
+  }
+
+  /// @brief Sorts hashes of the points
+  void SpatialPartition::sort_hashes()
+  {
+    thrust::stable_sort_by_key(hash_sorted_gpu.begin(), hash_sorted_gpu.end(),
+                               sorted_index_gpu.begin());
+  }
+
+  /// @brief Bins the points into the grid
+  /// @details Calculates the start and end cell index of each point
+  void SpatialPartition::bin_particles()
+  {
+#ifdef CUDA_ENABLED
+    KERNEL_BIN_PARTICLES<<<launch_config.tpb, launch_config.bpg>>>(
+        thrust::raw_pointer_cast(cell_start_gpu.data()),
+        thrust::raw_pointer_cast(cell_end_gpu.data()),
+        thrust::raw_pointer_cast(hash_sorted_gpu.data()), num_elements);
+    gpuErrchk(cudaDeviceSynchronize());
+#else
+    for (size_t ti = 0; ti < num_elements; ti++)
+    {
+      bin_particles_kernel(cell_start_gpu.data(), cell_end_gpu.data(),
+                           hash_sorted_gpu.data(), num_elements, ti);
+    }
+#endif
+  }
 
 } // namespace pyroclastmpm

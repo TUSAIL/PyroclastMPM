@@ -29,7 +29,8 @@
 #include "pyroclastmpm/solver/usl/usl.h"
 
 ///  @brief Construct a new TEST object for ParticlesContainer G2P transfer
-TEST(USL, Solve_StepWise) {
+TEST(USL, Solve_StepWise)
+{
   cpu_array<Matrix3r> stresses = std::vector({Matrix3r::Ones()});
 #if DIM == 3
   cpu_array<Vectorr> pos =
@@ -112,8 +113,6 @@ TEST(USL, Solve_StepWise) {
   EXPECT_NEAR(moments_cpu[1][0], expected_node_moment[1][0], 0.000001);
 #endif
 
-  usl_solver.nodes.integrate();
-
   usl_solver.G2P();
 
   cpu_array<Real> volumes_cpu = usl_solver.particles.volumes_gpu;
@@ -176,7 +175,8 @@ TEST(USL, Solve_StepWise) {
 #endif
 }
 
-TEST(USL, Solve) {
+TEST(USL, Solve)
+{
   // Check if full solve() works
 #if DIM == 3
   cpu_array<Vectorr> pos =

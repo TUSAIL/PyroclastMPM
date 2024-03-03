@@ -266,6 +266,8 @@ public:
 
   /// @brief Spawner data (data class) for spawning particles
   SpawnerData spawner;
+
+  double total_memory_mb = 0.0;
 };
 
 } // namespace pyroclastmpm

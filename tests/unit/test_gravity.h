@@ -32,7 +32,10 @@
  * @brief Construct a new TEST object for testing the gravity boundary condition
  *
  */
-TEST(Gravity, APPLY_GRAVITY_NO_RAMP) {
+TEST(Gravity, APPLY_GRAVITY_NO_RAMP)
+{
+
+  set_global_dt(1.0);
 
   Vectorr gravity = Vectorr::Ones();
   gravity *= -9.81;
@@ -56,24 +59,25 @@ TEST(Gravity, APPLY_GRAVITY_NO_RAMP) {
 
   boundarycond.apply_on_nodes_f_ext(nodes);
 
-  cpu_array<Vectorr> forces_external_cpu = nodes.forces_external_gpu;
+  cpu_array<Vectorr> moments_nt_cpu = nodes.moments_nt_gpu;
 
-  EXPECT_NEAR(forces_external_cpu[0][0], -9.81, 0.000001);
-  EXPECT_NEAR(forces_external_cpu[1][0], -19.62, 0.000001);
+  EXPECT_NEAR(moments_nt_cpu[0][0], -9.81, 0.000001);
+  EXPECT_NEAR(moments_nt_cpu[1][0], -19.62, 0.000001);
 
 #if DIM > 1
-  EXPECT_NEAR(forces_external_cpu[0][1], -9.81, 0.000001);
-  EXPECT_NEAR(forces_external_cpu[1][1], -19.62, 0.000001);
+  EXPECT_NEAR(moments_nt_cpu[0][1], -9.81, 0.000001);
+  EXPECT_NEAR(moments_nt_cpu[1][1], -19.62, 0.000001);
 #endif
 
 #if DIM > 2
-  EXPECT_NEAR(forces_external_cpu[0][2], -9.81, 0.000001);
-  EXPECT_NEAR(forces_external_cpu[1][2], -19.62, 0.000001);
+  EXPECT_NEAR(moments_nt_cpu[0][2], -9.81, 0.000001);
+  EXPECT_NEAR(moments_nt_cpu[1][2], -19.62, 0.000001);
 #endif
 }
 
-TEST(Gravity, APPLY_GRAVITY_WITH_RAMP) {
-
+TEST(Gravity, APPLY_GRAVITY_WITH_RAMP)
+{
+  set_global_dt(1.0);
   Vectorr gravity = Vectorr::Ones();
   gravity *= -9.81;
 
@@ -98,16 +102,17 @@ TEST(Gravity, APPLY_GRAVITY_WITH_RAMP) {
   set_global_step(1);
   boundarycond.apply_on_nodes_f_ext(nodes);
 
-  cpu_array<Vectorr> forces_external_cpu = nodes.forces_external_gpu;
+  // cpu_array<Vectorr> forces_external_cpu = nodes.forces_external_gpu;
+  cpu_array<Vectorr> moments_nt_cpu = nodes.moments_nt_gpu;
 
-  EXPECT_NEAR(forces_external_cpu[0][0], -4.905, 0.000001);
-  EXPECT_NEAR(forces_external_cpu[1][0], -9.81, 0.000001);
+  EXPECT_NEAR(moments_nt_cpu[0][0], -4.905, 0.000001);
+  EXPECT_NEAR(moments_nt_cpu[1][0], -9.81, 0.000001);
 
   set_global_step(2);
   boundarycond.apply_on_nodes_f_ext(nodes);
 
-  forces_external_cpu = nodes.forces_external_gpu;
+  moments_nt_cpu = nodes.moments_nt_gpu;
 
-  EXPECT_NEAR(forces_external_cpu[0][0], -9.81, 0.000001);
-  EXPECT_NEAR(forces_external_cpu[1][0], -19.62, 0.000001);
+  EXPECT_NEAR(moments_nt_cpu[0][0], -9.81, 0.000001);
+  EXPECT_NEAR(moments_nt_cpu[1][0], -19.62, 0.000001);
 }
