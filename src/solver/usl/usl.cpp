@@ -145,6 +145,7 @@ namespace pyroclastmpm
 
       usl_p2g_kernel(
           nodes.moments_gpu.data(),
+          nodes.moments_nt_gpu.data(),
           nodes.masses_gpu.data(), nodes.node_ids_gpu.data(),
           particles.stresses_gpu.data(), particles.forces_external_gpu.data(),
           particles.velocities_gpu.data(), particles.dpsi_gpu.data(),
@@ -153,6 +154,7 @@ namespace pyroclastmpm
           particles.spatial.cell_end_gpu.data(),
           particles.spatial.sorted_index_gpu.data(),
           particles.is_rigid_gpu.data(), particles.is_active_gpu.data(),
+          nodes.small_mass_cutoff,
           nodes.grid, index);
     }
 #endif

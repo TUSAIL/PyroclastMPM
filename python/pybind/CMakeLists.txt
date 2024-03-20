@@ -50,7 +50,7 @@ set(
   "materials/linearelastic_bind.cpp"
   "materials/modified_camclay_bind.cpp"
   "materials/druckerprager_cap_bind.cpp"
-  # "materials/modified_camclay_nl_bind.cpp"
+
   "materials/mohr_coulomb_bind.cpp"
   "materials/newtonfluid_bind.cpp"
   "materials/localrheology_bind.cpp"
@@ -78,7 +78,11 @@ set_target_properties(MPM${DIM}D
 
 target_link_libraries(MPM${DIM}D PRIVATE pyroclastmpm_${DIM}D)
 
-target_link_libraries(MPM${DIM}D PRIVATE GTest::gtest_main spdlog::spdlog_header_only Eigen3::Eigen ${VTK_LIBRARIES})
+
+target_link_libraries(MPM${DIM}D PRIVATE spdlog::spdlog_header_only Eigen3::Eigen ${VTK_LIBRARIES})
+
+# for testing
+# target_link_libraries(MPM${DIM}D PRIVATE GTest::gtest_main)
 
 if(BUILD_CUDA)
   target_link_libraries(MPM${DIM}D PRIVATE CUDA::cudart CUDA::cuda_driver)
@@ -97,7 +101,7 @@ else()
   set_source_files_properties(${PyroclastPyBind} PROPERTIES LANGUAGE CXX)
 endif()
 
-vtk_module_autoinit(
-  FORCE_STATIC TARGETS MPM${DIM}D
-  MODULES ${VTK_LIBRARIES}
-)
+# vtk_module_autoinit(
+#   FORCE_STATIC TARGETS MPM${DIM}D
+#   MODULES ${VTK_LIBRARIES}
+# )

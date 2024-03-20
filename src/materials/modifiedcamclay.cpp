@@ -27,6 +27,8 @@
 
 #include "modifiedcamclay_inline.h"
 
+// #include "modifiedcamclay_inline_2.h"
+
 namespace pyroclastmpm
 {
 
@@ -111,10 +113,41 @@ namespace pyroclastmpm
                                       int mat_id)
   {
 
+    // #ifdef CUDA_ENABLED
+    //     // TODO ADD KERNEL
+    //     KERNEL_STRESS_UPDATE_MCC<<<particles_ref.launch_config.tpb,
+    //                                particles_ref.launch_config.bpg>>>(
+    //         thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
+    //         thrust::raw_pointer_cast(eps_e_gpu.data()),
+    //         thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
+    //         thrust::raw_pointer_cast(particles_ref.volumes_original_gpu.data()),
+    //         thrust::raw_pointer_cast(alpha_gpu.data()),
+    //         thrust::raw_pointer_cast(pc_gpu.data()),
+    //         thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
+    //         thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
+    //         thrust::raw_pointer_cast(stress_ref_gpu.data()), bulk_modulus,
+    //         shear_modulus, M, lam, kap, Pt, beta, Vs, mat_id, do_update_history,
+    //         is_velgrad_strain_increment, particles_ref.num_particles);
+
+    //     cudaDeviceSynchronize();
+    // #else
+    //     for (int pid = 0; pid < particles_ref.num_particles; pid++)
+    //     {
+    //       update_modifiedcamclay(
+    //           particles_ref.stresses_gpu.data(), eps_e_gpu.data(),
+    //           particles_ref.volumes_gpu.data(),
+    //           particles_ref.volumes_original_gpu.data(), alpha_gpu.data(),
+    //           pc_gpu.data(), particles_ref.velocity_gradient_gpu.data(),
+    //           particles_ref.colors_gpu.data(), stress_ref_gpu.data(), bulk_modulus,
+    //           shear_modulus, M, lam, kap, Pt, beta, Vs, mat_id, do_update_history,
+    //           is_velgrad_strain_increment, pid);
+    //     }
+    // #endif
+
 #ifdef CUDA_ENABLED
     // TODO ADD KERNEL
-    KERNEL_STRESS_UPDATE_MCC<<<particles_ref.launch_config.tpb,
-                               particles_ref.launch_config.bpg>>>(
+    KERNEL_STRESS_UPDATE_MCC_NONLINEAR<<<particles_ref.launch_config.tpb,
+                                         particles_ref.launch_config.bpg>>>(
         thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
         thrust::raw_pointer_cast(eps_e_gpu.data()),
         thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
@@ -131,7 +164,7 @@ namespace pyroclastmpm
 #else
     for (int pid = 0; pid < particles_ref.num_particles; pid++)
     {
-      update_modifiedcamclay(
+      update_modifiedcamclay_nonlinear(
           particles_ref.stresses_gpu.data(), eps_e_gpu.data(),
           particles_ref.volumes_gpu.data(),
           particles_ref.volumes_original_gpu.data(), alpha_gpu.data(),
@@ -141,10 +174,8 @@ namespace pyroclastmpm
           is_velgrad_strain_increment, pid);
     }
 #endif
-    // debug mmc gpu - 01/03/2024 remove by 09/03/2024
-    // thrust::host_vector<Matrix3r> stresses_cpu = particles_ref.stresses_gpu;
-    // print_array(stresses_cpu);
-    // exit(0);
+
+    printf("Non Linear stress update \n");
   }
 
   /// @brief Calculate time step wave propagation speed

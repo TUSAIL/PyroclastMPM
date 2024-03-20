@@ -141,7 +141,7 @@ namespace pyroclastmpm
 #endif
 
     reset(); // reset needed
-    
+
     spdlog::info("[Particles] Number of particles: {}", num_particles);
     spdlog::info("[Particles] Number of rigid particles: {}", num_rigid_particles);
     spdlog::info("[Particles] Total memory allocated: {:2f} MB", total_memory_mb);
