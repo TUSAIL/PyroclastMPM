@@ -34,70 +34,75 @@
  */
 #include "pyroclastmpm/common/types_common.h"
 
-namespace pyroclastmpm {
+namespace pyroclastmpm
+{
 
 #ifdef CUDA_ENABLED
-extern Real __constant__ dt_gpu;
+  extern Real __constant__ dt_gpu;
 #else
-extern const Real dt_cpu;
+  extern const Real dt_cpu;
 #endif
 
-/** @brief Integrate nodal arrays to get moments
- *
- * @param nodes_moments_nt_gpu Forwards nodal moments
- * @param nodes_forces_total_gpu Total nodal forces
- * @param nodes_forces_external_gpu External nodal forces
- * @param nodes_forces_internal_gpu Internal nodal forces
- * @param nodes_moments_gpu Nodal moments
- * @param nodes_masses_gpu Nodal masses
- * @param node_mem_index Index of node in memory
- * @return __device__
- */
-__device__ __host__ inline void
-integrate_nodes(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
-                const Vectorr *nodes_forces_external_gpu,
-                const Vectorr *nodes_forces_internal_gpu,
-                const Vectorr *nodes_moments_gpu, const Real *nodes_masses_gpu,
-                const Real small_mass_cutoff, const int node_mem_index) {
+  /** @brief Integrate nodal arrays to get moments
+   *
+   * @param nodes_moments_nt_gpu Forwards nodal moments
+   * @param nodes_forces_total_gpu Total nodal forces
+   * @param nodes_forces_external_gpu External nodal forces
+   * @param nodes_forces_internal_gpu Internal nodal forces
+   * @param nodes_moments_gpu Nodal moments
+   * @param nodes_masses_gpu Nodal masses
+   * @param node_mem_index Index of node in memory
+   * @return __device__
+   */
+  __device__ __host__ inline void
+  integrate_nodes(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
+                  const Vectorr *nodes_forces_external_gpu,
+                  const Vectorr *nodes_forces_internal_gpu,
+                  const Vectorr *nodes_moments_gpu, const Real *nodes_masses_gpu,
+                  const Real small_mass_cutoff, const int node_mem_index)
+  {
 
-  if (nodes_masses_gpu[node_mem_index] <= small_mass_cutoff) {
-    return;
-  }
-  const Vectorr ftotal = nodes_forces_internal_gpu[node_mem_index] +
-                         nodes_forces_external_gpu[node_mem_index];
+    if (nodes_masses_gpu[node_mem_index] <= small_mass_cutoff)
+    {
+      return;
+    }
+    const Vectorr ftotal = nodes_forces_internal_gpu[node_mem_index] +
+                           nodes_forces_external_gpu[node_mem_index];
 
-  nodes_forces_total_gpu[node_mem_index] = ftotal;
+    nodes_forces_total_gpu[node_mem_index] = ftotal;
 
-  // moments_nt - updated moments
-  // moments - old moments
+    // moments_nt - updated moments
+    // moments - old moments
 #ifdef CUDA_ENABLED
-  nodes_moments_nt_gpu[node_mem_index] =
-      nodes_moments_gpu[node_mem_index] + ftotal * dt_gpu;
+    nodes_moments_nt_gpu[node_mem_index] =
+        nodes_moments_gpu[node_mem_index] + ftotal * dt_gpu;
 #else
-  nodes_moments_nt_gpu[node_mem_index] =
-      nodes_moments_gpu[node_mem_index] + ftotal * dt_cpu;
+    nodes_moments_nt_gpu[node_mem_index] =
+        nodes_moments_gpu[node_mem_index] + ftotal * dt_cpu;
 #endif
-}
-
-#ifdef CUDA_ENABLED
-__global__ void
-KERNEL_INTEGRATE(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
-                 const Vectorr *nodes_forces_external_gpu,
-                 const Vectorr *nodes_forces_internal_gpu,
-                 const Vectorr *nodes_moments_gpu, const Real *nodes_masses_gpu,
-                 const Real small_mass_cutoff, const int num_nodes_total) {
-
-  const int node_mem_index = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if (node_mem_index >= num_nodes_total) {
-    return;
   }
 
-  integrate_nodes(nodes_moments_nt_gpu, nodes_forces_total_gpu,
-                  nodes_forces_external_gpu, nodes_forces_internal_gpu,
-                  nodes_moments_gpu, nodes_masses_gpu, small_mass_cutoff,
-                  node_mem_index);
-}
+#ifdef CUDA_ENABLED
+  __global__ void
+  KERNEL_INTEGRATE(Vectorr *nodes_moments_nt_gpu, Vectorr *nodes_forces_total_gpu,
+                   const Vectorr *nodes_forces_external_gpu,
+                   const Vectorr *nodes_forces_internal_gpu,
+                   const Vectorr *nodes_moments_gpu, const Real *nodes_masses_gpu,
+                   const Real small_mass_cutoff, const int num_nodes_total)
+  {
+
+    const int node_mem_index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (node_mem_index >= num_nodes_total)
+    {
+      return;
+    }
+
+    integrate_nodes(nodes_moments_nt_gpu, nodes_forces_total_gpu,
+                    nodes_forces_external_gpu, nodes_forces_internal_gpu,
+                    nodes_moments_gpu, nodes_masses_gpu, small_mass_cutoff,
+                    node_mem_index);
+  }
 
 #endif
 

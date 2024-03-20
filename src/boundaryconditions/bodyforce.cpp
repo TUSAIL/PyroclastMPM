@@ -38,82 +38,66 @@
 #include "pyroclastmpm/boundaryconditions/bodyforce.h"
 #include "bodyforce_inline.h"
 
-namespace pyroclastmpm {
+namespace pyroclastmpm
+{
 
-/// @brief Construct a new Body Force object
-/// @param _mode mode of the body force
-/// @param _values values of the body force
-/// @param _mask mask on which nodes to apply the body force
-BodyForce::BodyForce(const std::string_view &_mode,
-                     const cpu_array<Vectorr> &_values,
-                     const cpu_array<bool> &_mask) noexcept {
-  if (_mode == "forces") {
-    mode_id = 0;
-  } else if (_mode == "moments") {
-    mode_id = 1;
-  } else if (_mode == "fixed") {
-    mode_id = 2;
-  }
-
-  set_default_device<Vectorr>(static_cast<int>(_values.size()), _values,
-                              values_gpu, Vectorr::Zero());
-  set_default_device<bool>(static_cast<int>(_mask.size()), _mask, mask_gpu,
-                           false);
-}
-
-/// @brief Apply body force to external node forces
-/// @param nodes_ptr NodeContainer reference
-void BodyForce::apply_on_nodes_f_ext(NodesContainer &nodes_ref) {
-  if (!isActive) {
-    return;
-  }
-
-  if (mode_id == 0) // apply on external forces
+  /// @brief Construct a new Body Force object
+  /// @param _mode mode of the body force
+  /// @param _values values of the body force
+  /// @param _mask mask on which nodes to apply the body force
+  BodyForce::BodyForce(const std::string_view &_mode,
+                       const cpu_array<Vectorr> &_values,
+                       const cpu_array<bool> &_mask) noexcept
   {
-#ifdef CUDA_ENABLED
-    KERNEL_APPLY_BODYFORCE<<<nodes_ref.launch_config.tpb,
-                             nodes_ref.launch_config.bpg>>>(
-        thrust::raw_pointer_cast(nodes_ref.forces_external_gpu.data()),
-        thrust::raw_pointer_cast(values_gpu.data()),
-        thrust::raw_pointer_cast(mask_gpu.data()),
-        nodes_ref.grid.num_cells_total);
-#else
-    for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++) {
-      apply_bodyforce(nodes_ref.forces_external_gpu.data(), values_gpu.data(),
-                      mask_gpu.data(), nid);
+    if (_mode == "forces")
+    {
+      mode_id = 0;
+    }
+    else if (_mode == "moments")
+    {
+      mode_id = 1;
+    }
+    else if (_mode == "fixed")
+    {
+      mode_id = 2;
     }
 
-#endif
-  }
-};
-
-/// @brief Update node values for moments
-/// @param nodes_ref NodeContainer reference
-/// @param particles_ref ParticleContainer reference
-void BodyForce::apply_on_nodes_moments(NodesContainer &nodes_ref,
-                                       ParticlesContainer &particles_ref) {
-  if (!isActive) {
-    return;
+    set_default_device<Vectorr>(static_cast<int>(_values.size()), _values,
+                                values_gpu, Vectorr::Zero());
+    set_default_device<bool>(static_cast<int>(_mask.size()), _mask, mask_gpu,
+                             false);
   }
 
-  bool isFixed = (mode_id == 2);
+  /// @brief Update node values for moments
+  /// @param nodes_ref NodeContainer reference
+  /// @param particles_ref ParticleContainer reference
+  void BodyForce::apply_on_nodes_moments(NodesContainer &nodes_ref,
+                                         ParticlesContainer &particles_ref)
+  {
+    if (!isActive)
+    {
+      return;
+    }
+
+    bool isFixed = (mode_id == 2);
 
 #ifdef CUDA_ENABLED
-  KERNEL_APPLY_BODYMOMENT<<<nodes_ref.launch_config.tpb,
-                            nodes_ref.launch_config.bpg>>>(
-      thrust::raw_pointer_cast(nodes_ref.moments_nt_gpu.data()),
-      thrust::raw_pointer_cast(nodes_ref.moments_gpu.data()),
-      thrust::raw_pointer_cast(values_gpu.data()),
-      thrust::raw_pointer_cast(mask_gpu.data()), isFixed,
-      nodes_ref.grid.num_cells_total);
+    KERNEL_APPLY_BODYMOMENT<<<nodes_ref.launch_config.tpb,
+                              nodes_ref.launch_config.bpg>>>(
+        thrust::raw_pointer_cast(nodes_ref.moments_nt_gpu.data()),
+        thrust::raw_pointer_cast(nodes_ref.moments_gpu.data()),
+        thrust::raw_pointer_cast(values_gpu.data()),
+        thrust::raw_pointer_cast(mask_gpu.data()), isFixed,
+        nodes_ref.grid.num_cells_total);
 #else
-  for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++) {
+    for (int nid = 0; nid < nodes_ref.grid.num_cells_total; nid++)
+    {
 
-    apply_bodymoments(nodes_ref.moments_nt_gpu.data(),
-                      nodes_ref.moments_gpu.data(), values_gpu.data(),
-                      mask_gpu.data(), isFixed, nid);
-  }
+      apply_bodymoments(nodes_ref.moments_nt_gpu.data(),
+                        nodes_ref.moments_gpu.data(), values_gpu.data(),
+                        mask_gpu.data(), isFixed, nid);
+    }
 #endif
-};
+  };
 
 } // namespace pyroclastmpm

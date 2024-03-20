@@ -62,6 +62,14 @@ if (DOUBLE_PRECISION)
     add_definitions(-DUSE_DOUBLES) 
 endif()
 
+add_subdirectory(ext/spdlog/)
+
+
+if(NOT TARGET spdlog)
+    # Stand-alone build
+    find_package(spdlog REQUIRED)
+endif()
+
 if(BUILD_CUDA)
     add_definitions(-DCUDA_ENABLED) 
     project(pyroclastmpm VERSION 0.0.1 LANGUAGES C CXX CUDA)
@@ -72,17 +80,6 @@ else()
     
     message(STATUS "Compiling Thrust without CUDA... ")
     set(Thrust_DIR ext/thrust/thrust/cmake)
-    # find_path(THRUST_INCLUDE_DIR
-    # HINTS
-    #     ext/thrust/cmake
-    #     ext/thrust/
-    #     /usr/include/cuda
-    #     /usr/local/include
-    #     /usr/local/cuda/include
-    #     ${CUDA_INCLUDE_DIRS}
-    # NAMES thrust/version.h
-    # DOC "Thrust headers"
-    # )
 
     find_package(Thrust REQUIRED CONFIG)
 
@@ -104,8 +101,6 @@ endif()
 # EIGEN3
 add_subdirectory(ext/eigen/)
 
-# TQDM-CPP
-include_directories("ext/indicators/include")
 
 
 # find_package(indicators REQUIRED)
@@ -168,7 +163,7 @@ add_library(pyroclastmpm::pyroclastmpm ALIAS pyroclastmpm_${DIM}D)
 
 # Install targets and configuration
 install(
-    TARGETS pyroclastmpm_${DIM}D
+    TARGETS pyroclastmpm_${DIM}D spdlog_header_only #workaround 
     EXPORT pyroclastmpm-config
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

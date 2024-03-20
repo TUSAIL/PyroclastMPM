@@ -38,7 +38,7 @@ class UniaxialControl(BaseControl):
     _summary_
     """
 
-    def run(self):
+
         for step in range(self.num_steps):
             target_strain_tensor = self.prestrain.copy()
             target_strain_tensor[0, 0] += -self.axial_strain_target_list[step]
@@ -65,9 +65,11 @@ class UniaxialControl(BaseControl):
             self.particles, _ = self.material.stress_update(self.particles, 0)
 
             self.strain_prev = np.array(self.particles.F[0])
+            
 
             if step % self.output_step == 0:
                 self.store_results(step)  # defined in baseclass
+           
 
     def set_mode_sequence(self, axial_strain_target_list, total_time):
         """

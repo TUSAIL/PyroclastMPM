@@ -36,6 +36,7 @@ PlanarDomain::PlanarDomain(Vectorr _face0_friction, Vectorr _face1_friction) {
 
   face0_friction = _face0_friction * (Real)(PI / 180.);
   face1_friction = _face1_friction * (Real)(PI / 180.);
+
 }
 
 /// @brief apply contact on particles

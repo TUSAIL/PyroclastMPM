@@ -34,18 +34,20 @@
 
 namespace py = pybind11;
 
-namespace pyroclastmpm {
+namespace pyroclastmpm
+{
 
-void tools_module(py::module &m) {
+      void tools_module(py::module &m)
+      {
 
-  m.def("get_stl_cells", &get_stl_cells,
-        R"(
+            m.def("get_stl_cells", &get_stl_cells,
+                  R"(
 
             )",
-        py::arg("stl_filename"));
+                  py::arg("stl_filename"));
 
-  m.def("uniform_random_points_in_volume", &uniform_random_points_in_volume,
-        R"(
+            m.def("uniform_random_points_in_volume", &uniform_random_points_in_volume,
+                  R"(
             Generate a uniform random distribution of points within a volume.
 
             Example usage:
@@ -64,10 +66,10 @@ void tools_module(py::module &m) {
             np.array
                   The sampled points.
              )",
-        py::arg("stl_filename"), py::arg("num_points"));
+                  py::arg("stl_filename"), py::arg("num_points"));
 
-  m.def("grid_points_in_volume", &grid_points_in_volume,
-        R"(
+            m.def("grid_points_in_volume", &grid_points_in_volume,
+                  R"(
             Generate even distribution (grid) of points within a volume.
 
             Example usage:
@@ -88,11 +90,11 @@ void tools_module(py::module &m) {
             np.array
                   The sampled points.
              )",
-        py::arg("stl_filename"), py::arg("cell_size"),
-        py::arg("points_per_cell"));
+                  py::arg("stl_filename"), py::arg("cell_size"),
+                  py::arg("points_per_cell"));
 
-  m.def("grid_points_on_surface", &grid_points_on_surface,
-        R"(
+            m.def("grid_points_on_surface", &grid_points_on_surface,
+                  R"(
             Generate even distribution (grid) of points on a surface.
 
             Example usage:
@@ -113,11 +115,11 @@ void tools_module(py::module &m) {
             np.array
                   The sampled points.
              )",
-        py::arg("stl_filename"), py::arg("cell_size"),
-        py::arg("points_per_cell"));
+                  py::arg("stl_filename"), py::arg("cell_size"),
+                  py::arg("points_per_cell"));
 
-  m.def("get_bounds", &get_bounds,
-        R"(
+            m.def("get_bounds", &get_bounds,
+                  R"(
             Get start and end coordinates of an STL file.
 
             Example usage:
@@ -134,16 +136,47 @@ void tools_module(py::module &m) {
             Tuple[np.array, np.array]
                   A tuple of start and end coordinates
              )",
-        py::arg("stl_filename"));
+                  py::arg("stl_filename"));
 
-  m.def("calculate_timestep", &calculate_timestep);
+            m.def("calculate_timestep", &calculate_timestep);
 
-  // calculate_timestep(Real cell_size, Real factor, Real bulk_modulus,
-  // Real shear_modulus, Real density)
+            // calculate_timestep(Real cell_size, Real factor, Real bulk_modulus,
+            // Real shear_modulus, Real density)
+            m.def("set_logger", &set_logger,
+                  R"(
+                        Set up a logger for the application.
+
+                        This function sets up a logger that writes to the specified file or to the console if no file is specified. 
+                        The logging level can also be specified. If no level is specified, it defaults to info.
+
+                        Example usage:
+                              >>> import pyroclastmpm as pm
+                              >>> pm.set_logger("logfile.log", ymn.spdlog.level.info)
+
+                        Parameters
+                        ----------
+                        log_file: str, optional
+                              The name of the file to which the logger will write. If empty, the logger will write to the console.
+                        log_level: str, optional
+                              The level of messages that the logger will log. This defaults to info. Critical = 0
+
+                              Critical = 0 - Designates critical errors.
+                              Error = 1 - Designates very serious errors.
+                              Warn = 2 - Designates hazardous situations.
+                              Info = 3 - Designates useful information.
+                              Debug = 4 - Designates lower priority information.
+                              Trace = 5 - Designates very low priority, often extremely verbose, information.
+
+
+                        Returns
+                        -------
+                        None
+                        )",
+                  py::arg("log_file") = "", py::arg("log_level") = "info");
 
 #ifdef CUDA_ENABLED
-  m.def("set_device", &set_device,
-        R"(
+            m.def("set_device", &set_device,
+                  R"(
             Sets the GPU device id. Supports only CUDA enabled devices.
 
             Example usage:
@@ -155,8 +188,8 @@ void tools_module(py::module &m) {
             stl_filename: int
                 The file name of the name of the STL (.stl).
              )",
-        py::arg("device_id"));
+                  py::arg("device_id"));
 #endif
-}
+      }
 
 } // namespace pyroclastmpm

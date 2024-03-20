@@ -32,12 +32,14 @@
 
 namespace py = pybind11;
 
-namespace pyroclastmpm {
+namespace pyroclastmpm
+{
 
-void nodes_module(const py::module &m) {
-  py::class_<NodesContainer> N_cls(m, "NodesContainer");
-  N_cls.def(py::init<Vectorr, Vectorr, Real>(),
-            R"(
+  void nodes_module(const py::module &m)
+  {
+    py::class_<NodesContainer> N_cls(m, "NodesContainer");
+    N_cls.def(py::init<Vectorr, Vectorr, Real>(),
+              R"(
     A container for the background grid nodes of the MPM simulation.
 
     Example usage:
@@ -57,10 +59,10 @@ void nodes_module(const py::module &m) {
     cell_size : float
         Size of the grid cells
     )",
-            py::arg("origin"), py::arg("end"), py::arg("cell_size"));
+              py::arg("origin"), py::arg("end"), py::arg("cell_size"));
 
-  N_cls.def("set_output_formats", &NodesContainer::set_output_formats,
-            R"(
+    N_cls.def("set_output_formats", &NodesContainer::set_output_formats,
+              R"(
             Set a list of formats that are outputted in a
             directory specified in :func:`set_globals`.
 
@@ -74,10 +76,10 @@ void nodes_module(const py::module &m) {
             output_formats : List[str]
                 List of output formats.
             )",
-            py::arg("output_formats"));
+              py::arg("output_formats"));
 
-  N_cls.def("give_coords", &NodesContainer::give_node_coords_stl,
-            R"(
+    N_cls.def("give_coords", &NodesContainer::give_node_coords_stl,
+              R"(
             A method to get the node coordinates as a flattened array of M nodes in
             D dimensions.
 
@@ -88,79 +90,50 @@ void nodes_module(const py::module &m) {
           
             )");
 
-  N_cls.def_property(
-      "moments",
-      [](NodesContainer &self) {
-        return std::vector<Vectorr>(self.moments_gpu.begin(),
-                                    self.moments_gpu.end());
-      },
-      [](NodesContainer &self, const std::vector<Vectorr> &value) {
-        cpu_array<Vectorr> host_val = value;
-        self.moments_gpu = host_val;
-      },
-      "Node moments");
-  N_cls.def_property(
-      "moments_nt",
-      [](NodesContainer &self) {
-        return std::vector<Vectorr>(self.moments_nt_gpu.begin(),
-                                    self.moments_nt_gpu.end());
-      },
-      [](NodesContainer &self, const std::vector<Vectorr> &value) {
-        cpu_array<Vectorr> host_val = value;
-        self.moments_nt_gpu = host_val;
-      },
-      "Node forward moments (refer to :class:`USL` for more info)");
+    N_cls.def_property(
+        "moments",
+        [](NodesContainer &self)
+        {
+          return std::vector<Vectorr>(self.moments_gpu.begin(),
+                                      self.moments_gpu.end());
+        },
+        [](NodesContainer &self, const std::vector<Vectorr> &value)
+        {
+          cpu_array<Vectorr> host_val = value;
+          self.moments_gpu = host_val;
+        },
+        "Node moments");
+    N_cls.def_property(
+        "moments_nt",
+        [](NodesContainer &self)
+        {
+          return std::vector<Vectorr>(self.moments_nt_gpu.begin(),
+                                      self.moments_nt_gpu.end());
+        },
+        [](NodesContainer &self, const std::vector<Vectorr> &value)
+        {
+          cpu_array<Vectorr> host_val = value;
+          self.moments_nt_gpu = host_val;
+        },
+        "Node forward moments (refer to :class:`USL` for more info)");
 
-  N_cls.def_property(
-      "forces_external",
-      [](NodesContainer &self) {
-        return std::vector<Vectorr>(self.forces_external_gpu.begin(),
-                                    self.forces_external_gpu.end());
-      },
-      [](NodesContainer &self, const std::vector<Vectorr> &value) {
-        cpu_array<Vectorr> host_val = value;
-        self.forces_external_gpu = host_val;
-      },
-      "External forces on the nodes");
-  N_cls.def_property(
-      "forces_internal",
-      [](NodesContainer &self) {
-        return std::vector<Vectorr>(self.forces_internal_gpu.begin(),
-                                    self.forces_internal_gpu.end());
-      },
-      [](NodesContainer &self, const std::vector<Vectorr> &value) {
-        cpu_array<Vectorr> host_val = value;
-        self.forces_internal_gpu = host_val;
-      },
-      "Internal forces of the nodes");
+    N_cls.def_property(
+        "masses",
+        [](NodesContainer &self)
+        {
+          return std::vector<Real>(self.masses_gpu.begin(),
+                                   self.masses_gpu.end());
+        },
+        [](NodesContainer &self, const std::vector<Real> &value)
+        {
+          cpu_array<Real> host_val = value;
+          self.masses_gpu = host_val;
+        },
+        "Masses of the nodes");
 
-  N_cls.def_property(
-      "forces_total",
-      [](NodesContainer &self) {
-        return std::vector<Vectorr>(self.forces_total_gpu.begin(),
-                                    self.forces_total_gpu.end());
-      },
-      [](NodesContainer &self, const std::vector<Vectorr> &value) {
-        cpu_array<Vectorr> host_val = value;
-        self.forces_total_gpu = host_val;
-      },
-      "Total forces of the nodes");
-
-  N_cls.def_property(
-      "masses",
-      [](NodesContainer &self) {
-        return std::vector<Real>(self.masses_gpu.begin(),
-                                 self.masses_gpu.end());
-      },
-      [](NodesContainer &self, const std::vector<Real> &value) {
-        cpu_array<Real> host_val = value;
-        self.masses_gpu = host_val;
-      },
-      "Masses of the nodes");
-
-  // N_cls.def_readwrite("small_mass_cutoff",
-  // &NodesContainer::small_mass_cutoff,
-  //                     "Cutoff for small masses default 1.0e-6");
-}
+    // N_cls.def_readwrite("small_mass_cutoff",
+    // &NodesContainer::small_mass_cutoff,
+    //                     "Cutoff for small masses default 1.0e-6");
+  }
 
 } // namespace pyroclastmpm

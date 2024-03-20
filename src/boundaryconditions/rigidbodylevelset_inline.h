@@ -28,11 +28,10 @@
 namespace pyroclastmpm {
 
 #ifdef CUDA_ENABLED
-extern __constant__ Real dt_gpu;
 extern __constant__ int num_surround_nodes_gpu;
 extern __constant__ int g2p_window_gpu[64][3];
 extern __constant__ int p2g_window_gpu[64][3];
-extern Real __constant__ dt_gpu;
+extern __constant__  Real dt_gpu;
 #else
 extern const int num_surround_nodes_cpu;
 extern const int g2p_window_cpu[64][3];
@@ -96,6 +95,7 @@ __device__ __host__ inline void calculate_grid_normals_nn_rigid(
       {0, 0, 0}, {-1, 0, 0}, {0, -1, 0}, {-1, -1, 0}};
   const int num_surround_nodes = 4;
 #else
+
   const int linear_p2g_window[64][3] = {{0, 0, 0}, {-1, 0, 0}};
   const int num_surround_nodes = 2;
 #endif
@@ -251,6 +251,13 @@ update_rigid_velocity(Vectorr *particles_velocities_gpu,
     return;
   }
 
+#ifdef CUDA_ENABLED
+  const Real dt = dt_gpu;
+#else
+  const Real dt = dt_cpu;
+  using std::isnan;
+#endif
+
   const Vectorr particle_coords = particles_positions_gpu[tid];
 
   const Vectorr relative_coords = particle_coords - COM;
@@ -258,7 +265,7 @@ update_rigid_velocity(Vectorr *particles_velocities_gpu,
   const Vectorr updated_relative_coords = rotation_matrix * relative_coords;
 
   particles_velocities_gpu[tid] =
-      (updated_relative_coords - relative_coords) / dt_cpu;
+      (updated_relative_coords - relative_coords) / dt;
 
   // x-to y, y-to z, z-to x
   // roll, pitch, yaw
@@ -336,19 +343,19 @@ update_rigid_position(Vectorr *particles_positions_gpu,
 }
 
 #ifdef CUDA_ENABLED
-// __global__ void KERNEL_UPDATE_RIGID_POSITION(
-//     Vectorr *particles_positions_gpu, const Vectorr
-//     *particles_velocities_gpu, const bool *particle_is_rigid_gpu, const int
-//     num_particles) {
-//   const int tid = blockDim.x * blockIdx.x + threadIdx.x;
+__global__ void KERNEL_UPDATE_RIGID_POSITION(
+    Vectorr *particles_positions_gpu, const Vectorr
+    *particles_velocities_gpu, const bool *particle_is_rigid_gpu, const int
+    num_particles) {
+  const int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
-//   if (tid >= num_particles) {
-//     return;
-//   } // block access threads
+  if (tid >= num_particles) {
+    return;
+  } // block access threads
 
-//   update_rigid_position(particles_positions_gpu, particles_velocities_gpu,
-//                         particle_is_rigid_gpu, tid);
-// }
+  update_rigid_position(particles_positions_gpu, particles_velocities_gpu,
+                        particle_is_rigid_gpu, tid);
+}
 #endif
 
 // __device__ __host__ inline void g2p_get_nodes_w_rigid_particles(

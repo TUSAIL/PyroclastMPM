@@ -37,9 +37,9 @@ set(
   "materials/mohrcoulomb.cpp"
   "materials/druckerprager_cap.cpp"
   "materials/modifiedcamclay.cpp"
-  "materials/modifiedcamclay_nl.cpp"
   "materials/muijop.cpp"
   "materials/mcc_mu_i.cpp"
+  "materials/dp_rheo.cpp"
 
   "materials/linearelastic.cpp"
   "materials/newtonfluid.cpp"
@@ -70,11 +70,16 @@ set(
 
 add_library(pyroclastmpm_${DIM}D ${PyroclastSrc})
 
-
-target_link_libraries(pyroclastmpm_${DIM}D PRIVATE Eigen3::Eigen ${VTK_LIBRARIES} )
+target_link_libraries(pyroclastmpm_${DIM}D PRIVATE spdlog::spdlog_header_only Eigen3::Eigen ${VTK_LIBRARIES} )
 
 
 if(BUILD_CUDA)
+  # remove by 11/03/2023
+  # target_include_directories(
+  #    pyroclastmpm_${DIM}D 
+  #     PRIVATE 
+  #     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+  # )
   target_link_libraries(pyroclastmpm_${DIM}D PRIVATE CUDA::cudart CUDA::cuda_driver)
   target_compile_options(pyroclastmpm_${DIM}D PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
     --use_fast_math

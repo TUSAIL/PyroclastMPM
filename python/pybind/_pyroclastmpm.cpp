@@ -46,13 +46,15 @@ void materials_module(const py::module &);
 void vonmises_module(const py::module &);
 void linearelastic_module(const py::module &);
 void modified_camclay_module(const py::module &);
-void modified_camclay_nl_module(const py::module &);
+// void modified_camclay_nl_module(const py::module &);
 void mohr_coulomb_module(const py::module &);
 void newtonfluid_module(const py::module &);
 void localrheology_module(const py::module &);
 void mu_i_module(const py::module &);
 void modified_camclay_mu_i_module(const py::module &);
 void duckerprager_cap_module(const py::module &);
+void dp_rheo_module(const py::module &);
+
 
 // boundary conditions
 void boundaryconditions_module(const py::module &);
@@ -98,13 +100,14 @@ PYBIND11_MODULE(PYBIND_MODULE_NAME, m) {
   vonmises_module(m);
   linearelastic_module(m);
   modified_camclay_module(m);
-  modified_camclay_nl_module(m);
+  // modified_camclay_nl_module(m);
   duckerprager_cap_module(m);
   mohr_coulomb_module(m);
   newtonfluid_module(m);
   localrheology_module(m);
   mu_i_module(m);
   modified_camclay_mu_i_module(m);
+  dp_rheo_module(m);
 
   // solver
   solver_module(m);

@@ -53,6 +53,8 @@ NewtonFluid::NewtonFluid(const Real _density, const Real _viscosity,
                          const Real _bulk_modulus, const Real _gamma)
     : viscosity(_viscosity), bulk_modulus(_bulk_modulus), gamma(_gamma) {
   density = _density;
+  spdlog::info("[NewtonFluid] density: {:4f}; viscosity: {:4f}; bulk_modulus: {:4f}; gamma: {:4f} ", 
+  density, viscosity,bulk_modulus,gamma);
 }
 
 /// @brief Perform stress update

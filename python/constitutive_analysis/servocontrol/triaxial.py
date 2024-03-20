@@ -133,7 +133,6 @@ class TriaxialControl(BaseControl):
                 method="Nelder-Mead",
             )
 
-            # return
 
             self.particles, self.material = triax_loading_path(
                 res.x,
@@ -152,6 +151,7 @@ class TriaxialControl(BaseControl):
             if step % self.output_step == 0:
                 # print(f"step:{step} ", end="\r")
                 self.store_results(step)  # defined in baseclass
+
 
     def set_mode_sequence(
         self, axial_strain_target_list, radial_stress_target, total_time

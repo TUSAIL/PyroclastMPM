@@ -554,7 +554,7 @@ __device__ __host__ inline void update_druckerpragercap(
 }
 
 #ifdef CUDA_ENABLED
-__global__ void KERNEL_STRESS_UPDATE_MCC(
+__global__ void KERNEL_STRESS_UPDATE_DPCAP(
     Matrix3r *particles_stresses_gpu, Matrixr *particles_eps_e_gpu,
     const Real *particles_volume_gpu, const Real *particles_volume_original_gpu,
     Real *particles_alpha_gpu, Real *pc_gpu,
@@ -562,7 +562,7 @@ __global__ void KERNEL_STRESS_UPDATE_MCC(
     const uint8_t *particle_colors_gpu, const Matrix3r *stress_ref_gpu,
     const Real bulk_modulus, const Real shear_modulus, const Real M,
     const Real lam, const Real kap, const Real Pt, const Real beta,
-    const Real Vs, const int mat_id, const bool do_update_history,
+    const Real Vs,const Real eta_overline, const int mat_id, const bool do_update_history,
     const bool is_velgrad_strain_increment, const int num_particles) {
   const int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -570,29 +570,31 @@ __global__ void KERNEL_STRESS_UPDATE_MCC(
     return;
   } // block access threads
 
-  update_druckerpragercap(particles_stresses_gpu, particles_eps_e_gpu,
-                          particles_volume_gpu, particles_volume_original_gpu,
-                          particles_alpha_gpu, pc_gpu,
-                          particles_velocity_gradient_gpu, particle_colors_gpu,
-                          stress_ref_gpu, bulk_modulus, shear_modulus, M, lam,
-                          kap, Pt, beta, Vs, const Real eta_overline, mat_id,
-                          do_update_history, is_velgrad_strain_increment, tid);
 
-  // __device__ __host__ inline void update_modifiedcamclay(
-  //     Matrix3r * particles_stresses_gpu, Matrixr * particles_eps_e_gpu,
-  //     const Real *particles_volume_gpu,
-  //     const Real *particles_volume_original_gpu, Real *particles_alpha_gpu,
-  //     Real *pc_gpu, const Matrixr *particles_velocity_gradient_gpu,
-  //     const uint8_t *particle_colors_gpu, const Matrix3r *stress_ref_gpu,
-  //     const Real bulk_modulus, const Real shear_modulus, const Real M,
-  //     const Real lam, const Real kap,  const Real Pt,
-  //     const Real beta, const Real Vs, const int mat_id,
-  //     const bool do_update_history, const bool is_velgrad_strain_increment,
-  //     const int tid)
+  update_druckerpragercap(
+    particles_stresses_gpu,
+    particles_eps_e_gpu,
+    particles_volume_gpu,
+    particles_volume_original_gpu,
+    particles_alpha_gpu,
+    pc_gpu,
+    particles_velocity_gradient_gpu,
+    particle_colors_gpu,
+    stress_ref_gpu,
+    bulk_modulus,
+    shear_modulus,
+    M,
+    lam,
+    kap,
+    Pt,
+    beta,
+    Vs,
+    eta_overline,
+    mat_id,
+    do_update_history,
+    is_velgrad_strain_increment,
+    tid);
 
-  //     update_linearelastic(particles_stresses_gpu, particles_F_gpu,
-  //                          particles_colors_gpu, particles_is_active_gpu,
-  //                          shear_modulus, bulk_modulus, mat_id, tid);
 }
 #endif
 

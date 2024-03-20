@@ -27,152 +27,194 @@
 
 #include "modifiedcamclay_inline.h"
 
-namespace pyroclastmpm {
+// #include "modifiedcamclay_inline_2.h"
 
-extern const int global_step_cpu;
+namespace pyroclastmpm
+{
 
-/// @brief Construct a new Modified Cam Clay object
-/// @param _density material density (original)
-/// @param _E Young's modulus
-/// @param _pois Poisson's ratio
-/// @param _M Slope of critical state line
-/// @param _lam slope of virgin consolidation line
-/// @param _kap slope of swelling line
-/// @param _Vs solid volume
-/// @param R  preconsolidation ratio
-/// @param _Pt Tensile yield hydrostatic stress
-/// @param _beta Parameter related to size of outer diameter of ellipse
-ModifiedCamClay::ModifiedCamClay(const Real _density, const Real _E,
-                                 const Real _pois, const Real _M,
-                                 const Real _lam, const Real _kap,
-                                 const Real _Vs, const Real _R, const Real _Pt,
-                                 const Real _beta)
-    : M(_M), Pt(_Pt), beta(_beta), E(_E), pois(_pois), lam(_lam), kap(_kap),
-      Vs(_Vs), R(_R) {
+  extern const int global_step_cpu;
 
-  bulk_modulus = E / ((Real)3.0 * ((Real)1.0 - (Real)2.0 * pois));
-  shear_modulus = E / ((Real)2.0 * ((Real)1 + pois));
+  /// @brief Construct a new Modified Cam Clay object
+  /// @param _density material density (original)
+  /// @param _E Young's modulus
+  /// @param _pois Poisson's ratio
+  /// @param _M Slope of critical state line
+  /// @param _lam slope of virgin consolidation line
+  /// @param _kap slope of swelling line
+  /// @param _Vs solid volume
+  /// @param R  preconsolidation ratio
+  /// @param _Pt Tensile yield hydrostatic stress
+  /// @param _beta Parameter related to size of outer diameter of ellipse
+  ModifiedCamClay::ModifiedCamClay(const Real _density, const Real _E,
+                                   const Real _pois, const Real _M,
+                                   const Real _lam, const Real _kap,
+                                   const Real _Vs, const Real _R, const Real _Pt,
+                                   const Real _beta)
+      : M(_M), Pt(_Pt), beta(_beta), E(_E), pois(_pois), lam(_lam), kap(_kap),
+        Vs(_Vs), R(_R)
+  {
 
-  printf("shear modulus %f bulk modulus %f \n", shear_modulus, bulk_modulus);
+    bulk_modulus = E / ((Real)3.0 * ((Real)1.0 - (Real)2.0 * pois));
+    shear_modulus = E / ((Real)2.0 * ((Real)1 + pois));
 
-  density = _density;
-}
+    printf("shear modulus %f bulk modulus %f \n", shear_modulus, bulk_modulus);
 
-/// @brief Initialize material (allocate memory for history variables)
-/// @param particles_ref ParticleContainer reference
-/// @param mat_id material id
-void ModifiedCamClay::initialize(const ParticlesContainer &particles_ref,
-                                 [[maybe_unused]] int mat_id) {
-
-  set_default_device<Real>(particles_ref.num_particles, {}, alpha_gpu, 0.0);
-
-  set_default_device<Real>(particles_ref.num_particles, {}, pc_gpu, 0.0);
-
-  set_default_device<Matrixr>(particles_ref.num_particles, {}, eps_e_gpu,
-                              Matrixr::Zero());
-
-  set_default_device<Matrix3r>(particles_ref.num_particles,
-                               particles_ref.stresses_gpu, stress_ref_gpu,
-                               Matrix3r::Zero());
-
-  cpu_array<Matrix3r> stresses_cpu = particles_ref.stresses_gpu;
-
-  cpu_array<Real> pc_cpu = pc_gpu;
-
-  cpu_array<Real> pressures_cpu =
-      cpu_array<Real>(particles_ref.num_particles, 0.);
-
-  for (int pi = 0; pi < particles_ref.num_particles; pi++) {
-    // check positive compression
-    pressures_cpu[pi] = -stresses_cpu[pi].trace() / 3.;
-
-    const Real Pc0 = pressures_cpu[pi] * R;
-
-    pc_cpu[pi] = Pc0;
-
-    if (pressures_cpu[pi] > pc_cpu[pi]) {
-      printf("ModifiedCamClay::initialize: Warning: Pc0 (%f) < p0 (%f)  check "
-             "R ( %f)\n",
-             pc_cpu[pi], pressures_cpu[pi], R);
-    } else {
-      printf("ModifiedCamClay::initialize: Pc0 (%f) > p0 (%f)  check "
-             "R ( %f)\n",
-             pc_cpu[pi], pressures_cpu[pi], R);
-    }
+    density = _density;
   }
-  pc_gpu = pc_cpu;
-}
 
-/// @brief Perform stress update
-/// @param particles_ptr ParticlesContainer class
-/// @param mat_id material id
-void ModifiedCamClay::stress_update(ParticlesContainer &particles_ref,
-                                    int mat_id) {
+  /// @brief Initialize material (allocate memory for history variables)
+  /// @param particles_ref ParticleContainer reference
+  /// @param mat_id material id
+  void ModifiedCamClay::initialize(const ParticlesContainer &particles_ref,
+                                   [[maybe_unused]] int mat_id)
+  {
+
+    set_default_device<Real>(particles_ref.num_particles, {}, alpha_gpu, 0.0);
+
+    set_default_device<Real>(particles_ref.num_particles, {}, pc_gpu, 0.0);
+
+    set_default_device<Matrixr>(particles_ref.num_particles, {}, eps_e_gpu,
+                                Matrixr::Zero());
+
+    set_default_device<Matrix3r>(particles_ref.num_particles,
+                                 particles_ref.stresses_gpu, stress_ref_gpu,
+                                 Matrix3r::Zero());
+
+    cpu_array<Matrix3r> stresses_cpu = particles_ref.stresses_gpu;
+
+    cpu_array<Real> pc_cpu = pc_gpu;
+
+    cpu_array<Real> pressures_cpu =
+        cpu_array<Real>(particles_ref.num_particles, 0.);
+
+    for (int pi = 0; pi < particles_ref.num_particles; pi++)
+    {
+      // check positive compression
+      pressures_cpu[pi] = -stresses_cpu[pi].trace() / 3.;
+
+      const Real Pc0 = pressures_cpu[pi] * R;
+
+      pc_cpu[pi] = Pc0;
+
+      if (pressures_cpu[pi] > pc_cpu[pi])
+      {
+        printf("ModifiedCamClay::initialize: Warning: Pc0 (%f) < p0 (%f)  check "
+               "R ( %f)\n",
+               pc_cpu[pi], pressures_cpu[pi], R);
+      }
+    }
+    pc_gpu = pc_cpu;
+  }
+
+  /// @brief Perform stress update
+  /// @param particles_ptr ParticlesContainer class
+  /// @param mat_id material id
+  void ModifiedCamClay::stress_update(ParticlesContainer &particles_ref,
+                                      int mat_id)
+  {
+
+    // #ifdef CUDA_ENABLED
+    //     // TODO ADD KERNEL
+    //     KERNEL_STRESS_UPDATE_MCC<<<particles_ref.launch_config.tpb,
+    //                                particles_ref.launch_config.bpg>>>(
+    //         thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
+    //         thrust::raw_pointer_cast(eps_e_gpu.data()),
+    //         thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
+    //         thrust::raw_pointer_cast(particles_ref.volumes_original_gpu.data()),
+    //         thrust::raw_pointer_cast(alpha_gpu.data()),
+    //         thrust::raw_pointer_cast(pc_gpu.data()),
+    //         thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
+    //         thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
+    //         thrust::raw_pointer_cast(stress_ref_gpu.data()), bulk_modulus,
+    //         shear_modulus, M, lam, kap, Pt, beta, Vs, mat_id, do_update_history,
+    //         is_velgrad_strain_increment, particles_ref.num_particles);
+
+    //     cudaDeviceSynchronize();
+    // #else
+    //     for (int pid = 0; pid < particles_ref.num_particles; pid++)
+    //     {
+    //       update_modifiedcamclay(
+    //           particles_ref.stresses_gpu.data(), eps_e_gpu.data(),
+    //           particles_ref.volumes_gpu.data(),
+    //           particles_ref.volumes_original_gpu.data(), alpha_gpu.data(),
+    //           pc_gpu.data(), particles_ref.velocity_gradient_gpu.data(),
+    //           particles_ref.colors_gpu.data(), stress_ref_gpu.data(), bulk_modulus,
+    //           shear_modulus, M, lam, kap, Pt, beta, Vs, mat_id, do_update_history,
+    //           is_velgrad_strain_increment, pid);
+    //     }
+    // #endif
 
 #ifdef CUDA_ENABLED
-  // TODO ADD KERNEL
-
-  KERNEL_STRESS_UPDATE_MCC<<<particles_ref.launch_config.tpb,
-                             particles_ref.launch_config.bpg>>>(
-      thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
-      thrust::raw_pointer_cast(eps_e_gpu.data()),
-      thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
-      thrust::raw_pointer_cast(particles_ref.volumes_original_gpu.data()),
-      thrust::raw_pointer_cast(alpha_gpu.data()),
-      thrust::raw_pointer_cast(pc_gpu.data()),
-      thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
-      thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
-      thrust::raw_pointer_cast(stress_ref_gpu.data()), bulk_modulus,
-      shear_modulus, M, lam, kap, Pt, beta, Vs, mat_id, do_update_history,
-      is_velgrad_strain_increment, particles_ref.num_particles);
-
-#else
-  for (int pid = 0; pid < particles_ref.num_particles; pid++) {
-    update_modifiedcamclay(
-        particles_ref.stresses_gpu.data(), eps_e_gpu.data(),
-        particles_ref.volumes_gpu.data(),
-        particles_ref.volumes_original_gpu.data(), alpha_gpu.data(),
-        pc_gpu.data(), particles_ref.velocity_gradient_gpu.data(),
-        particles_ref.colors_gpu.data(), stress_ref_gpu.data(), bulk_modulus,
+    // TODO ADD KERNEL
+    KERNEL_STRESS_UPDATE_MCC_NONLINEAR<<<particles_ref.launch_config.tpb,
+                                         particles_ref.launch_config.bpg>>>(
+        thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
+        thrust::raw_pointer_cast(eps_e_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.volumes_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.volumes_original_gpu.data()),
+        thrust::raw_pointer_cast(alpha_gpu.data()),
+        thrust::raw_pointer_cast(pc_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.velocity_gradient_gpu.data()),
+        thrust::raw_pointer_cast(particles_ref.colors_gpu.data()),
+        thrust::raw_pointer_cast(stress_ref_gpu.data()), bulk_modulus,
         shear_modulus, M, lam, kap, Pt, beta, Vs, mat_id, do_update_history,
-        is_velgrad_strain_increment, pid);
-  }
+        is_velgrad_strain_increment, particles_ref.num_particles);
+
+    cudaDeviceSynchronize();
+#else
+    for (int pid = 0; pid < particles_ref.num_particles; pid++)
+    {
+      update_modifiedcamclay_nonlinear(
+          particles_ref.stresses_gpu.data(), eps_e_gpu.data(),
+          particles_ref.volumes_gpu.data(),
+          particles_ref.volumes_original_gpu.data(), alpha_gpu.data(),
+          pc_gpu.data(), particles_ref.velocity_gradient_gpu.data(),
+          particles_ref.colors_gpu.data(), stress_ref_gpu.data(), bulk_modulus,
+          shear_modulus, M, lam, kap, Pt, beta, Vs, mat_id, do_update_history,
+          is_velgrad_strain_increment, pid);
+    }
 #endif
-}
 
-/// @brief Calculate time step wave propagation speed
-/// @param cell_size Fell size of the background grid
-/// @param factor Scaling factor for speed
-/// @return Real a timestep
-Real ModifiedCamClay::calculate_timestep(Real cell_size, Real factor,
-                                         Real bulk_modulus, Real shear_modulus,
-                                         Real density) {
-  // https://www.sciencedirect.com/science/article/pii/S0045782520306885
-  const auto c = (Real)sqrt((bulk_modulus + 4. * shear_modulus / 3.) / density);
-
-  const Real delta_t = factor * (cell_size / c);
-
-  printf("ModifiedCamClay::calculate_timestep: %f", delta_t);
-  return delta_t;
-}
-
-void ModifiedCamClay::output_vtk(NodesContainer &nodes_ref,
-                                 ParticlesContainer &particles_ref) {
-
-  if (output_formats.empty()) {
-    return;
+    printf("Non Linear stress update \n");
   }
 
-  vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+  /// @brief Calculate time step wave propagation speed
+  /// @param cell_size Fell size of the background grid
+  /// @param factor Scaling factor for speed
+  /// @return Real a timestep
+  Real ModifiedCamClay::calculate_timestep(Real cell_size, Real factor,
+                                           Real bulk_modulus, Real shear_modulus,
+                                           Real density)
+  {
+    // https://www.sciencedirect.com/science/article/pii/S0045782520306885
+    const auto c = (Real)sqrt((bulk_modulus + 4. * shear_modulus / 3.) / density);
 
-  cpu_array<Vectorr> positions_cpu = particles_ref.positions_gpu;
-  cpu_array<Real> alpha_cpu = alpha_gpu;
-  set_vtk_points(positions_cpu, polydata);
-  set_vtk_pointdata<Real>(alpha_cpu, polydata, "alpha");
+    const Real delta_t = factor * (cell_size / c);
 
-  for (const auto &format : output_formats) {
-    write_vtk_polydata(polydata, "modified_cam_clay", format);
+    printf("ModifiedCamClay::calculate_timestep: %f", delta_t);
+    return delta_t;
   }
-}
+
+  void ModifiedCamClay::output_vtk(NodesContainer &nodes_ref,
+                                   ParticlesContainer &particles_ref)
+  {
+
+    if (output_formats.empty())
+    {
+      return;
+    }
+
+    vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+
+    cpu_array<Vectorr> positions_cpu = particles_ref.positions_gpu;
+    cpu_array<Real> alpha_cpu = alpha_gpu;
+    set_vtk_points(positions_cpu, polydata);
+    set_vtk_pointdata<Real>(alpha_cpu, polydata, "alpha");
+
+    for (const auto &format : output_formats)
+    {
+      write_vtk_polydata(polydata, "modified_cam_clay", format);
+    }
+  }
 
 } // namespace pyroclastmpm

@@ -122,7 +122,7 @@ void DruckerPragerCap::stress_update(ParticlesContainer &particles_ref,
 #ifdef CUDA_ENABLED
   // TODO ADD KERNEL
 
-  KERNEL_STRESS_UPDATE_MCC<<<particles_ref.launch_config.tpb,
+  KERNEL_STRESS_UPDATE_DPCAP<<<particles_ref.launch_config.tpb,
                              particles_ref.launch_config.bpg>>>(
       thrust::raw_pointer_cast(particles_ref.stresses_gpu.data()),
       thrust::raw_pointer_cast(eps_e_gpu.data()),

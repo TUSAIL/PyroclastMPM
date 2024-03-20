@@ -45,84 +45,89 @@
 #include <thrust/sequence.h>
 #include <thrust/sort.h>
 
-namespace pyroclastmpm {
+namespace pyroclastmpm
+{
 
-/**
- * @brief Spatially partitions points into a grid
- * @details This is a "neighborhood search" algorithm that bins points into a
- * uniform grid which helps to efficiently access to the P2G and G2P kernels.
- *
- * \verbatim embed:rst:leading-asterisk
- *     Example usage
- *
- *     .. code-block:: cpp
- *
- *        #include "pyroclastmpm/nodes/nodes.h"
- *
- *        SpatialPartition spatial =
- *            SpatialPartition(Grid(grid_origin, grid_end, cell_size),
- * num_points);
- *
- *        spatial.reset();
- *
- *        spatial.calculate_hash(point_coordinates);
- *
- *        spatial.sort_hashes();
- *
- *        spatial.bin_particles();
- *
- * \endverbatim
- */
-class SpatialPartition {
-public:
-  /// @brief Construct a new Spatial Partition object
-  /// @param _grid Grid object
-  /// @param _num_elements number of particles (or points) being partitioned
-  SpatialPartition(const Grid &_grid, const int _num_elements);
+  /**
+   * @brief Spatially partitions points into a grid
+   * @details This is a "neighborhood search" algorithm that bins points into a
+   * uniform grid which helps to efficiently access to the P2G and G2P kernels.
+   *
+   * \verbatim embed:rst:leading-asterisk
+   *     Example usage
+   *
+   *     .. code-block:: cpp
+   *
+   *        #include "pyroclastmpm/nodes/nodes.h"
+   *
+   *        SpatialPartition spatial =
+   *            SpatialPartition(Grid(grid_origin, grid_end, cell_size),
+   * num_points);
+   *
+   *        spatial.reset();
+   *
+   *        spatial.calculate_hash(point_coordinates);
+   *
+   *        spatial.sort_hashes();
+   *
+   *        spatial.bin_particles();
+   *
+   * \endverbatim
+   */
+  class SpatialPartition
+  {
+  public:
+    /// @brief Construct a new Spatial Partition object
+    /// @param _grid Grid object
+    /// @param _num_elements number of particles (or points) being partitioned
+    SpatialPartition(const Grid &_grid, const int _num_elements);
 
-  /// @brief Destroy the Spatial Partition object
-  SpatialPartition() = default;
+    /// @brief Destroy the Spatial Partition object
+    SpatialPartition() = default;
 
-  /// @brief Resets the memory of the Spatial Partition object
-  void reset();
+    /// @brief Resets the memory of the Spatial Partition object
+    void reset();
 
-  /// @brief Calculates the cartesian hash of a set of points
-  /// @param positions_gpu Set of points with the same size as _num_elements
-  void calculate_hash(gpu_array<Vectorr> &positions_gpu);
+    /// @brief Calculates the cartesian hash of a set of points
+    /// @param positions_gpu Set of points with the same size as _num_elements
+    void calculate_hash(gpu_array<Vectorr> &positions_gpu);
 
-  /// @brief Sorts hashes of the points
-  void sort_hashes();
+    /// @brief Sorts hashes of the points
+    void sort_hashes();
 
-  /// @brief Bins the points into the grid
-  void bin_particles();
+    /// @brief Bins the points into the grid
+    void bin_particles();
 
-  /// @brief start cell indices of the points
-  gpu_array<int> cell_start_gpu;
+    /// @brief start cell indices of the points
+    gpu_array<int> cell_start_gpu;
 
-  /// @brief end cell indices of the points
-  gpu_array<int> cell_end_gpu;
+    /// @brief end cell indices of the points
+    gpu_array<int> cell_end_gpu;
 
-  /// @brief sorted indices of the points
-  gpu_array<int> sorted_index_gpu;
+    /// @brief sorted indices of the points
+    gpu_array<int> sorted_index_gpu;
 
-  ////@brief unsorted cartesian hashes of the coordinates
-  gpu_array<unsigned int> hash_unsorted_gpu;
+    ////@brief unsorted cartesian hashes of the coordinates
+    gpu_array<unsigned int> hash_unsorted_gpu;
 
-  /// @brief sorted cartesian hashes with respect to the sorted indices.
-  gpu_array<unsigned int> hash_sorted_gpu;
+    /// @brief sorted cartesian hashes with respect to the sorted indices.
+    gpu_array<unsigned int> hash_sorted_gpu;
 
-  /// @brief bin ids of points within a cell, e.g  (x=1,y=2,z=3)
-  gpu_array<Vectori> bins_gpu;
+    /// @brief bin ids of points within a cell, e.g  (x=1,y=2,z=3)
+    gpu_array<Vectori> bins_gpu;
 
-  /// @brief Grid object
-  Grid grid = Grid();
+    /// @brief Grid object
+    Grid grid = Grid();
 
-  /// @brief number of points being partitioned
-  int num_elements = 0;
+    /// @brief number of points being partitioned
+    int num_elements = 0;
+
+    /// @brief Total memory
+    double total_memory_mb = 0.0;
 
 #ifdef CUDA_ENABLED
-  /// @brief GPU launch configuration for kernels
-  GPULaunchConfig launch_config;
+    /// @brief GPU launch configuration for kernels
+    GPULaunchConfig launch_config;
 #endif
-};
+  };
 } // namespace pyroclastmpm

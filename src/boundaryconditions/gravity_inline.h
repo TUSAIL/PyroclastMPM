@@ -25,47 +25,61 @@
 
 #include "pyroclastmpm/common/types_common.h"
 
-namespace pyroclastmpm {
-
-/**
- * @brief Apply gravity to the nodes of the background grid. *
- * @details The nodes must have a mass mass > 0.000000001
- *
- * @param nodes_forces_external_gpu external forces of the background grid
- * @param nodes_masses_gpu masses of the nodes
- * @param gravity gravity vector
- * @param node_mem_index index of the node
- */
-__device__ __host__ inline void
-apply_gravity(Vectorr *nodes_forces_external_gpu, const Real *nodes_masses_gpu,
-              const Vectorr gravity, const int node_mem_index) {
-
-  const Real node_mass = nodes_masses_gpu[node_mem_index];
-
-  if (node_mass <= 0.000000001) {
-    return;
-  }
-
-  nodes_forces_external_gpu[node_mem_index] += gravity * node_mass;
-}
-
-#ifdef CUDA_ENABLED
-__global__ void KERNEL_APPLY_GRAVITY(Vectorr *nodes_forces_external_gpu,
-                                     const Real *nodes_masses_gpu,
-                                     const Vectorr gravity,
-                                     const int num_nodes_total)
-
+namespace pyroclastmpm
 {
 
-  const int node_mem_index = blockIdx.x * blockDim.x + threadIdx.x;
+#ifdef CUDA_ENABLED
+  extern __constant__ Real dt_gpu;
+#else
+  extern const Real dt_cpu;
+#endif
 
-  if (node_mem_index >= num_nodes_total) {
-    return;
+  /**
+   * @brief Apply gravity to the nodes of the background grid. *
+   * @details The nodes must have a mass mass > 0.000000001
+   *
+   * @param nodes_forces_external_gpu external forces of the background grid
+   * @param nodes_masses_gpu masses of the nodes
+   * @param gravity gravity vector
+   * @param node_mem_index index of the node
+   */
+  __device__ __host__ inline void
+  apply_gravity(Vectorr *nodes_moments_nt_gpu, const Real *nodes_masses_gpu,
+                const Vectorr gravity, const int node_mem_index)
+  {
+
+    const Real node_mass = nodes_masses_gpu[node_mem_index];
+
+    if (node_mass <= 0.000000001)
+    {
+      return;
+    }
+    // moment = mass * gravity * dt
+#ifdef CUDA_ENABLED
+    nodes_moments_nt_gpu[node_mem_index] += gravity * node_mass * dt_gpu;
+#else
+    nodes_moments_nt_gpu[node_mem_index] += gravity * node_mass * dt_cpu;
+#endif
   }
 
-  apply_gravity(nodes_forces_external_gpu, nodes_masses_gpu, gravity,
-                node_mem_index);
-}
+#ifdef CUDA_ENABLED
+  __global__ void KERNEL_APPLY_GRAVITY(Vectorr *nodes_moments_nt_gpu,
+                                       const Real *nodes_masses_gpu,
+                                       const Vectorr gravity,
+                                       const int num_nodes_total)
+
+  {
+
+    const int node_mem_index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (node_mem_index >= num_nodes_total)
+    {
+      return;
+    }
+
+    apply_gravity(nodes_moments_nt_gpu, nodes_masses_gpu, gravity,
+                  node_mem_index);
+  }
 
 #endif
 

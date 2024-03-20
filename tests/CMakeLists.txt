@@ -31,7 +31,7 @@ enable_testing()
 
 add_executable(tests_${DIM}D ${PyroclastSrc_test})
 
-target_link_libraries(tests_${DIM}D PRIVATE pyroclastmpm_${DIM}D GTest::gtest_main Eigen3::Eigen ${VTK_LIBRARIES})
+target_link_libraries(tests_${DIM}D PRIVATE pyroclastmpm_${DIM}D spdlog::spdlog_header_only GTest::gtest_main Eigen3::Eigen ${VTK_LIBRARIES})
 
 if(BUILD_CUDA)
   target_link_libraries(tests_${DIM}D PRIVATE CUDA::cudart CUDA::cuda_driver)

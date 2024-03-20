@@ -63,7 +63,7 @@ namespace pyroclastmpm {
  * @param default_value default_value default value to set the array to
  */
 template <typename T>
-void set_default_device(const int input_size, const cpu_array<T> input,
+double set_default_device(const int input_size, const cpu_array<T> input,
                         gpu_array<T> &output, T default_value);
 
 /**

@@ -37,20 +37,22 @@
 
 namespace py = pybind11;
 
-namespace pyroclastmpm {
+namespace pyroclastmpm
+{
 
-extern const Real dt_cpu;
+    extern const Real dt_cpu;
 
-extern const int global_step_cpu;
+    extern const int global_step_cpu;
 
-void solver_module(const py::module &m) {
-  /* Solver base */
-  py::class_<Solver> S_cls(m, "Solver");
-  S_cls.def(
-      py::init<ParticlesContainer, NodesContainer, std::vector<MaterialType>,
-               std::vector<BoundaryConditionType>>(),
+    void solver_module(const py::module &m)
+    {
+        /* Solver base */
+        py::class_<Solver> S_cls(m, "Solver");
+        S_cls.def(
+            py::init<ParticlesContainer, NodesContainer, std::vector<MaterialType>,
+                     std::vector<BoundaryConditionType>>(),
 
-      R"(
+            R"(
       A Solver class that combines all the components of the MPM solver. The base
       class is responsible for defining the initialization, output, and stress.
       
@@ -66,11 +68,11 @@ void solver_module(const py::module &m) {
       boundaryconditions : [BoundaryCondition], optional
           List of boundary conditions, by default None
       )",
-      py::arg("particles"), py::arg("nodes"),
-      py::arg("materials") = std::vector<MaterialType>(),
-      py::arg("boundaryconditions") = std::vector<BoundaryConditionType>());
+            py::arg("particles"), py::arg("nodes"),
+            py::arg("materials") = std::vector<MaterialType>(),
+            py::arg("boundaryconditions") = std::vector<BoundaryConditionType>());
 
-  S_cls.def("run", &Solver::run, R"(
+        S_cls.def("run", &Solver::run, R"(
       Runs the MPM simulation. The simulation is run for a fixed number of steps
       and the output is written at a frequency to a file.
 
@@ -90,20 +92,21 @@ void solver_module(const py::module &m) {
       frequency: int
           Frequency at which to write the output
       )",
-            py::arg("total_steps"), py::arg("frequency"));
+                  py::arg("total_steps"), py::arg("output_frequency"));
 
-  S_cls.def_readwrite("nodes", &Solver::nodes, "NodesContainer");
-  S_cls.def_readwrite("particles", &Solver::particles, "ParticlesContainer");
-  S_cls.def_property(
-      "boundaryconditions",
-      [](Solver &self) {
-        return std::vector<BoundaryConditionType>(
-            self.boundaryconditions.begin(), self.boundaryconditions.end());
-      },
-      [](Solver &self, const std::vector<BoundaryConditionType> &value) {
-        self.boundaryconditions = value;
-      },
-      "List of boundary conditions");
-
-}
+        S_cls.def_readwrite("nodes", &Solver::nodes, "NodesContainer");
+        S_cls.def_readwrite("particles", &Solver::particles, "ParticlesContainer");
+        S_cls.def_property(
+            "boundaryconditions",
+            [](Solver &self)
+            {
+                return std::vector<BoundaryConditionType>(
+                    self.boundaryconditions.begin(), self.boundaryconditions.end());
+            },
+            [](Solver &self, const std::vector<BoundaryConditionType> &value)
+            {
+                self.boundaryconditions = value;
+            },
+            "List of boundary conditions");
+    }
 } // namespace pyroclastmpm
